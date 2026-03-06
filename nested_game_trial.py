@@ -82,7 +82,7 @@ class NestedDictatorTrial(StaticTrial):
                 dictator = "other"
 
         return OuterDictatorFeedbackPage(
-            dictator=dictator,
+            proposer=dictator,
         )
 
     def assign_inner_roles(self):

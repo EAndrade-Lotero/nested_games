@@ -19,32 +19,6 @@ from .game_paramters import (
 logger = get_logger()
 
 
-class OuterDictatorFeedbackPage(ModularPage):
-    def __init__(
-        self,
-        proposer: str,
-    ):
-        if proposer == "self":
-            text = (
-                f"You are the PROPOSER. "
-            )
-        else:
-            text = (
-                f"You are the RESPONDER."
-            )
-
-        super().__init__(
-            label="outer_choice",
-            prompt=Prompt(text),
-            control=PushButtonControl(
-                labels=["Next"],
-                choices=[proposer]
-            ),
-            time_estimate=5,
-            save_answer="outer_choice",
-        )
-
-
 class OuterDictatorProposalPage(ModularPage):
     def __init__(
             self,
@@ -74,34 +48,29 @@ class OuterDictatorProposalPage(ModularPage):
         )
 
 
-class InnerDictatorFeedbackPage(ModularPage):
+class OuterDictatorFeedbackPage(ModularPage):
     def __init__(
         self,
-        proposer: bool,
-        proposal: int,
-        remainder: int,
+        proposer: str,
     ):
-        if proposer:
-            score = remainder
+        if proposer == "self":
             text = (
-                f"You have given {CURRENCY}{proposal} to your partner. "
-                f"You keep the remainder of {CURRENCY}{remainder}. "
+                f"You are the PROPOSER. "
             )
         else:
-            score = proposal
             text = (
-                f"Your partner has given you {CURRENCY}{proposal}."
+                f"You are the RESPONDER."
             )
 
         super().__init__(
-            label="inner_score",
+            label="outer_choice",
             prompt=Prompt(text),
             control=PushButtonControl(
                 labels=["Next"],
-                choices=[score]
+                choices=[proposer]
             ),
             time_estimate=5,
-            save_answer="inner_score",
+            save_answer="outer_choice",
         )
 
 
@@ -153,4 +122,34 @@ class InnerDictatorProposalPage(ModularPage):
             return FailedValidation(error_txt)
         logger.info(f"Validated!")
         return None
+
+class InnerDictatorFeedbackPage(ModularPage):
+    def __init__(
+        self,
+        proposer: bool,
+        proposal: int,
+        remainder: int,
+    ):
+        if proposer:
+            score = remainder
+            text = (
+                f"You have given {CURRENCY}{proposal} to your partner. "
+                f"You keep the remainder of {CURRENCY}{remainder}. "
+            )
+        else:
+            score = proposal
+            text = (
+                f"Your partner has given you {CURRENCY}{proposal}."
+            )
+
+        super().__init__(
+            label="inner_score",
+            prompt=Prompt(text),
+            control=PushButtonControl(
+                labels=["Next"],
+                choices=[score]
+            ),
+            time_estimate=5,
+            save_answer="inner_score",
+        )
 

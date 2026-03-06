@@ -1,3 +1,4 @@
+import random
 import psynet.experiment
 from psynet.sync import (
     GroupBarrier,
@@ -28,9 +29,9 @@ def assign_roles(group, participants):
     assert len(participants) == 2
     ordered = sorted(participants, key=lambda p: p.id)
     outer_roles = ["proposer", "responder"]
+    random.shuffle(outer_roles)
     for participant, role in zip(ordered, outer_roles):
         participant.var.outer_role = role
-
 
 waiting_nodes = [
     StaticNode(
