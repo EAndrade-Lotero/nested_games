@@ -19,7 +19,7 @@ from .game_paramters import (
 logger = get_logger()
 
 
-class OuterDictatorFeedbackPage(ModularPage):
+class OuterUltimatumFeedbackPage(ModularPage):
     def __init__(
         self,
         proposer: str,
@@ -45,7 +45,7 @@ class OuterDictatorFeedbackPage(ModularPage):
         )
 
 
-class OuterDictatorProposalPage(ModularPage):
+class OuterUltimatumProposalPage(ModularPage):
     def __init__(
             self,
             proposer: bool,
@@ -74,7 +74,7 @@ class OuterDictatorProposalPage(ModularPage):
         )
 
 
-class InnerDictatorFeedbackPage(ModularPage):
+class InnerUltimatumFeedbackPage(ModularPage):
     def __init__(
         self,
         proposer: bool,
@@ -105,7 +105,7 @@ class InnerDictatorFeedbackPage(ModularPage):
         )
 
 
-class InnerDictatorProposalPage(ModularPage):
+class InnerUltimatumProposalPage(ModularPage):
     def __init__(
             self,
             proposer: bool,
