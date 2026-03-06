@@ -6,16 +6,12 @@ from psynet.sync import (
 from psynet.timeline import (
     Timeline,
     PageMaker,
-    for_loop,
-    join,
-    conditional,
 )
 
 from psynet.trial.static import (
     StaticNode,
     StaticTrialMaker,
 )
-from psynet.page import InfoPage
 from psynet.utils import get_logger
 
 from .nested_game_trial import NestedDictatorTrial

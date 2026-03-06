@@ -10,10 +10,10 @@ from psynet.sync import GroupBarrier
 from psynet.utils import get_logger
 
 from .dictator_pages import (
-    OuterFeedbackPage,
-    OuterProposalPage,
-    InnerFeedbackPage,
-    InnerProposalPage,
+    OuterDictatorFeedbackPage,
+    OuterDictatorProposalPage,
+    InnerDictatorFeedbackPage,
+    InnerDictatorProposalPage,
 )
 
 
@@ -66,7 +66,7 @@ class NestedDictatorTrial(StaticTrial):
     # METHODS FOR THE OUTER GAME
     ######################################################
     def outer_proposal_stage(self):
-        return OuterProposalPage(
+        return OuterDictatorProposalPage(
             proposer=self.am_i_the_outer_leader(),
         )
 
@@ -81,7 +81,7 @@ class NestedDictatorTrial(StaticTrial):
             else:
                 dictator = "other"
 
-        return OuterFeedbackPage(
+        return OuterDictatorFeedbackPage(
             dictator=dictator,
         )
 
@@ -149,14 +149,14 @@ class NestedDictatorTrial(StaticTrial):
     # METHODS FOR THE INNER GAME
     ######################################################
     def inner_proposal_stage(self):
-        return InnerProposalPage(
+        return InnerDictatorProposalPage(
             proposer=self.am_i_the_inner_leader(),
         )
 
     def inner_feedback_stage(self):
         # Determine proposal and accept answer
         proposal, remainder = self.get_inner_result()
-        return InnerFeedbackPage(
+        return InnerDictatorFeedbackPage(
             proposer=self.am_i_the_inner_leader(),
             proposal=proposal,
             remainder=remainder,
