@@ -17,13 +17,30 @@ from psynet.utils import get_logger
 
 from .nested_game_trial import NestedDictatorTrial
 from .waiting_page import WaitingTrial
+from psynet.trial.imitation_chain import ImitationChainNode, ImitationChainTrialMaker
 
 logger = get_logger()
+NUMBER_OF_REPEATED_GAMES=10
 
-
-class NestedDictatorTrialMaker(StaticTrialMaker):
+class NestedDictatorTrialMaker(ImitationChainTrialMaker):
     pass
 
+class NestedDictatorNode(ImitationChainNode):
+    def create_initial_seed(self, experiment, participant):
+        return {
+            "outer": {
+                "order": "normal",
+                "type": "dictator",
+            },
+            "inner": {
+                "order": "normal",
+                "type": "dictator",
+            },
+        }
+
+    def summarize_trials(self, trials, experiment, participant):
+        # Keep node definition stable across repeats instead of propagating trial answers.
+        return self.definition
 
 def assign_roles(group, participants):
     assert len(participants) == 2
@@ -78,7 +95,7 @@ class Exp(psynet.experiment.Experiment):
     timeline = Timeline(
         waiting_trial_maker.custom(
             SimpleGrouper(
-                group_type="nested_ultimatum",
+                group_type="chain",
                 initial_group_size=2,
                 max_group_size="initial_group_size",
                 min_group_size=2,
@@ -90,15 +107,24 @@ class Exp(psynet.experiment.Experiment):
         ),
         GroupBarrier(
             id_="assign_roles",
-            group_type="nested_ultimatum",
+            group_type="chain",
             on_release=assign_roles,
         ),
         NestedDictatorTrialMaker(
-            id_="nested_games",
+            id_="nested_games_trial_maker",
             trial_class=NestedDictatorTrial,
-            nodes=game_nodes,
-            expected_trials_per_participant=1,
-            max_trials_per_participant=1,
-            sync_group_type="nested_ultimatum",
+            node_class=NestedDictatorNode,
+            chain_type="within",
+            start_nodes=None,
+            expected_trials_per_participant=5,
+            max_trials_per_participant=5,
+            chains_per_participant=1,
+            #allow_repeated_nodes=True,
+            target_n_participants=60,
+            wait_for_networks=True,
+            max_nodes_per_chain=NUMBER_OF_REPEATED_GAMES,
+            trials_per_node=1,
+            sync_group_type="chain",
+
         ),
     )

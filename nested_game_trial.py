@@ -5,7 +5,7 @@ from psynet.timeline import (
     conditional,
     CodeBlock,
 )
-from psynet.trial.static import StaticTrial
+from psynet.trial.imitation_chain import ImitationChainTrial
 from psynet.sync import GroupBarrier
 from psynet.utils import get_logger
 
@@ -20,7 +20,7 @@ from .dictator_pages import (
 logger = get_logger()
 
 
-class NestedDictatorTrial(StaticTrial):
+class NestedDictatorTrial(ImitationChainTrial):
     time_estimate = 5
     accumulate_answers = True
 
@@ -33,13 +33,13 @@ class NestedDictatorTrial(StaticTrial):
             self.outer_proposal_stage(),
             GroupBarrier(
                 id_="outer_proposal_stage",
-                group_type="nested_ultimatum",
+                group_type="chain",
             ),
             # Feedback stage
             self.outer_feedback_stage(),
             GroupBarrier(
                 id_="outer_feedback_stage",
-                group_type="nested_ultimatum",
+                group_type="chain",
             ),
             # Save to participant.var
             CodeBlock(
@@ -52,13 +52,13 @@ class NestedDictatorTrial(StaticTrial):
             self.inner_proposal_stage(),
             GroupBarrier(
                 id_="inner_proposal_stage",
-                group_type="nested_ultimatum",
+                group_type="chain",
             ),
             # Feedback stage
             self.inner_feedback_stage(),
             GroupBarrier(
                 id_="inner_feedback_stage",
-                group_type="nested_ultimatum",
+                group_type="chain",
             ),
         )
 
