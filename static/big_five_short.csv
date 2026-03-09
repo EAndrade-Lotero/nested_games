@@ -1,0 +1,11 @@
+id,full_position,short_position,sign,key,facet,item
+1,1,1,-E1,E1,Friendliness,Is reserved.
+2,2,2,+A1,A1,Trust,Is generally trusting.
+3,3,3,-C1,C1,Self-Efficacy,Tends to be lazy.
+4,4,4,-N1,N1,Anxiety,"Is relaxed, handles stress well."
+5,5,5,-O1,O1,Imagination,Has few artistic interests.
+6,6,6,+E2,E2,Gregariousness,"Is outgoing, sociable."
+7,7,7,-A2,A2,Morality,Tends to find fault with others.
+8,8,8,+C2,C2,Orderliness,Does a thorough job.
+9,9,9,+N2,N2,Anger,Gets nervous easily.
+10,10,10,+O2,O2,Artistic Interests,Has an active imagination.

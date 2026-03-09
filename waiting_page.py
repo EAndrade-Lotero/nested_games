@@ -1,10 +1,26 @@
-from psynet.trial.static import StaticTrial
+import pandas as pd
+from psynet.trial.static import (
+    StaticTrial,
+    StaticNode,
+)
 from psynet.modular_page import (
     ModularPage,
     PushButtonControl,
 )
 
 from .game_paramters import RNG
+
+full_items = pd.read_csv("static/big_five.csv").to_dict(orient="records")
+RNG.shuffle(full_items)
+
+waiting_nodes = [
+    StaticNode(
+        definition={
+            "question_id": item["full_position"],
+            "question_text": item["item"],
+        },
+    ) for item in full_items
+]
 
 
 class WaitingTrial(StaticTrial):
@@ -13,11 +29,15 @@ class WaitingTrial(StaticTrial):
     def show_trial(self, experiment, participant):
 
         question = self.definition["question"]
+        text = "We are waiting for other participants.\n"
+        text += "In the meantime, please Please report how accurately this describes you:\n"
+        text += f"I see myself as someone who {question}?"
 
         return ModularPage(
             "waiting_trial",
-            f"We are waiting for other participants. In the meantime, please answer this question: {question}?",
+            text,
             PushButtonControl(
-                ["Not at all", "A little", "Very much"],
+                ["Very Inaccurate", "Moderately Inaccurate", "Neither Accurate Nor Inaccurate", "Moderately Accurate", "Very Accurate"],
             ),
         )
+

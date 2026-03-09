@@ -5,6 +5,10 @@ from psynet.timeline import (
     conditional,
     CodeBlock,
 )
+from psynet.trial.imitation_chain import (
+    ImitationChainNode, 
+    ImitationChainTrialMaker,
+)
 from psynet.trial.imitation_chain import ImitationChainTrial
 from psynet.sync import GroupBarrier
 from psynet.utils import get_logger
@@ -16,11 +20,28 @@ from .dictator_pages import (
     InnerDictatorProposalPage,
 )
 
-
 logger = get_logger()
 
 
-class NestedDictatorTrial(ImitationChainTrial):
+class NestedGameNode(ImitationChainNode):
+    def create_initial_seed(self, experiment, participant):
+        return {
+            "outer": {
+                "order": "normal",
+                "type": "dictator",
+            },
+            "inner": {
+                "order": "normal",
+                "type": "dictator",
+            },
+        }
+
+    def summarize_trials(self, trials, experiment, participant):
+        # Keep node definition stable across repeats instead of propagating trial answers.
+        return self.definition
+
+
+class NestedGameTrial(ImitationChainTrial):
     time_estimate = 5
     accumulate_answers = True
 
@@ -106,20 +127,20 @@ class NestedDictatorTrial(ImitationChainTrial):
 
     @staticmethod
     def get_outer_role(participant) -> Union[str, None]:
-        outer_role = NestedDictatorTrial.get_value_from_var(participant, 'outer_role')
+        outer_role = NestedGameTrial.get_value_from_var(participant, 'outer_role')
         if outer_role is not None:
             return outer_role
         return None
 
     def am_i_the_outer_leader(self) -> Union[bool, None]:
-        my_outer_role = NestedDictatorTrial.get_outer_role(self.participant)
+        my_outer_role = NestedGameTrial.get_outer_role(self.participant)
         if my_outer_role is not None:
             return my_outer_role == 'proposer'
         return None
 
     @staticmethod
     def is_the_outer_leader(participant) -> Union[bool, None]:
-        outer_role = NestedDictatorTrial.get_outer_role(participant)
+        outer_role = NestedGameTrial.get_outer_role(participant)
         if outer_role is not None:
             return outer_role == 'proposer'
         return None
@@ -135,7 +156,7 @@ class NestedDictatorTrial(ImitationChainTrial):
         # Determine proposal
         dictator_id = None
         for i, participant in enumerate(participants):
-            outer_proposal = NestedDictatorTrial.get_value_from_var(participant, "outer_proposal")
+            outer_proposal = NestedGameTrial.get_value_from_var(participant, "outer_proposal")
             if outer_proposal is not None:
                 if outer_proposal == "self":
                     dictator_id = ids[i]
@@ -164,20 +185,20 @@ class NestedDictatorTrial(ImitationChainTrial):
 
     @staticmethod
     def get_inner_role(participant) -> Union[str, None]:
-        inner_role = NestedDictatorTrial.get_value_from_var(participant, 'inner_role')
+        inner_role = NestedGameTrial.get_value_from_var(participant, 'inner_role')
         if inner_role is not None:
             return inner_role
         return None
 
     def am_i_the_inner_leader(self) -> Union[bool, None]:
-        my_inner_role = NestedDictatorTrial.get_inner_role(self.participant)
+        my_inner_role = NestedGameTrial.get_inner_role(self.participant)
         if my_inner_role is not None:
             return my_inner_role == 'proposer'
         return None
 
     @staticmethod
     def is_the_inner_leader(participant) -> Union[bool, None]:
-        inner_role = NestedDictatorTrial.get_inner_role(participant)
+        inner_role = NestedGameTrial.get_inner_role(participant)
         if inner_role is not None:
             return inner_role == 'proposer'
         return None
@@ -191,10 +212,10 @@ class NestedDictatorTrial(ImitationChainTrial):
         proposal = None
         remainder = None
         for participant in participants:
-            inner_role = NestedDictatorTrial.get_inner_role(participant)
+            inner_role = NestedGameTrial.get_inner_role(participant)
             if inner_role is not None:
                 if inner_role == 'proposer':
-                    proposal = NestedDictatorTrial.get_value_from_var(participant, 'inner_proposal')
+                    proposal = NestedGameTrial.get_value_from_var(participant, 'inner_proposal')
                     if proposal is not None:
                         try:
                             proposal = int(proposal)
@@ -214,3 +235,7 @@ class NestedDictatorTrial(ImitationChainTrial):
             return getattr(participant.var, variable)
         else:
             return None
+
+
+class NestedGameTrialMaker(ImitationChainTrialMaker):
+    pass

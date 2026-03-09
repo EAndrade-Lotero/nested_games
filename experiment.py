@@ -1,4 +1,3 @@
-import random
 import psynet.experiment
 from psynet.sync import (
     GroupBarrier,
@@ -8,55 +7,39 @@ from psynet.timeline import (
     Timeline,
     PageMaker,
 )
-
 from psynet.trial.static import (
     StaticNode,
-    StaticTrialMaker,
 )
 from psynet.utils import get_logger
 
-from .nested_game_trial import NestedDictatorTrial
-from .waiting_page import WaitingTrial
-from psynet.trial.imitation_chain import ImitationChainNode, ImitationChainTrialMaker
+from .nested_game_trial import (
+    NestedGameNode,
+    NestedGameTrial,
+    NestedGameTrialMaker,
+)
+from .game_paramters import (
+    NUMBER_OF_REPEATED_GAMES,
+    RNG,
+)
+from .five_questions import (
+    PersonalityTrial,
+    PersonalityTrialMaker,
+    personality_nodes,
+)
+from .waiting_page import (
+    WaitingTrial,
+    waiting_nodes,
+)
 
 logger = get_logger()
-NUMBER_OF_REPEATED_GAMES=10
-
-class NestedDictatorTrialMaker(ImitationChainTrialMaker):
-    pass
-
-class NestedDictatorNode(ImitationChainNode):
-    def create_initial_seed(self, experiment, participant):
-        return {
-            "outer": {
-                "order": "normal",
-                "type": "dictator",
-            },
-            "inner": {
-                "order": "normal",
-                "type": "dictator",
-            },
-        }
-
-    def summarize_trials(self, trials, experiment, participant):
-        # Keep node definition stable across repeats instead of propagating trial answers.
-        return self.definition
 
 def assign_roles(group, participants):
     assert len(participants) == 2
     ordered = sorted(participants, key=lambda p: p.id)
     outer_roles = ["proposer", "responder"]
-    random.shuffle(outer_roles)
+    RNG.shuffle(outer_roles)
     for participant, role in zip(ordered, outer_roles):
         participant.var.outer_role = role
-
-waiting_nodes = [
-    StaticNode(
-        definition={
-            "question": question
-        },
-    ) for question in ["Question1", "Question2"]
-]
 
 game_nodes = [
     StaticNode(
@@ -74,17 +57,27 @@ game_nodes = [
     for outer_order in ["normal"]
 ]
 
-waiting_trial_maker = StaticTrialMaker(
-    id_="animals",
-    trial_class=WaitingTrial,
+waiting_trial_maker = PersonalityTrialMaker(
+    id_="waiting",
+    trial_class=PersonalityTrial,
     nodes=waiting_nodes,
-    expected_trials_per_participant=len(waiting_nodes),
-    max_trials_per_participant=99,
-    allow_repeated_nodes=True,
+    expected_trials_per_participant=3,
+    max_trials_per_participant=len(waiting_nodes),
+    allow_repeated_nodes=True, # we must allow participants to cycle through nodes, otherwise a bug will occur if they run out of trials
+)
+
+personality_trial_maker = PersonalityTrialMaker(
+    id_="personality",
+    trial_class=PersonalityTrial,
+    nodes=personality_nodes,
+    expected_trials_per_participant=len(personality_nodes),
+    max_trials_per_participant=len(personality_nodes),
+    allow_repeated_nodes=False,
 )
 
 waiting_logic = PageMaker(
-    waiting_trial_maker.cue_trial, time_estimate=WaitingTrial.time_estimate
+    waiting_trial_maker.cue_trial, 
+    time_estimate=PersonalityTrial.time_estimate
 )
 
 
@@ -110,10 +103,10 @@ class Exp(psynet.experiment.Experiment):
             group_type="chain",
             on_release=assign_roles,
         ),
-        NestedDictatorTrialMaker(
+        NestedGameTrialMaker(
             id_="nested_games_trial_maker",
-            trial_class=NestedDictatorTrial,
-            node_class=NestedDictatorNode,
+            trial_class=NestedGameTrial,
+            node_class=NestedGameNode,
             chain_type="within",
             start_nodes=None,
             expected_trials_per_participant=5,
