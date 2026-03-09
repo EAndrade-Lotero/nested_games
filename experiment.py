@@ -21,17 +21,16 @@ from .game_paramters import (
     NUMBER_OF_REPEATED_GAMES,
     RNG,
 )
-from .five_questions import (
+from .big_five import (
     PersonalityTrial,
     PersonalityTrialMaker,
     personality_nodes,
-)
-from .waiting_page import (
     WaitingTrial,
     waiting_nodes,
 )
 
 logger = get_logger()
+
 
 def assign_roles(group, participants):
     assert len(participants) == 2
@@ -40,6 +39,7 @@ def assign_roles(group, participants):
     RNG.shuffle(outer_roles)
     for participant, role in zip(ordered, outer_roles):
         participant.var.outer_role = role
+
 
 game_nodes = [
     StaticNode(
@@ -59,11 +59,11 @@ game_nodes = [
 
 waiting_trial_maker = PersonalityTrialMaker(
     id_="waiting",
-    trial_class=PersonalityTrial,
+    trial_class=WaitingTrial,
     nodes=waiting_nodes,
     expected_trials_per_participant=3,
     max_trials_per_participant=len(waiting_nodes),
-    allow_repeated_nodes=True, # we must allow participants to cycle through nodes, otherwise a bug will occur if they run out of trials
+    allow_repeated_nodes=True,  # allow participants to cycle or a bug will occur
 )
 
 personality_trial_maker = PersonalityTrialMaker(
@@ -86,6 +86,7 @@ class Exp(psynet.experiment.Experiment):
     initial_recruitment_size = 1
 
     timeline = Timeline(
+        personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(
                 group_type="chain",
@@ -112,7 +113,7 @@ class Exp(psynet.experiment.Experiment):
             expected_trials_per_participant=5,
             max_trials_per_participant=5,
             chains_per_participant=1,
-            #allow_repeated_nodes=True,
+            # allow_repeated_nodes=True,
             target_n_participants=60,
             wait_for_networks=True,
             max_nodes_per_chain=NUMBER_OF_REPEATED_GAMES,
