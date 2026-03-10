@@ -120,6 +120,5 @@ class Exp(psynet.experiment.Experiment):
             max_nodes_per_chain=NUMBER_OF_REPEATED_GAMES,
             trials_per_node=1,
             sync_group_type="chain",
-
         ),
     )

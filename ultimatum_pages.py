@@ -54,7 +54,7 @@ class OuterAcceptancePage(ModularPage):
             proposer: bool,
             proposal: str,
     ) -> None:
-        assert proposal in ["PROPOSER", "RESPONDER"]
+        assert proposal in ["", "PROPOSER", "RESPONDER"]
 
         if proposer:
             prompt = Prompt(
@@ -63,7 +63,7 @@ class OuterAcceptancePage(ModularPage):
             control = NullControl()
         else:
             prompt = Prompt(
-                f"Do you accept your partner's proposal of for you to be the {proposal}? "
+                f"Do you accept your partner's proposal of you to be the {proposal}? "
             )
             control = PushButtonControl(
                 choices=["Accept", "Reject"],
