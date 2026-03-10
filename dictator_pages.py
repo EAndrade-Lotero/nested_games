@@ -67,7 +67,7 @@ class OuterDictatorProposalPage(ModularPage):
                     js="onNextButton();",
                 ),
             },
-            progress_display=progress_display
+            progress_display=progress_display,
         )
 
 
@@ -94,6 +94,21 @@ class OuterDictatorFeedbackPage(ModularPage):
             ),
             time_estimate=5,
             save_answer="outer_choice",
+            events={
+                "responseEnable": Event(
+                    is_triggered_by="trialStart",
+                    delay=10,
+                    js="onNextButton();",
+                ),
+            },
+            progress_display=ProgressDisplay(
+                stages=[
+                    ProgressStage(
+                        time=15,
+                        color="gray"
+                    ),
+                ],
+            )
         )
 
 
@@ -108,18 +123,35 @@ class InnerDictatorProposalPage(ModularPage):
                 f"Decide how much of the {CURRENCY}{ENDOWMENT} you will give to your partner: "
             )
             control = NumberControl()
+            progress_display = None
         else:
             prompt = Prompt(
                 "Press the 'Next' button to see the proposal from your partner."
             )
             control = NullControl()
+            progress_display = ProgressDisplay(
+                stages=[
+                    ProgressStage(
+                        time=15,
+                        color="gray"
+                    ),
+                ],
+            )
 
         super().__init__(
             label="inner_proposal",
             prompt=prompt,
             control=control,
             time_estimate=5,
-            save_answer="inner_proposal"
+            save_answer="inner_proposal",
+            events={
+                "responseEnable": Event(
+                    is_triggered_by="trialStart",
+                    delay=10,
+                    js="onNextButton();",
+                ),
+            },
+            progress_display=progress_display,
         )
 
     def format_answer(self, raw_answer, **kwargs) -> Union[float, str, None]:
@@ -145,6 +177,7 @@ class InnerDictatorProposalPage(ModularPage):
             return FailedValidation(error_txt)
         logger.info(f"Validated!")
         return None
+
 
 class InnerDictatorFeedbackPage(ModularPage):
     def __init__(
@@ -174,5 +207,20 @@ class InnerDictatorFeedbackPage(ModularPage):
             ),
             time_estimate=5,
             save_answer="inner_score",
+            events={
+                "responseEnable": Event(
+                    is_triggered_by="trialStart",
+                    delay=10,
+                    js="onNextButton();",
+                ),
+            },
+            progress_display=ProgressDisplay(
+                stages=[
+                    ProgressStage(
+                        time=15,
+                        color="gray"
+                    ),
+                ],
+            ),
         )
 

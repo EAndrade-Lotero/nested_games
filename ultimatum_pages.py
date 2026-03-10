@@ -7,7 +7,12 @@ from psynet.modular_page import (
     NumberControl,
     NullControl,
 )
-from psynet.timeline import FailedValidation
+from psynet.timeline import (
+    FailedValidation,
+    Event,
+    ProgressDisplay,
+    ProgressStage,
+)
 from psynet.utils import get_logger
 
 from .game_paramters import (
@@ -33,18 +38,35 @@ class OuterUltimatumProposalPage(ModularPage):
                 labels=["Myself", "My partner"],
                 choices=["self", "other"],
             )
+            progress_display = None
         else:
             prompt = Prompt(
                 "Click 'Next' to see which player your partner selects as PROPOSER."
             )
             control = NullControl()
+            progress_display = ProgressDisplay(
+                stages=[
+                    ProgressStage(
+                        time=15,
+                        color="gray"
+                    ),
+                ],
+            )
 
         super().__init__(
             label="outer_proposal",
             prompt=prompt,
             control=control,
             time_estimate=5,
-            save_answer="outer_proposal"
+            save_answer="outer_proposal",
+            events={
+                "responseEnable": Event(
+                    is_triggered_by="trialStart",
+                    delay=10,
+                    js="onNextButton();",
+                ),
+            },
+            progress_display=progress_display,
         )
 
 
@@ -61,6 +83,14 @@ class OuterAcceptancePage(ModularPage):
                 "Press the 'Next' button to see whether your partner accepted the proposal."
             )
             control = NullControl()
+            progress_display = ProgressDisplay(
+                stages=[
+                    ProgressStage(
+                        time=15,
+                        color="gray"
+                    ),
+                ],
+            )
         else:
             prompt = Prompt(
                 f"Do you accept your partner's proposal of you to be the {proposal}? "
@@ -69,13 +99,22 @@ class OuterAcceptancePage(ModularPage):
                 choices=["Accept", "Reject"],
                 labels=["Accept", "Reject"],
             )
+            progress_display = None
 
         super().__init__(
-            label="accept_answer",
+            label="outer_accept_answer",
             prompt=prompt,
             control=control,
             time_estimate=5,
-            save_answer="accept_answer",
+            save_answer="outer_accept_answer",
+            events={
+                "responseEnable": Event(
+                    is_triggered_by="trialStart",
+                    delay=10,
+                    js="onNextButton();",
+                ),
+            },
+            progress_display=progress_display,
         )
 
 
@@ -102,6 +141,21 @@ class OuterUltimatumFeedbackPage(ModularPage):
             ),
             time_estimate=5,
             save_answer="outer_choice",
+            events={
+                "responseEnable": Event(
+                    is_triggered_by="trialStart",
+                    delay=10,
+                    js="onNextButton();",
+                ),
+            },
+            progress_display=ProgressDisplay(
+                stages=[
+                    ProgressStage(
+                        time=15,
+                        color="gray"
+                    ),
+                ],
+            ),
         )
 
 
@@ -116,18 +170,35 @@ class InnerUltimatumProposalPage(ModularPage):
                 f"Decide how much of the {CURRENCY}{ENDOWMENT} you will give to your partner: "
             )
             control = NumberControl()
+            progress_display = None
         else:
             prompt = Prompt(
                 "Press the 'Next' button to see the proposal from your partner."
             )
             control = NullControl()
+            progress_display = ProgressDisplay(
+                stages=[
+                    ProgressStage(
+                        time=15,
+                        color="gray"
+                    ),
+                ],
+            )
 
         super().__init__(
             label="inner_proposal",
             prompt=prompt,
             control=control,
             time_estimate=5,
-            save_answer="inner_proposal"
+            save_answer="inner_proposal",
+            events={
+                "responseEnable": Event(
+                    is_triggered_by="trialStart",
+                    delay=10,
+                    js="onNextButton();",
+                ),
+            },
+            progress_display=progress_display,
         )
 
     def format_answer(self, raw_answer, **kwargs) -> Union[float, str, None]:
@@ -161,6 +232,7 @@ class InnerAcceptancePage(ModularPage):
             proposer: bool,
             proposal: int,
             remainder: int,
+            accept_answer: str,
     ) -> None:
 
         if proposer:
@@ -168,6 +240,14 @@ class InnerAcceptancePage(ModularPage):
                 "Press the 'Next' button to see whether your partner accepted the proposal."
             )
             control = NullControl()
+            progress_display = ProgressDisplay(
+                stages=[
+                    ProgressStage(
+                        time=15,
+                        color="gray"
+                    ),
+                ],
+            )
         else:
             prompt = Prompt(
                 f"Do you accept your partner's proposal of {proposal} out of {10}? "
@@ -176,13 +256,22 @@ class InnerAcceptancePage(ModularPage):
                 choices=["Accept", "Reject"],
                 labels=["Accept", "Reject"],
             )
+            progress_display = None
 
         super().__init__(
-            label="accept_answer",
+            label="inner_accept_answer",
             prompt=prompt,
             control=control,
             time_estimate=5,
-            save_answer="accept_answer",
+            save_answer="inner_accept_answer",
+            events={
+                "responseEnable": Event(
+                    is_triggered_by="trialStart",
+                    delay=10,
+                    js="onNextButton();",
+                ),
+            },
+            progress_display=progress_display,
         )
 
 
@@ -192,18 +281,27 @@ class InnerUltimatumFeedbackPage(ModularPage):
         proposer: bool,
         proposal: int,
         remainder: int,
+        accept_answer: str,
     ):
         if proposer:
-            score = remainder
-            text = (
-                f"You have given {CURRENCY}{proposal} to your partner. "
-                f"You keep the remainder of {CURRENCY}{remainder}. "
-            )
+            if accept_answer == 'Accept':
+                acceptance = "your partner accepted"
+                score = remainder
+            else:
+                acceptance = "your partner rejected"
+                score = 0
         else:
-            score = proposal
-            text = (
-                f"Your partner has given you {CURRENCY}{proposal}."
-            )
+            if accept_answer == 'Accept':
+                acceptance = "you accepted"
+                score = proposal
+            else:
+                acceptance = "you rejected"
+                score = 0
+
+        text = (
+            f"The proposal was {proposal} (out of 10), which {acceptance}. "
+            + f"Your score is {score}."
+        )
 
         super().__init__(
             label="inner_score",
@@ -214,4 +312,19 @@ class InnerUltimatumFeedbackPage(ModularPage):
             ),
             time_estimate=5,
             save_answer="inner_score",
+            events={
+                "responseEnable": Event(
+                    is_triggered_by="trialStart",
+                    delay=10,
+                    js="onNextButton();",
+                ),
+            },
+            progress_display=ProgressDisplay(
+                stages=[
+                    ProgressStage(
+                        time=15,
+                        color="gray"
+                    ),
+                ],
+            ),
         )
