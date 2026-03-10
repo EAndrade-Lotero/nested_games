@@ -11,45 +11,44 @@ from psynet.modular_page import (
     ModularPage,
     PushButtonControl,
 )
+from psynet.utils import get_logger
 
 from .game_paramters import RNG
 
 
+logger = get_logger()
+
+
 def format_text(text: str) -> str:
+    """Remove trailing periods and lowercase sentence starts,
+    except for the pronoun 'I'."""
     if not text:
         return text
 
-    # Remove trailing periods and trailing spaces
-    text = re.sub(r"\.+\s*$", "", text.strip())
+    # Remove ending periods (one or more) and surrounding spaces
+    text = re.sub(r"\.*\s*$", "", text)
 
-    # Keep the first letter as-is, lowercase every other capital letter,
-    # except standalone pronoun "I"
-    if len(text) > 1:
-        first = text[0]
-        rest = re.sub(
-            r"\bI\b|[A-Z]",
-            lambda m: m.group(0) if m.group(0) == "I" else m.group(0).lower(),
-            text[1:],
-        )
-        text = first + rest
+    # Lowercase the first character if it is uppercase and not 'I'
+    text = re.sub(
+        r"^([A-Z])",
+        lambda m: m.group(1) if m.group(1) == "I" else m.group(1).lower(),
+        text,
+    )
 
     return text
 
 
 full_items = pd.read_csv("static/big_five.csv").to_dict(orient="records")
-RNG.shuffle(full_items)
 
 waiting_nodes = [
     StaticNode(
         definition={
-            "question_id": item["full_position"],
-            "question_text": item["item"],
+            "dummy": "ok"
         },
-    ) for item in full_items
+    )
 ]
 
 short_items = pd.read_csv("static/big_five_short.csv").to_dict(orient="records")
-RNG.shuffle(short_items)
 
 personality_nodes = [
     StaticNode(
@@ -91,7 +90,8 @@ class WaitingTrial(StaticTrial):
 
     def show_trial(self, experiment, participant):
 
-        question = self.definition["question_text"]
+        item = RNG.choice(full_items)
+        question = item["item"]
         text = "We are waiting for other participants. "
         text += "In the meantime, please report how accurate is the following statement: "
         text += f"<h6>I see myself as someone who {format_text(question)}</h6>"

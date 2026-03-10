@@ -1,4 +1,5 @@
 import psynet.experiment
+from psynet.page import WaitPage
 from psynet.sync import (
     GroupBarrier,
     SimpleGrouper,
@@ -18,6 +19,7 @@ from .nested_game_trial import (
     NestedGameTrialMaker,
 )
 from .game_paramters import (
+    MAX_WAITING_BIG_QUESTIONS,
     NUMBER_OF_REPEATED_GAMES,
     RNG,
 )
@@ -44,14 +46,9 @@ def assign_roles(group, participants):
 game_nodes = [
     StaticNode(
         definition={
-            "outer": {
-                "order": outer_order,
-                "type": "dictator",
-            },
-            "inner": {
-                "order": "normal",
-                "type": "dictator",
-            },
+            "outer_game": "ultimatum",
+            "inner_game": "dictator",
+            "order": "constant",
         }
     )
     for outer_order in ["normal"]
@@ -62,7 +59,7 @@ waiting_trial_maker = PersonalityTrialMaker(
     trial_class=WaitingTrial,
     nodes=waiting_nodes,
     expected_trials_per_participant=3,
-    max_trials_per_participant=len(waiting_nodes),
+    max_trials_per_participant=MAX_WAITING_BIG_QUESTIONS,
     allow_repeated_nodes=True,  # allow participants to cycle or a bug will occur
 )
 
@@ -86,7 +83,7 @@ class Exp(psynet.experiment.Experiment):
     initial_recruitment_size = 1
 
     timeline = Timeline(
-        personality_trial_maker,
+        # personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(
                 group_type="chain",
@@ -95,13 +92,17 @@ class Exp(psynet.experiment.Experiment):
                 min_group_size=2,
                 join_existing_groups=False,
                 waiting_logic=waiting_logic,
-                waiting_logic_expected_repetitions=len(waiting_nodes),
+                waiting_logic_expected_repetitions=MAX_WAITING_BIG_QUESTIONS,
                 max_wait_time=120,
             ),
         ),
         GroupBarrier(
             id_="assign_roles",
             group_type="chain",
+            waiting_logic=WaitPage(
+                wait_time=1,
+                content="Please wait while other participants finish completing the personality trait questions..."
+            ),
             on_release=assign_roles,
         ),
         NestedGameTrialMaker(

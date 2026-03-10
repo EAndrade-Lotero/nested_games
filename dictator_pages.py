@@ -7,8 +7,14 @@ from psynet.modular_page import (
     NumberControl,
     NullControl,
 )
-from psynet.timeline import FailedValidation
+from psynet.timeline import (
+    FailedValidation,
+    Event,
+    ProgressDisplay,
+    ProgressStage,
+)
 from psynet.utils import get_logger
+
 
 from .game_paramters import (
     CURRENCY,
@@ -33,18 +39,35 @@ class OuterDictatorProposalPage(ModularPage):
                 labels=["Myself", "My partner"],
                 choices=["self", "other"],
             )
+            progress_display = None
         else:
             prompt = Prompt(
                 "Click 'Next' to see which player your partner selects as PROPOSER."
             )
             control = NullControl()
+            progress_display = ProgressDisplay(
+                stages=[
+                    ProgressStage(
+                        time=15,
+                        color="gray"
+                    ),
+                ],
+            )
 
         super().__init__(
             label="outer_proposal",
             prompt=prompt,
             control=control,
             time_estimate=5,
-            save_answer="outer_proposal"
+            save_answer="outer_proposal",
+            events={
+                "responseEnable": Event(
+                    is_triggered_by="trialStart",
+                    delay=10,
+                    js="onNextButton();",
+                ),
+            },
+            progress_display=progress_display
         )
 
 

@@ -19,32 +19,6 @@ from .game_paramters import (
 logger = get_logger()
 
 
-class OuterUltimatumFeedbackPage(ModularPage):
-    def __init__(
-        self,
-        proposer: str,
-    ):
-        if proposer == "self":
-            text = (
-                f"You are the PROPOSER. "
-            )
-        else:
-            text = (
-                f"You are the RESPONDER."
-            )
-
-        super().__init__(
-            label="outer_choice",
-            prompt=Prompt(text),
-            control=PushButtonControl(
-                labels=["Next"],
-                choices=[proposer]
-            ),
-            time_estimate=5,
-            save_answer="outer_choice",
-        )
-
-
 class OuterUltimatumProposalPage(ModularPage):
     def __init__(
             self,
@@ -74,34 +48,60 @@ class OuterUltimatumProposalPage(ModularPage):
         )
 
 
-class InnerUltimatumFeedbackPage(ModularPage):
+class OuterAcceptancePage(ModularPage):
     def __init__(
-        self,
-        proposer: bool,
-        proposal: int,
-        remainder: int,
-    ):
+            self,
+            proposer: bool,
+            proposal: str,
+    ) -> None:
+        assert proposal in ["PROPOSER", "RESPONDER"]
+
         if proposer:
-            score = remainder
-            text = (
-                f"You have given {CURRENCY}{proposal} to your partner. "
-                f"You keep the remainder of {CURRENCY}{remainder}. "
+            prompt = Prompt(
+                "Press the 'Next' button to see whether your partner accepted the proposal."
             )
+            control = NullControl()
         else:
-            score = proposal
-            text = (
-                f"Your partner has given you {CURRENCY}{proposal}."
+            prompt = Prompt(
+                f"Do you accept your partner's proposal of for you to be the {proposal}? "
+            )
+            control = PushButtonControl(
+                choices=["Accept", "Reject"],
+                labels=["Accept", "Reject"],
             )
 
         super().__init__(
-            label="inner_score",
+            label="accept_answer",
+            prompt=prompt,
+            control=control,
+            time_estimate=5,
+            save_answer="accept_answer",
+        )
+
+
+class OuterUltimatumFeedbackPage(ModularPage):
+    def __init__(
+        self,
+        proposer: str,
+    ):
+        if proposer == "self":
+            text = (
+                f"Proposal accepted. You are the PROPOSER. "
+            )
+        else:
+            text = (
+                f"Proposal accepted. You are the RESPONDER."
+            )
+
+        super().__init__(
+            label="outer_choice",
             prompt=Prompt(text),
             control=PushButtonControl(
                 labels=["Next"],
-                choices=[score]
+                choices=[proposer]
             ),
             time_estimate=5,
-            save_answer="inner_score",
+            save_answer="outer_choice",
         )
 
 
@@ -154,3 +154,64 @@ class InnerUltimatumProposalPage(ModularPage):
         logger.info(f"Validated!")
         return None
 
+
+class InnerAcceptancePage(ModularPage):
+    def __init__(
+            self,
+            proposer: bool,
+            proposal: int,
+            remainder: int,
+    ) -> None:
+
+        if proposer:
+            prompt = Prompt(
+                "Press the 'Next' button to see whether your partner accepted the proposal."
+            )
+            control = NullControl()
+        else:
+            prompt = Prompt(
+                f"Do you accept your partner's proposal of {proposal} out of {10}? "
+            )
+            control = PushButtonControl(
+                choices=["Accept", "Reject"],
+                labels=["Accept", "Reject"],
+            )
+
+        super().__init__(
+            label="accept_answer",
+            prompt=prompt,
+            control=control,
+            time_estimate=5,
+            save_answer="accept_answer",
+        )
+
+
+class InnerUltimatumFeedbackPage(ModularPage):
+    def __init__(
+        self,
+        proposer: bool,
+        proposal: int,
+        remainder: int,
+    ):
+        if proposer:
+            score = remainder
+            text = (
+                f"You have given {CURRENCY}{proposal} to your partner. "
+                f"You keep the remainder of {CURRENCY}{remainder}. "
+            )
+        else:
+            score = proposal
+            text = (
+                f"Your partner has given you {CURRENCY}{proposal}."
+            )
+
+        super().__init__(
+            label="inner_score",
+            prompt=Prompt(text),
+            control=PushButtonControl(
+                labels=["Next"],
+                choices=[score]
+            ),
+            time_estimate=5,
+            save_answer="inner_score",
+        )
