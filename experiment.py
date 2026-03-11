@@ -8,13 +8,10 @@ from psynet.timeline import (
     Timeline,
     PageMaker,
 )
-from psynet.trial.static import (
-    StaticNode,
-)
 from psynet.utils import get_logger
 
-from .nested_game_classes import (
-    NestedGameNode,
+from .nested_game_node import NestedGameNode
+from .nested_game_trial import (
     NestedGameTrial,
     NestedGameTrialMaker,
 )
@@ -43,16 +40,17 @@ def assign_roles(group, participants):
         participant.var.outer_role = role
 
 
-game_nodes = [
-    StaticNode(
-        definition={
-            "outer_game": "ultimatum",
-            "inner_game": "dictator",
-            "order": "constant",
-        }
-    )
-    for outer_order in ["normal"]
-]
+def get_start_nodes():
+    return [
+        NestedGameNode(
+            definition={
+                "outer_game": "ultimatum",  # dictator, ultimatum
+                "inner_game": "ultimatum",  # dictator, ultimatum
+                "order": "constant",  # constant, random, bid
+            }
+        )
+    ]
+
 
 waiting_trial_maker = PersonalityTrialMaker(
     id_="waiting",
@@ -110,7 +108,7 @@ class Exp(psynet.experiment.Experiment):
             trial_class=NestedGameTrial,
             node_class=NestedGameNode,
             chain_type="within",
-            start_nodes=None,
+            start_nodes=get_start_nodes,
             expected_trials_per_participant=5,
             max_trials_per_participant=5,
             chains_per_participant=1,

@@ -1,18 +1,22 @@
 from typing import Union
 
-from psynet.modular_page import ModularPage, NullControl, PushButtonControl
+from psynet.page import WaitPage
+from psynet.modular_page import (
+    ModularPage,
+    PushButtonControl,
+)
 from psynet.timeline import (
     join,
     conditional,
+    switch,
     CodeBlock,
     Event,
     ProgressDisplay,
     ProgressStage,
 )
-from psynet.trial.imitation_chain import (
-    ImitationChainNode,
-    ImitationChainTrial,
-    ImitationChainTrialMaker,
+from psynet.trial.chain import (
+    ChainTrial,
+    ChainTrialMaker,
 )
 from psynet.sync import GroupBarrier
 from psynet.utils import get_logger
@@ -35,33 +39,38 @@ from .variable_handler import VariableHandler
 from .game_paramters import (
     REWARD_SCALING_FACTOR,
     MAX_BONUS_REWARD,
+    RNG,
 )
 
 logger = get_logger()
 variable_handler = VariableHandler()
-variable_handler.debug = True
 
 
-class NestedGameNode(ImitationChainNode):
-    def create_initial_seed(self, experiment, participant):
-        return {
-            "outer_game": "ultimatum",  # dictator, ultimatum
-            "inner_game": "ultimatum",  # dictator, ultimatum
-            "order": "constant",  # constant, random, bid
-        }
-
-    def summarize_trials(self, trials, experiment, participant):
-        # Keep node definition stable across repeats instead of propagating trial answers.
-        return self.definition
-
-
-class NestedGameTrial(ImitationChainTrial):
+class NestedGameTrial(ChainTrial):
     time_estimate = 5
     accumulate_answers = True
 
     def show_trial(self, experiment, participant):
 
         return join(
+            #########################################
+            # INSTRUCTIONS
+            #########################################
+            conditional(
+                label="only_first_round",
+                condition=lambda participant: self.position == 0,
+                logic_if_true=self.instructions_stage(),
+                logic_if_false=None
+            ),
+            GroupBarrier(
+                id_="instructions_stage",
+                group_type="chain",
+                waiting_logic=WaitPage(
+                    wait_time=1,
+                    content="Please wait while other participants read the instructions..."
+                ),
+                max_wait_time=120,
+            ),
             #########################################
             # OUTER GAME
             #########################################
@@ -80,10 +89,6 @@ class NestedGameTrial(ImitationChainTrial):
                 condition=lambda participant: self.continue_to_inner_game(),
                 logic_if_false=join(
                     self.show_score(),
-                    GroupBarrier(
-                        id_="overall_score",
-                        group_type="chain",
-                    ),
                 ),
                 logic_if_true=join(
                     #########################################
@@ -96,12 +101,40 @@ class NestedGameTrial(ImitationChainTrial):
                         logic_if_false=self.inner_ultimatum_stage(),
                     ),
                     self.show_score(),
-                    GroupBarrier(
-                        id_="overall_score",
-                        group_type="chain",
-                    ),
                 ),
             ),
+            GroupBarrier(
+                id_="overall_score",
+                group_type="chain",
+            ),
+            switch(
+                label="choose_new_outer_role",
+                function=lambda experiment, participant: participant.definition["order"],
+                branches={
+                    "constant": None,
+                    "random": self.shuffle_roles(),
+                    "bid": self.bid(),
+                }
+            ),
+            self.get_roles_for_new_round(),
+            GroupBarrier(
+                id_="roles_for_new_round",
+                group_type="chain",
+            ),
+        )
+
+    ######################################################
+    # METHODS FOR THE INSTRUCTIONS
+    ######################################################
+    def instructions_stage(self):
+        return ModularPage(
+            label="outer_role",
+            prompt="This is going to be the instructions",
+            control=PushButtonControl(
+                labels=["Next"],
+                choices=[self.get_outer_role(self.participant)]
+            ),
+            time_estimate=10,
         )
 
     ######################################################
@@ -115,6 +148,10 @@ class NestedGameTrial(ImitationChainTrial):
             GroupBarrier(
                 id_="outer_proposal_stage",
                 group_type="chain",
+            ),
+            # Save to participant.var
+            CodeBlock(
+                lambda participant: self.assign_inner_roles()
             ),
             # Feedback stage
             self.outer_dictator_feedback_stage(),
@@ -226,8 +263,11 @@ class NestedGameTrial(ImitationChainTrial):
     def assign_inner_roles(self):
         logger.info("Entering assignment of inner roles...")
         proposer_id = self.get_outer_result()
+        logger.info(f"--> {proposer_id}")
+
         roles = None
         if proposer_id is not None:
+            logger.info(f"The proposer is participant {proposer_id}")
             if proposer_id == self.participant.id:
                 roles = ["proposer", "responder"]
             else:
@@ -310,7 +350,6 @@ class NestedGameTrial(ImitationChainTrial):
             # Determine if proposal was accepted
             for participant in participants:
                 accept_answer = variable_handler.get_value(participant, "outer_accept_answer")
-                logger.info(f"Participant {participant.id} => {accept_answer}")
                 if accept_answer is not None:
                     break
 
@@ -429,6 +468,22 @@ class NestedGameTrial(ImitationChainTrial):
     ######################################################
     # END OF ROUND METHODS
     ######################################################
+    def shuffle_roles(self):
+        participants = self.participant.sync_group.participants
+        outer_roles = [
+            self.get_outer_role(participant) for participant in participants
+        ]
+        RNG.shuffle(outer_roles)
+
+        for role, participant in zip(outer_roles, participants):
+            variable_handler.set_value(
+                participant=participant,
+                variable="outer_role",
+                value=role,
+            )
+
+    def bid(self):
+        raise NotImplementedError
 
     def score_trial(self, participants):
         pass
@@ -507,5 +562,5 @@ class NestedGameTrial(ImitationChainTrial):
             return min(max(0.0, score), MAX_BONUS_REWARD)
 
 
-class NestedGameTrialMaker(ImitationChainTrialMaker):
+class NestedGameTrialMaker(ChainTrialMaker):
     pass
