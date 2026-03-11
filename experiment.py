@@ -13,7 +13,7 @@ from psynet.trial.static import (
 )
 from psynet.utils import get_logger
 
-from .nested_game_trial import (
+from .nested_game_classes import (
     NestedGameNode,
     NestedGameTrial,
     NestedGameTrialMaker,
