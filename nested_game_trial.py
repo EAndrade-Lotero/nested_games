@@ -1,9 +1,13 @@
 from typing import Union
 
+from psynet.modular_page import ModularPage, NullControl, PushButtonControl
 from psynet.timeline import (
     join,
     conditional,
     CodeBlock,
+    Event,
+    ProgressDisplay,
+    ProgressStage,
 )
 from psynet.trial.imitation_chain import (
     ImitationChainNode,
@@ -12,23 +16,26 @@ from psynet.trial.imitation_chain import (
 )
 from psynet.sync import GroupBarrier
 from psynet.utils import get_logger
-from psynet.page import InfoPage
 
 from .dictator_pages import (
-    OuterDictatorFeedbackPage,
     OuterDictatorProposalPage,
-    InnerDictatorFeedbackPage,
+    OuterDictatorFeedbackPage,
     InnerDictatorProposalPage,
+    InnerDictatorFeedbackPage,
 )
 from .ultimatum_pages import (
     OuterUltimatumProposalPage,
-    OuterUltimatumFeedbackPage,
     OuterAcceptancePage,
+    OuterUltimatumFeedbackPage,
     InnerUltimatumProposalPage,
-    InnerUltimatumFeedbackPage,
     InnerAcceptancePage,
+    InnerUltimatumFeedbackPage,
 )
 from .variable_handler import VariableHandler
+from .game_paramters import (
+    REWARD_SCALING_FACTOR,
+    MAX_BONUS_REWARD,
+)
 
 logger = get_logger()
 variable_handler = VariableHandler()
@@ -54,13 +61,6 @@ class NestedGameTrial(ImitationChainTrial):
 
     def show_trial(self, experiment, participant):
 
-        #########################################
-        # Variable initializations
-        #########################################
-        # variable_handler.set_value()
-        # logger.info("="*60)
-        # logger.info(f"==> participant vars:\n{vars(participant)}")
-
         return join(
             #########################################
             # OUTER GAME
@@ -79,15 +79,11 @@ class NestedGameTrial(ImitationChainTrial):
                 label="check_continue_to_inner_gamme",
                 condition=lambda participant: self.continue_to_inner_game(),
                 logic_if_false=join(
-                    InfoPage(
-                        "Ok",
-                        time_estimate=1,
+                    self.show_score(),
+                    GroupBarrier(
+                        id_="overall_score",
+                        group_type="chain",
                     ),
-                    # GroupBarrier(
-                    #     id_="outer_feedback_stage",
-                    #     group_type="chain",
-                    #     on_release=self.score_trial,
-                    # ),
                 ),
                 logic_if_true=join(
                     #########################################
@@ -98,6 +94,11 @@ class NestedGameTrial(ImitationChainTrial):
                         condition=lambda participant: participant.current_trial.definition["inner_game"] == "dictator",
                         logic_if_true=self.inner_dictator_stage(),
                         logic_if_false=self.inner_ultimatum_stage(),
+                    ),
+                    self.show_score(),
+                    GroupBarrier(
+                        id_="overall_score",
+                        group_type="chain",
                     ),
                 ),
             ),
@@ -171,6 +172,57 @@ class NestedGameTrial(ImitationChainTrial):
         )
         return list_of_pages
 
+    def outer_ultimatum_acceptance_stage(self):
+        # Check outer role and act accordingly
+        outer_role = NestedGameTrial.get_outer_role(self.participant)
+
+        if outer_role is not None:
+            proposal = ""
+
+            if outer_role == "proposer":
+                proposer = True
+            elif outer_role == "responder":
+                proposer = False
+
+                # Ask responder
+                proposer_id = self.get_outer_result()
+
+                if proposer_id is not None:
+                    if self.participant.id == proposer_id:
+                        proposal = "PROPOSER"
+                    else:
+                        proposal = "RESPONDER"
+            else:
+                raise ValueError(f"outer_role should be either proposer or responder but got {outer_role}")
+
+            return OuterAcceptancePage(
+                proposer=proposer,
+                proposal=proposal,
+            )
+
+    def outer_ultimatum_feedback_stage(self):
+        # Determine proposal and accept answer
+        proposer = None
+        accepted = None
+        proposer_id = self.get_outer_result()
+
+        if proposer_id is not None:
+            if self.participant.id == proposer_id:
+                proposer = "self"
+            else:
+                proposer = "other"
+
+            accept_answer = self.get_outer_acceptance()
+            if accept_answer == "Accept":
+                accepted = True
+            else:
+                accepted = False
+
+        return OuterUltimatumFeedbackPage(
+            proposer=proposer,
+            accepted=accepted,
+        )
+
     def assign_inner_roles(self):
         logger.info("Entering assignment of inner roles...")
         proposer_id = self.get_outer_result()
@@ -208,49 +260,6 @@ class NestedGameTrial(ImitationChainTrial):
                     variable_handler.set_value(participant, "continue_to_inner_game", False)
 
             logger.info(f"Proposal was {accept_answer}")
-
-    def outer_ultimatum_acceptance_stage(self):
-        # Check outer role and act accordingly
-        outer_role = NestedGameTrial.get_outer_role(self.participant)
-
-        if outer_role is not None:
-            proposal = ""
-
-            if outer_role == "proposer":
-                proposer = True
-            elif outer_role == "responder":
-                proposer = False
-
-                # Ask responder
-                proposer_id = self.get_outer_result()
-
-                if proposer_id is not None:
-                    if self.participant.id == proposer_id:
-                        proposal = "PROPOSER"
-                    else:
-                        proposal = "RESPONDER"
-            else:
-                raise ValueError(f"outer_role should be either proposer or responder but got {outer_role}")
-
-            return OuterAcceptancePage(
-                proposer=proposer,
-                proposal=proposal,
-            )
-
-    def outer_ultimatum_feedback_stage(self):
-        # Determine proposal and accept answer
-        proposer = None
-        proposer_id = self.get_outer_result()
-
-        if proposer_id is not None:
-            if self.participant.id == proposer_id:
-                proposer = "self"
-            else:
-                proposer = "other"
-
-        return OuterUltimatumFeedbackPage(
-            proposer=proposer,
-        )
 
     @staticmethod
     def get_outer_role(participant) -> Union[str, None]:
@@ -326,16 +335,15 @@ class NestedGameTrial(ImitationChainTrial):
                 id_="inner_proposal_stage",
                 group_type="chain",
             ),
-            # # Feedback stage
-            # InnerDictatorFeedbackPage(
-            #     proposer=self.am_i_the_inner_leader(),
-            #     **self.get_inner_result()
-            # ),
-            # GroupBarrier(
-            #     id_="inner_feedback_stage",
-            #     group_type="chain",
-            #     on_release=self.score_trial,
-            # ),
+            # Feedback stage
+            InnerDictatorFeedbackPage(
+                proposer=self.am_i_the_inner_leader(),
+                **self.get_inner_result()
+            ),
+            GroupBarrier(
+                id_="inner_feedback_stage",
+                group_type="chain",
+            ),
         )
         return list_of_pages
 
@@ -361,6 +369,10 @@ class NestedGameTrial(ImitationChainTrial):
             InnerUltimatumFeedbackPage(
                 proposer=self.am_i_the_inner_leader(),
                 **self.get_inner_result()
+            ),
+            GroupBarrier(
+                id_="inner_feedback_stage",
+                group_type="chain",
             ),
         )
         return list_of_pages
@@ -420,6 +432,79 @@ class NestedGameTrial(ImitationChainTrial):
 
     def score_trial(self, participants):
         pass
+
+    def show_score(self):
+        inner_game_on = self.continue_to_inner_game()
+        if not inner_game_on:
+            score = 0.0
+        else:
+            dict_result = self.get_inner_result()
+            accept_answer = dict_result["accept_answer"]
+
+            if accept_answer == "Reject":
+                score = 0.0
+            else:
+                proposal = dict_result["proposal"]
+                remainder = dict_result["remainder"]
+                if self.am_i_the_inner_leader():
+                    score = remainder
+                else:
+                    score = proposal
+
+        text = f"Your score for this round is {score}"
+
+        return ModularPage(
+                        label="reward",
+                        prompt=text,
+                        control=PushButtonControl(
+                            labels=["Next"],
+                            choices=[score],
+                        ),
+                        time_estimate=5,
+                        save_answer="reward",
+                        events={
+                            "responseEnable": Event(
+                                is_triggered_by="trialStart",
+                                delay=10,
+                                js="onNextButton();",
+                            ),
+                        },
+                        progress_display=ProgressDisplay(
+                            stages=[
+                                ProgressStage(
+                                    time=15,
+                                    color="gray"
+                                ),
+                            ],
+                        ),
+                    )
+
+    def score_answer(self, answer, definition) -> float:
+        """
+        Scores the participant's answer.
+        Returns a numeric score quantifying the participant's success.
+        """
+        if isinstance(answer, dict):
+            score = answer["reward"]
+        elif isinstance(answer, str):
+            try:
+                score = float(answer)
+            except Exception as e:
+                text = f"Error with finding reward from answer: {answer}"
+                text += f"\nGot error: {e}"
+                score = 0.0
+        else:
+            logger.info(f"Warning: answer type {type(answer)} not supported.  --- value={answer}")
+            score = 0.0
+        logger.info(f"Score obtained: {score}")
+        return score
+
+    def compute_performance_reward(self, score) -> float:
+        if score is None:
+            return 0.0
+        else:
+            score = float(score) * REWARD_SCALING_FACTOR
+            return min(max(0.0, score), MAX_BONUS_REWARD)
 
 
 class NestedGameTrialMaker(ImitationChainTrialMaker):

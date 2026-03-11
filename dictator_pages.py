@@ -185,6 +185,7 @@ class InnerDictatorFeedbackPage(ModularPage):
         proposer: bool,
         proposal: int,
         remainder: int,
+        accept_answer: str,
     ):
         if proposer:
             score = remainder

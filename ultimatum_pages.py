@@ -122,15 +122,26 @@ class OuterUltimatumFeedbackPage(ModularPage):
     def __init__(
         self,
         proposer: str,
+        accepted: bool,
     ):
         if proposer == "self":
-            text = (
-                f"Proposal accepted. You are the PROPOSER. "
-            )
+            if accepted:
+                text = (
+                    f"Your partner accepted your proposal. You are the PROPOSER. "
+                )
+            else:
+                text = (
+                    f"Your partner rejected your proposal. The round is over. "
+                )
         else:
-            text = (
-                f"Proposal accepted. You are the RESPONDER."
-            )
+            if accepted:
+                text = (
+                    f"Your partner accepted your proposal. You are the RESPONDER. "
+                )
+            else:
+                text = (
+                    f"Your partner rejected your proposal. The round is over. "
+                )
 
         super().__init__(
             label="outer_choice",
