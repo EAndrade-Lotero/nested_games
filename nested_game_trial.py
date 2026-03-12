@@ -472,9 +472,16 @@ class NestedGameTrial(ChainTrial):
         pass
 
     def show_score(self):
+        logger.info(f"==> Entering show score...")
+        try:
+            accumulated_scores = self.definition["summary"]["accumulated_rewards"]
+            my_accumulated_score = accumulated_scores[str(self.participant_id)]
+        except:
+            my_accumulated_score = 0.0
+
         inner_game_on = self.continue_to_inner_game()
         if not inner_game_on:
-            score = 0.0
+            score = my_accumulated_score
         else:
             dict_result = self.get_inner_result()
             accept_answer = dict_result["accept_answer"]
@@ -489,7 +496,11 @@ class NestedGameTrial(ChainTrial):
                 else:
                     score = proposal
 
-        text = f"Your score for this round is {score}"
+        if score is not None:
+            my_accumulated_score += score
+
+        text = f"Your score for this round is {score}. "
+        text += f"Your accumulated score is {my_accumulated_score}"
 
         return ModularPage(
                         label="reward",

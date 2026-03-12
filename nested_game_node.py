@@ -148,7 +148,7 @@ class NestedGameNode(ChainNode):
                         trial=trials[1 - idx],
                         variable="inner_accept_answer"
                     )
-            break
+                break
         return inner_proposal, inner_acceptance
 
     @staticmethod
