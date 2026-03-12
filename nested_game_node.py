@@ -18,6 +18,24 @@ class NestedGameNode(ChainNode):
         assert len(trials) == 2
 
         ###################################
+        # ACCUMULATE REWARDS
+        ###################################
+        rewards = {}
+        for trial in trials:
+            accumulated_reward = variable_handler.get_value(
+                participant=trial.participant,
+                variable="accumulated_reward"
+            )
+            round_reward = trial.answer["reward"]
+            accumulated_reward += float(round_reward)
+            variable_handler.set_value(
+                participant=trial.participant,
+                variable="accumulated_reward",
+                value=accumulated_reward,
+            )
+            rewards[trial.participant_id] = accumulated_reward
+
+        ###################################
         # SANITY CHECKS
         ###################################
         outer_game = self.definition["outer_game"]
@@ -55,6 +73,7 @@ class NestedGameNode(ChainNode):
             "inner_responder": inner_responder,
             "inner_proposal": inner_proposal,
             "inner_acceptance": inner_acceptance,
+            "accumulated_rewards": rewards,
         }
         self.definition["summary"] = summary
 
@@ -63,7 +82,13 @@ class NestedGameNode(ChainNode):
     @staticmethod
     def get_outer_proposer(trials):
         participant_ids = [trial.participant_id for trial in trials]
-        outer_roles = [trial.answer["outer_role"] for trial in trials]
+        outer_roles = [
+            variable_handler.get_value(
+                participant=trial.participant,
+                variable="outer_role",
+            )
+            for trial in trials
+        ]
         assert "proposer" in outer_roles
         assert "responder" in outer_roles
         assert len(outer_roles) == 2

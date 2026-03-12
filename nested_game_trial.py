@@ -4,6 +4,7 @@ from psynet.page import WaitPage
 from psynet.modular_page import (
     ModularPage,
     PushButtonControl,
+    SliderControl,
 )
 from psynet.timeline import (
     join,
@@ -107,20 +108,19 @@ class NestedGameTrial(ChainTrial):
                 id_="overall_score",
                 group_type="chain",
             ),
-            switch(
-                label="choose_new_outer_role",
-                function=lambda experiment, participant: participant.definition["order"],
-                branches={
-                    "constant": None,
-                    "random": self.shuffle_roles(),
-                    "bid": self.bid(),
-                }
-            ),
-            self.get_roles_for_new_round(),
-            GroupBarrier(
-                id_="roles_for_new_round",
-                group_type="chain",
-            ),
+            # switch(
+            #     label="choose_new_outer_role",
+            #     function=lambda experiment, participant: participant.definition["order"],
+            #     branches={
+            #         "constant": None,
+            #         "random": self.shuffle_roles(),
+            #         "bid": self.bid(),
+            #     }
+            # ),
+            # GroupBarrier(
+            #     id_="roles_for_new_round",
+            #     group_type="chain",
+            # ),
         )
 
     ######################################################
@@ -468,23 +468,6 @@ class NestedGameTrial(ChainTrial):
     ######################################################
     # END OF ROUND METHODS
     ######################################################
-    def shuffle_roles(self):
-        participants = self.participant.sync_group.participants
-        outer_roles = [
-            self.get_outer_role(participant) for participant in participants
-        ]
-        RNG.shuffle(outer_roles)
-
-        for role, participant in zip(outer_roles, participants):
-            variable_handler.set_value(
-                participant=participant,
-                variable="outer_role",
-                value=role,
-            )
-
-    def bid(self):
-        raise NotImplementedError
-
     def score_trial(self, participants):
         pass
 
@@ -533,6 +516,45 @@ class NestedGameTrial(ChainTrial):
                             ],
                         ),
                     )
+
+    def shuffle_roles(self):
+        participants = self.participant.sync_group.participants
+        outer_roles = [
+            self.get_outer_role(participant) for participant in participants
+        ]
+        RNG.shuffle(outer_roles)
+
+        for role, participant in zip(outer_roles, participants):
+            variable_handler.set_value(
+                participant=participant,
+                variable="outer_role",
+                value=role,
+            )
+
+    def bid(self):
+        max_value = variable_handler.get_value(
+            participant=self.participant,
+            variable="accumulated",
+        )
+        if max_value is not None:
+            return join(
+                ModularPage(
+                    label="bid_phase",
+                    prompt="Please use the slider to state your bid for being the proposer on the next round:",
+                    control=SliderControl(
+                        start_value=0.0,
+                        min_value=0.0,
+                        max_value=max_value,
+                        n_steps=max_value,
+                    ),
+                    save_answer="bid_phase"
+                ),
+                GroupBarrier(
+                    id_="bidding_stage",
+                    group_type="chain",
+                ),
+            )
+        return None
 
     def score_answer(self, answer, definition) -> float:
         """

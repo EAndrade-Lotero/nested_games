@@ -38,14 +38,15 @@ def assign_roles(group, participants):
     RNG.shuffle(outer_roles)
     for participant, role in zip(ordered, outer_roles):
         participant.var.outer_role = role
+        participant.var.accumulated_reward = 0
 
 
 def get_start_nodes():
     return [
         NestedGameNode(
             definition={
-                "outer_game": "ultimatum",  # dictator, ultimatum
-                "inner_game": "ultimatum",  # dictator, ultimatum
+                "outer_game": "dictator",  # dictator, ultimatum
+                "inner_game": "dictator",  # dictator, ultimatum
                 "order": "constant",  # constant, random, bid
             }
         )

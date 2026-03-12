@@ -122,7 +122,7 @@ class OuterUltimatumFeedbackPage(ModularPage):
     def __init__(
         self,
         proposer: str,
-        accepted: str,
+        accepted: bool,
     ):
         if proposer == "self":
             text = (
