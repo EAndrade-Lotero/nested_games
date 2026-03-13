@@ -118,62 +118,23 @@ class OuterAcceptancePage(ModularPage):
         )
 
 
-class OuterUltimatumFeedbackPage(ModularPage):
+class InnerProposalPageOuterUltimatum(ModularPage):
     def __init__(
         self,
-        proposer: str,
-        accepted: bool,
+        proposer: bool,
     ):
-        if proposer == "self":
-            text = (
-                f"Proposal accepted. You are the PROPOSER. "
-            )
-        else:
-            text = (
-                f"Proposal accepted. You are the RESPONDER."
-            )
-
-        super().__init__(
-            label="outer_choice",
-            prompt=Prompt(text),
-            control=PushButtonControl(
-                labels=["Next"],
-                choices=[proposer]
-            ),
-            time_estimate=5,
-            save_answer="outer_choice",
-            events={
-                "responseEnable": Event(
-                    is_triggered_by="trialStart",
-                    delay=10,
-                    js="onNextButton();",
-                ),
-            },
-            progress_display=ProgressDisplay(
-                stages=[
-                    ProgressStage(
-                        time=15,
-                        color="gray"
-                    ),
-                ],
-            ),
-        )
-
-
-class InnerUltimatumProposalPage(ModularPage):
-    def __init__(
-            self,
-            proposer: bool,
-    ) -> None:
-
         if proposer:
             prompt = Prompt(
+                f"Proposal accepted. You are the PROPOSER. "
                 f"Decide how much of the {CURRENCY}{ENDOWMENT} you will give to your partner: "
             )
             control = NumberControl()
             progress_display = None
+            text = (
+            )
         else:
             prompt = Prompt(
+                f"Proposal accepted. You are the RESPONDER."
                 "Press the 'Next' button to see the proposal from your partner."
             )
             control = NullControl()

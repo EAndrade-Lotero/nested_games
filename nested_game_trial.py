@@ -1,5 +1,6 @@
 from typing import Union
 
+from psynet.graphics import Prompt
 from psynet.page import WaitPage
 from psynet.modular_page import (
     ModularPage,
@@ -24,15 +25,13 @@ from psynet.utils import get_logger
 
 from .dictator_pages import (
     OuterDictatorProposalPage,
-    OuterDictatorFeedbackPage,
-    InnerDictatorProposalPage,
+    InnerProposalPageOuterDictator,
     InnerDictatorFeedbackPage,
 )
 from .ultimatum_pages import (
     OuterUltimatumProposalPage,
     OuterAcceptancePage,
-    OuterUltimatumFeedbackPage,
-    InnerUltimatumProposalPage,
+    InnerProposalPageOuterUltimatum,
     InnerAcceptancePage,
     InnerUltimatumFeedbackPage,
 )
@@ -152,29 +151,8 @@ class NestedGameTrial(ChainTrial):
             CodeBlock(
                 lambda participant: self.assign_inner_roles()
             ),
-            # Feedback stage
-            self.outer_dictator_feedback_stage(),
-            GroupBarrier(
-                id_="outer_feedback_stage",
-                group_type="chain",
-            ),
         )
         return list_of_pages
-
-    def outer_dictator_feedback_stage(self):
-        # Determine proposal and accept answer
-        proposer = None
-        proposer_id = self.get_outer_result()
-
-        if proposer_id is not None:
-            if self.participant.id == proposer_id:
-                proposer = "self"
-            else:
-                proposer = "other"
-
-        return OuterDictatorFeedbackPage(
-            proposer=proposer,
-        )
 
     def outer_ultimatum_stage(self):
         list_of_pages = join(
@@ -198,12 +176,6 @@ class NestedGameTrial(ChainTrial):
             # Save to participant.var
             CodeBlock(
                 lambda participant: self.assign_outer_acceptance()
-            ),
-            # Feedback stage
-            self.outer_ultimatum_feedback_stage(),
-            GroupBarrier(
-                id_="outer_feedback_stage",
-                group_type="chain",
             ),
         )
         return list_of_pages
@@ -235,29 +207,6 @@ class NestedGameTrial(ChainTrial):
                 proposer=proposer,
                 proposal=proposal,
             )
-
-    def outer_ultimatum_feedback_stage(self):
-        # Determine proposal and accept answer
-        proposer = None
-        accepted = None
-        proposer_id = self.get_outer_result()
-
-        if proposer_id is not None:
-            if self.participant.id == proposer_id:
-                proposer = "self"
-            else:
-                proposer = "other"
-
-            accept_answer = self.get_outer_acceptance()
-            if accept_answer == "Accept":
-                accepted = True
-            else:
-                accepted = False
-
-        return OuterUltimatumFeedbackPage(
-            proposer=proposer,
-            accepted=accepted,
-        )
 
     def assign_inner_roles(self):
         logger.info("Entering assignment of inner roles...")
@@ -380,22 +329,36 @@ class NestedGameTrial(ChainTrial):
     # METHODS FOR THE INNER GAME
     ######################################################
     def inner_dictator_stage(self):
-        list_of_pages = join(
+        return join(
             # Proposal stage
-            InnerDictatorProposalPage(
-                proposer=self.am_i_the_inner_leader(),
+            conditional(
+                label="feedback_depending_on_outer_game",
+                condition=lambda participant: participant.definition['outer_game'] == "dictator",
+                logic_if_true=InnerProposalPageOuterDictator(
+                    proposer=self.am_i_the_inner_leader(),
+                ),
+                logic_if_false=InnerProposalPageOuterUltimatum(
+                    proposer=self.am_i_the_inner_leader(),
+                ),
             ),
             GroupBarrier(
                 id_="inner_proposal_stage",
                 group_type="chain",
             ),
         )
-        return list_of_pages
 
     def inner_ultimatum_stage(self):
-        list_of_pages = join(
-            InnerUltimatumProposalPage(
-                proposer=self.am_i_the_outer_leader(),
+        return join(
+            # Proposal stage
+            conditional(
+                label="feedback_depending_on_outer_game",
+                condition=lambda participant: participant.definition['outer_game'] == "dictator",
+                logic_if_true=InnerProposalPageOuterDictator(
+                    proposer=self.am_i_the_inner_leader(),
+                ),
+                logic_if_false=InnerProposalPageOuterUltimatum(
+                    proposer=self.am_i_the_inner_leader(),
+                ),
             ),
             GroupBarrier(
                 id_="inner_proposal_stage",
@@ -411,7 +374,6 @@ class NestedGameTrial(ChainTrial):
                 group_type="chain",
             ),
         )
-        return list_of_pages
 
     @staticmethod
     def get_inner_role(participant) -> Union[str, None]:
@@ -482,7 +444,34 @@ class NestedGameTrial(ChainTrial):
         remainder = dict_result["remainder"]
 
         if not inner_game_on:
-            score = my_accumulated_score
+            return ModularPage(
+                label="reward",
+                prompt=Prompt(
+                    "Proposal was not accepted. Round finished with score 0.0. "
+                    f"Your accumulated score is {my_accumulated_score}"
+                ),
+                control=PushButtonControl(
+                    labels=["Next"],
+                    choices=[0.0]
+                ),
+                time_estimate=5,
+                save_answer="reward",
+                events={
+                    "responseEnable": Event(
+                        is_triggered_by="trialStart",
+                        delay=10,
+                        js="onNextButton();",
+                    ),
+                },
+                progress_display=ProgressDisplay(
+                    stages=[
+                        ProgressStage(
+                            time=15,
+                            color="gray"
+                        ),
+                    ],
+                ),
+            )
         else:
             if accept_answer == "Reject":
                 score = 0.0
