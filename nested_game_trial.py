@@ -82,9 +82,8 @@ class NestedGameTrial(ChainTrial):
                 logic_if_false=self.outer_ultimatum_stage(),
             ),
             #########################################
-            # BETWEEN GAMES
+            # DETERMINE IF GAME SHOULD CONTINUE
             #########################################
-            # Determine if game should continue
             conditional(
                 label="check_continue_to_inner_gamme",
                 condition=lambda participant: self.continue_to_inner_game(),
@@ -322,25 +321,41 @@ class NestedGameTrial(ChainTrial):
         return None
 
     def get_outer_result(self) -> int:
-        """Returns the id of the proposer """
+        """Returns the id of the inner proposer"""
 
         participants = self.participant.sync_group.participants
         assert len(participants) == 2
 
         ids = [participant.id for participant in self.participant.sync_group.participants]
+        assert self.participant_id in ids
+
+        other_id = None
+        for idx in ids:
+            if idx != self.participant_id:
+                other_id = idx
+            break
 
         # Determine proposal
-        proposer_id = None
-        for i, participant in enumerate(participants):
+        inner_proposer_id = None
+        outer_proposal = None
+        for participant in participants:
             outer_proposal = variable_handler.get_value(participant, "outer_proposal")
             if outer_proposal is not None:
-                if outer_proposal == "self":
-                    proposer_id = ids[i]
-                else:
-                    proposer_id = ids[1 - i]
                 break
 
-        return proposer_id
+        if outer_proposal is not None:
+            if outer_proposal == "self":
+                if self.am_i_the_outer_leader():
+                    inner_proposer_id = self.participant_id
+                else:
+                    inner_proposer_id = other_id
+            else:
+                if self.am_i_the_outer_leader():
+                    inner_proposer_id = other_id
+                else:
+                    inner_proposer_id = self.participant_id
+
+        return inner_proposer_id
 
     def get_outer_acceptance(self) -> str:
         participants = self.participant.sync_group.participants
@@ -374,15 +389,6 @@ class NestedGameTrial(ChainTrial):
                 id_="inner_proposal_stage",
                 group_type="chain",
             ),
-            # Feedback stage
-            InnerDictatorFeedbackPage(
-                proposer=self.am_i_the_inner_leader(),
-                **self.get_inner_result()
-            ),
-            GroupBarrier(
-                id_="inner_feedback_stage",
-                group_type="chain",
-            ),
         )
         return list_of_pages
 
@@ -402,15 +408,6 @@ class NestedGameTrial(ChainTrial):
             ),
             GroupBarrier(
                 id_="inner_acceptance_stage",
-                group_type="chain",
-            ),
-            # Feedback stage
-            InnerUltimatumFeedbackPage(
-                proposer=self.am_i_the_inner_leader(),
-                **self.get_inner_result()
-            ),
-            GroupBarrier(
-                id_="inner_feedback_stage",
                 group_type="chain",
             ),
         )
@@ -472,7 +469,6 @@ class NestedGameTrial(ChainTrial):
         pass
 
     def show_score(self):
-        logger.info(f"==> Entering show score...")
         try:
             accumulated_scores = self.definition["summary"]["accumulated_rewards"]
             my_accumulated_score = accumulated_scores[str(self.participant_id)]
@@ -480,17 +476,17 @@ class NestedGameTrial(ChainTrial):
             my_accumulated_score = 0.0
 
         inner_game_on = self.continue_to_inner_game()
+        dict_result = self.get_inner_result()
+        accept_answer = dict_result["accept_answer"]
+        proposal = dict_result["proposal"]
+        remainder = dict_result["remainder"]
+
         if not inner_game_on:
             score = my_accumulated_score
         else:
-            dict_result = self.get_inner_result()
-            accept_answer = dict_result["accept_answer"]
-
             if accept_answer == "Reject":
                 score = 0.0
             else:
-                proposal = dict_result["proposal"]
-                remainder = dict_result["remainder"]
                 if self.am_i_the_inner_leader():
                     score = remainder
                 else:
@@ -498,35 +494,22 @@ class NestedGameTrial(ChainTrial):
 
         if score is not None:
             my_accumulated_score += score
-
-        text = f"Your score for this round is {score}. "
-        text += f"Your accumulated score is {my_accumulated_score}"
-
-        return ModularPage(
-                        label="reward",
-                        prompt=text,
-                        control=PushButtonControl(
-                            labels=["Next"],
-                            choices=[score],
-                        ),
-                        time_estimate=5,
-                        save_answer="reward",
-                        events={
-                            "responseEnable": Event(
-                                is_triggered_by="trialStart",
-                                delay=10,
-                                js="onNextButton();",
-                            ),
-                        },
-                        progress_display=ProgressDisplay(
-                            stages=[
-                                ProgressStage(
-                                    time=15,
-                                    color="gray"
-                                ),
-                            ],
-                        ),
-                    )
+            inner_game = self.definition['inner_game']
+            if inner_game == "dictator":
+                return InnerDictatorFeedbackPage(
+                    proposer=self.get_outer_result() == self.participant_id,
+                    proposal=proposal,
+                    remainder=remainder,
+                    accumulated_score=my_accumulated_score,
+                )
+            else:
+                return InnerUltimatumFeedbackPage(
+                    proposer=self.get_outer_result() == self.participant_id,
+                    proposal=proposal,
+                    remainder=remainder,
+                    accept_answer=accept_answer,
+                    accumulated_score=my_accumulated_score,
+                )
 
     def shuffle_roles(self):
         participants = self.participant.sync_group.participants

@@ -283,6 +283,7 @@ class InnerUltimatumFeedbackPage(ModularPage):
         proposal: int,
         remainder: int,
         accept_answer: str,
+        accumulated_score: int,
     ):
         if proposer:
             if accept_answer == 'Accept':
@@ -301,18 +302,19 @@ class InnerUltimatumFeedbackPage(ModularPage):
 
         text = (
             f"The proposal was {proposal} (out of 10), which {acceptance}. "
-            + f"Your score is {score}."
+            f"Your score is {score}. "
+            f"Your accumulated score is {accumulated_score}"
         )
 
         super().__init__(
-            label="inner_score",
+            label="reward",
             prompt=Prompt(text),
             control=PushButtonControl(
                 labels=["Next"],
                 choices=[score]
             ),
             time_estimate=5,
-            save_answer="inner_score",
+            save_answer="reward",
             events={
                 "responseEnable": Event(
                     is_triggered_by="trialStart",

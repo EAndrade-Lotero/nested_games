@@ -185,13 +185,14 @@ class InnerDictatorFeedbackPage(ModularPage):
         proposer: bool,
         proposal: int,
         remainder: int,
-        accept_answer: int,
+        accumulated_score: int,
     ):
         if proposer:
             score = remainder
             text = (
                 f"You have given {CURRENCY}{proposal} to your partner. "
                 f"You keep the remainder of {CURRENCY}{remainder}. "
+                f"Your accumulated score is {accumulated_score}"
             )
         else:
             score = proposal
@@ -200,14 +201,14 @@ class InnerDictatorFeedbackPage(ModularPage):
             )
 
         super().__init__(
-            label="inner_score",
+            label="reward",
             prompt=Prompt(text),
             control=PushButtonControl(
                 labels=["Next"],
                 choices=[score]
             ),
             time_estimate=5,
-            save_answer="inner_score",
+            save_answer="reward",
             events={
                 "responseEnable": Event(
                     is_triggered_by="trialStart",
