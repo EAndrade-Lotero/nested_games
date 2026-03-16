@@ -1,14 +1,12 @@
-import numpy as np
 from markupsafe import Markup
 from typing import Union
 
 from psynet.graphics import Prompt
-from psynet.page import WaitPage, InfoPage
+from psynet.page import WaitPage
 from psynet.modular_page import (
     ModularPage,
     PushButtonControl,
     SliderControl,
-    NullControl,
 )
 from psynet.timeline import (
     join,
@@ -87,18 +85,6 @@ class NestedGameTrial(ChainTrial):
                 logic_if_true=self.outer_dictator_stage(),
                 logic_if_false=self.outer_ultimatum_stage(),
             ),
-            InfoPage(
-                content=f"""
-My id: {self.participant_id} ---
-My outer role: {self.get_outer_role(self.participant)} ---
-Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
-Participant to be the inner PROPOSER: {self.get_outer_result()} ---
-Continue to inner game?: {self.continue_to_inner_game()} ---
-Answer: {self.participant.answer} ---
-Answer accumulators: {self.participant.answer_accumulators} ---
-""",
-                time_estimate=5,
-            ),
             #########################################
             # DETERMINE IF GAME SHOULD CONTINUE
             #########################################
@@ -130,22 +116,6 @@ Answer accumulators: {self.participant.answer_accumulators} ---
             self.show_trial_feedback(),
             GroupBarrier(
                 id_="overall_score",
-                group_type="chain",
-            ),
-            InfoPage(
-                content=f"""
-My id: {self.participant_id} ---
-My inner role: {self.get_inner_role(self.participant)} ---
-Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
-Proposal: {variable_handler.get_value(participant, "inner_proposal")} ---
-Result: {self.get_inner_result()} ---
-Answer: {self.participant.answer} ---
-Answer accumulators: {self.participant.answer_accumulators} ---
-""",
-                time_estimate=5,
-            ),
-            GroupBarrier(
-                id_="final_stock_taking",
                 group_type="chain",
             ),
         )  # end main join
@@ -620,7 +590,7 @@ Answer accumulators: {self.participant.answer_accumulators} ---
                 text += f"\nGot error: {e}"
                 score = 0.0
         else:
-            logger.info(f"Warning: answer type {type(answer)} not supported.  --- value={answer}")
+            logger.info(f"Warning: answer type {type(answer)} not supported (Value={answer})")
             score = 0.0
         logger.info(f"Score obtained: {score}")
         return score

@@ -14,7 +14,10 @@ from psynet.modular_page import (
 )
 from psynet.utils import get_logger
 
-from .game_paramters import RNG
+from .game_paramters import (
+    RNG,
+    NUM_BIG_FIVE_QUESTIONS,
+)
 
 
 logger = get_logger()
@@ -57,12 +60,6 @@ personality_nodes = [
             "dummy": "ok"
         },
     )
-    # StaticNode(
-    #     definition={
-    #         "question_id": item["full_position"],
-    #         "question_text": item["item"],
-    #     },
-    # ) for item in short_items
 ]
 
 
@@ -76,7 +73,7 @@ class PersonalityTrial(StaticTrial):
                 idx=idx,
                 time_estimate=self.time_estimate,
             )
-            for idx, item in enumerate(short_items)
+            for idx, item in enumerate(short_items[NUM_BIG_FIVE_QUESTIONS])
         ])
 
     @staticmethod

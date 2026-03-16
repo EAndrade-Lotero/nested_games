@@ -16,7 +16,7 @@ from .nested_game_trial import (
     NestedGameTrialMaker,
 )
 from .game_paramters import (
-    MAX_WAITING_BIG_QUESTIONS,
+    MAX_WAITING_BIG_FIVE_QUESTIONS,
     NUMBER_OF_REPEATED_GAMES,
     RNG,
 )
@@ -58,7 +58,7 @@ waiting_trial_maker = PersonalityTrialMaker(
     trial_class=WaitingTrial,
     nodes=waiting_nodes,
     expected_trials_per_participant=3,
-    max_trials_per_participant=MAX_WAITING_BIG_QUESTIONS,
+    max_trials_per_participant=MAX_WAITING_BIG_FIVE_QUESTIONS,
     allow_repeated_nodes=True,  # allow participants to cycle or a bug will occur
 )
 
@@ -91,7 +91,7 @@ class Exp(psynet.experiment.Experiment):
                 min_group_size=2,
                 join_existing_groups=False,
                 waiting_logic=waiting_logic,
-                waiting_logic_expected_repetitions=MAX_WAITING_BIG_QUESTIONS,
+                waiting_logic_expected_repetitions=MAX_WAITING_BIG_FIVE_QUESTIONS,
                 max_wait_time=120,
             ),
         ),

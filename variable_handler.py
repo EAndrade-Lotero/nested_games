@@ -59,12 +59,12 @@ class VariableHandler:
         try:
             value = data[variable]
             if self.debug:
-                logger.info(f"VariableHandler succeeded ==> Variable {variable} has value {value} (type:{type(value)})")
+                logger.info(f"VariableHandler succeeded ==> {variable} has value {value} (type: {type(value)})")
             return value
-        except Exception as e:
+        except ValueError:
             data[variable] = None
             if self.debug:
-                logger.info(f"VariableHandler error ==> Variable {variable} doesn't exist in vars at level {self.level}")
+                logger.info(f"VariableHandler error ==> {variable} doesn't exist in vars at level {self.level}")
             return None
 
     def get_data_at_level(self, participant):
@@ -95,7 +95,6 @@ class VariableHandler:
     def get_value_from_last_answer(participant, page_label: str):
         last_answer = participant.answer_accumulators[-1]
         assert isinstance(last_answer, dict)
-        # assert page_label in last_answer.keys(), f"Error: page with label {page_label} is not in answers. Found only: {last_answer.keys()}"
         value = VariableHandler.get_from_answer(
             answer=last_answer,
             variable=page_label,
@@ -131,3 +130,34 @@ class VariableHandler:
         err_msg += f"The non-empty values found were {values}"
         assert len(values) == 1, err_msg
         return values[0]
+
+
+# InfoPage(
+#     content=f"""
+# My id: {self.participant_id} ---
+# My outer role: {self.get_outer_role(self.participant)} ---
+# Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
+# Participant to be the inner PROPOSER: {self.get_outer_result()} ---
+# Continue to inner game?: {self.continue_to_inner_game()} ---
+# Answer: {self.participant.answer} ---
+# Answer accumulators: {self.participant.answer_accumulators} ---
+# """,
+#     time_estimate=5,
+# ),
+
+# InfoPage(
+#     content=f"""
+# My id: {self.participant_id} ---
+# My inner role: {self.get_inner_role(self.participant)} ---
+# Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
+# Proposal: {variable_handler.get_value(participant, "inner_proposal")} ---
+# Result: {self.get_inner_result()} ---
+# Answer: {self.participant.answer} ---
+# Answer accumulators: {self.participant.answer_accumulators} ---
+# """,
+#     time_estimate=5,
+# ),
+# GroupBarrier(
+#     id_="final_stock_taking",
+#     group_type="chain",
+# ),
