@@ -286,7 +286,7 @@ class InnerUltimatumFeedbackPage(ModularPage):
                 score = 0
 
         text = Markup(
-            f"<h2>Feedback</h2>"
+            f"<h2>Score</h2>"
             f"<br>"
             f"<p>The proposal was {proposal} coins (out of 10), which {acceptance}. </p>"
             f"<p>Your score is {score} coins. </p>"

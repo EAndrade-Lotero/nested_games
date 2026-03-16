@@ -83,9 +83,12 @@ class PersonalityTrial(StaticTrial):
     def question_page(question: str, idx: int, time_estimate: int):
         page_label = f"big_five_question_{idx}"
 
-        text = "We want to ask you some questions about your personality traits. "
-        text += "Please report how accurate is the following statement: "
+        text = "<h2>Before we start</h2>"
+        text += "<p>We want to ask you some questions about your personality traits. </p>"
+        text += "<p>Please report how accurate is the following statement: </p>"
+        text += "<br>"
         text += f"<h6>I see myself as someone who {format_text(question)}</h6>"
+        text += "<br>"
 
         return ModularPage(
             label=page_label,
@@ -111,14 +114,18 @@ class WaitingTrial(StaticTrial):
 
         item = RNG.choice(full_items)
         question = item["item"]
-        text = "We are waiting for other participants. "
-        text += "In the meantime, please report how accurate is the following statement: "
+        text = "<h2>Before we start</h2>"
+        text += "<br>"
+        text += "<p>We are waiting for other participants. </p>"
+        text += "<p>In the meantime, please report how accurate is the following statement: </p>"
+        text += "<br>"
         text += f"<h6>I see myself as someone who {format_text(question)}</h6>"
+        text += "<br>"
 
         return ModularPage(
-            "waiting_trial",
-            Markup(text),
-            PushButtonControl(
+            label="waiting_trial",
+            prompt=Markup(text),
+            control=PushButtonControl(
                 [
                     "Very inaccurate",
                     "Moderately inaccurate",
@@ -127,6 +134,7 @@ class WaitingTrial(StaticTrial):
                     "Very accurate"
                 ],
             ),
+            time_estimate=self.time_estimate
         )
 
 

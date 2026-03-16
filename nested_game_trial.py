@@ -1,4 +1,5 @@
 import numpy as np
+from markupsafe import Markup
 from typing import Union
 
 from psynet.graphics import Prompt
@@ -482,10 +483,13 @@ Answer accumulators: {self.participant.answer_accumulators} ---
 
             return ModularPage(
                 label="reward",
-                prompt=Prompt(
-                    "Proposal was not accepted. Round finished with score 0.0. "
-                    f"Your accumulated score is {my_accumulated_score}"
-                ),
+                prompt=Prompt(Markup(
+                    f"<h2>Score</h2>"
+                    f"<br>"
+                    "<p>Proposal was not accepted. Round finished with score 0 coins. </p>"
+                    f"<p>Your accumulated score is {my_accumulated_score} coins. </p>"
+                    f"<br>"
+                )),
                 control=PushButtonControl(
                     labels=["Next"],
                     choices=[0.0]

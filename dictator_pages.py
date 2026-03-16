@@ -173,7 +173,7 @@ class InnerDictatorFeedbackPage(ModularPage):
         if proposer:
             score = remainder
             text = Markup(
-                f"<h2>Feedback</h2>"
+                f"<h2>Score</h2>"
                 f"<br>"
                 f"<p>You have given {proposal} coins to your partner. </p>"
                 f"<p>You keep the remainder of {remainder} coins. </p>"
@@ -183,7 +183,7 @@ class InnerDictatorFeedbackPage(ModularPage):
         else:
             score = proposal
             text = Markup(
-                f"<h2>Feedback</h2>"
+                f"<h2>Score</h2>"
                 f"<br>"
                 f"<p>Your partner has given you {proposal} coins. </p>"
                 f"<p>Your accumulated score is {accumulated_score} coins.</p>"
