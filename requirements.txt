@@ -1,5 +1,6 @@
 # psynet@git+https://gitlab.com/PsyNetDev/PsyNet@master#egg=psynet
 rq<2.0
+numpy==2.2.6
 
 psynet@git+https://gitlab.com/PsyNetDev/PsyNet@eedb172cd338e0efb3a56653c5e6895fd46ea5f0#egg=psynet
 

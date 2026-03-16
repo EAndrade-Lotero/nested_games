@@ -2,6 +2,7 @@ import re
 import pandas as pd
 from markupsafe import Markup
 
+from psynet.timeline import join
 from psynet.trial.static import (
     StaticTrialMaker,
     StaticTrial,
@@ -53,10 +54,15 @@ short_items = pd.read_csv("static/big_five_short.csv").to_dict(orient="records")
 personality_nodes = [
     StaticNode(
         definition={
-            "question_id": item["full_position"],
-            "question_text": item["item"],
+            "dummy": "ok"
         },
-    ) for item in short_items
+    )
+    # StaticNode(
+    #     definition={
+    #         "question_id": item["full_position"],
+    #         "question_text": item["item"],
+    #     },
+    # ) for item in short_items
 ]
 
 
@@ -64,16 +70,27 @@ class PersonalityTrial(StaticTrial):
     time_estimate = 3
 
     def show_trial(self, experiment, participant):
+        return join([
+            PersonalityTrial.question_page(
+                question=item["item"],
+                idx=idx,
+                time_estimate=self.time_estimate,
+            )
+            for idx, item in enumerate(short_items)
+        ])
 
-        question = self.definition["question_text"]
+    @staticmethod
+    def question_page(question: str, idx: int, time_estimate: int):
+        page_label = f"big_five_question_{idx}"
+
         text = "We want to ask you some questions about your personality traits. "
         text += "Please report how accurate is the following statement: "
         text += f"<h6>I see myself as someone who {format_text(question)}</h6>"
 
         return ModularPage(
-            "waiting_trial",
-            Markup(text),
-            PushButtonControl(
+            label=page_label,
+            prompt=Markup(text),
+            control=PushButtonControl(
                 [
                     "Very inaccurate",
                     "Moderately inaccurate",
@@ -82,6 +99,8 @@ class PersonalityTrial(StaticTrial):
                     "Very accurate"
                 ],
             ),
+            time_estimate=time_estimate,
+            save_answer=page_label
         )
 
 

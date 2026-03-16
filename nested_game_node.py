@@ -1,3 +1,5 @@
+import numpy as np
+
 from psynet.utils import get_logger
 from psynet.trial.chain import ChainNode
 
@@ -15,15 +17,18 @@ class NestedGameNode(ChainNode):
         return seed
 
     def summarize_trials(self, trials, experiment, participant):
-        assert len(trials) == 2
-
-
         ###################################
         # FILTER TRIALS
         ###################################
         filtered_trials = [
-            trial for trial in trials if trial.failed == False
+            trial for trial in trials if trial.failed is False
         ]
+        assert len(filtered_trials) == 2, f"{[trial.failed_reason for trial in trials]}"
+
+        filtered_answers = [trial.answer for trial in filtered_trials]
+        assert np.all([
+            answer is not None for answer in filtered_answers
+        ]), f"{[answer for answer in filtered_answers]}"
 
         ###################################
         # ACCUMULATE REWARDS

@@ -3,13 +3,15 @@ from .game_paramters import ENDOWMENT
 OBJECTIVE = f"""
     <h2>Instructions</h2>
     <br>
-    <p><em>Objective:</em> In this game you will be paired with another participant.
+    <p>Welcome to the Proposals Game!</p>
+    <br>
+    <p>You will be paired with another participant. 
     In each round, one of you will receive an endowment of {ENDOWMENT} coins.
     This participant will be the <strong>PROPOSER</strong>. The PROPOSER may offer
     some portion of these coins to the other participant, who will be the
     <strong>RESPONDER</strong>.</p>
     <br>
-    <p>Your goal in the game is to accumulate as many coins as possible.</p>
+    <p><em>Objective:</em> Your goal in the game is to accumulate as many coins as possible.</p>
     <br>
 """
 
@@ -50,6 +52,7 @@ INNER_ULTIMATUM_INSTRUCTIONS = f"""
     <strong>RESPONDER</strong>. The RESPONDER may either accept or reject the
     offer. If the RESPONDER rejects the offer, neither participant receives
     any coins for that round.</p>
+    <br>
 """
 
 INNER_DICTATOR_INSTRUCTIONS = f"""
@@ -57,4 +60,5 @@ INNER_DICTATOR_INSTRUCTIONS = f"""
     <br>
     <p>The <strong>PROPOSER</strong> decides how many coins to give to the
     <strong>RESPONDER</strong> and keeps the remaining coins.</p>
+    <br>
 """

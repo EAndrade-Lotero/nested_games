@@ -1,3 +1,4 @@
+from markupsafe import Markup
 from typing import Union
 
 from psynet.graphics import Prompt
@@ -35,9 +36,12 @@ class OuterDictatorProposalPage(ModularPage):
     ) -> None:
 
         if proposer:
-            prompt = Prompt(
-                f"Choose who will take on the role of PROPOSER: "
-            )
+            prompt = Prompt(Markup(
+                f"<h2>Preparation phase</h2>"
+                f"<br>"
+                f"<p>Choose who will take on the role of PROPOSER: </p>"
+                f"<br>"
+            ))
             control = PushButtonControl(
                 labels=["Myself", "My partner"],
                 choices=["self", "other"],
@@ -45,9 +49,9 @@ class OuterDictatorProposalPage(ModularPage):
             progress_display = None
             waiting_time = MAX_WAITING_PROPOSALS
         else:
-            prompt = Prompt(
+            prompt = Prompt(Markup(
                 "Click 'Next' to see which player your partner selects as PROPOSER."
-            )
+            ))
             control = NullControl()
             waiting_time = MAX_WAITING_FOR_OTHER
             progress_display = ProgressDisplay(
@@ -82,10 +86,13 @@ class InnerProposalPageOuterDictator(ModularPage):
         proposer: bool,
     ):
         if proposer:
-            prompt = Prompt(
-                f"You are the PROPOSER. "
-                f"Decide how much of the {CURRENCY}{ENDOWMENT} you will give to your partner: "
-            )
+            prompt = Prompt(Markup(
+                f"<h2>Proposal phase</h2>"
+                f"<br>"
+                f"<p>You are the PROPOSER.</p>"
+                f"<p>Decide how much of the {ENDOWMENT} coins you will give to your partner: </p>"
+                f"<br>"
+            ))
             control = CustomSliderControl(
                 start_value=0,
                 min_value=0,
@@ -96,10 +103,13 @@ class InnerProposalPageOuterDictator(ModularPage):
             progress_display = None
             waiting_time = MAX_WAITING_PROPOSALS
         else:
-            prompt = Prompt(
-                f"You are the RESPONDER. "
+            prompt = Prompt(Markup(
+                f"<h2>Proposal phase</h2>"
+                f"<br>"
+                f"<p>You are the RESPONDER. </p>"
+                f"<br>"
                 "Press the 'Next' button to see the proposal from your partner."
-            )
+            ))
             control = NullControl()
             waiting_time = MAX_WAITING_FOR_OTHER
             progress_display = ProgressDisplay(
@@ -162,15 +172,22 @@ class InnerDictatorFeedbackPage(ModularPage):
     ):
         if proposer:
             score = remainder
-            text = (
-                f"You have given {CURRENCY}{proposal} to your partner. "
-                f"You keep the remainder of {CURRENCY}{remainder}. "
-                f"Your accumulated score is {accumulated_score}"
+            text = Markup(
+                f"<h2>Feedback</h2>"
+                f"<br>"
+                f"<p>You have given {proposal} coins to your partner. </p>"
+                f"<p>You keep the remainder of {remainder} coins. </p>"
+                f"<p>Your accumulated score is {accumulated_score} coins.</p>"
+                f"<br>"
             )
         else:
             score = proposal
-            text = (
-                f"Your partner has given you {CURRENCY}{proposal}."
+            text = Markup(
+                f"<h2>Feedback</h2>"
+                f"<br>"
+                f"<p>Your partner has given you {proposal} coins. </p>"
+                f"<p>Your accumulated score is {accumulated_score} coins.</p>"
+                f"<br>"
             )
 
         waiting_time = MAX_WAITING_SEEING_INFO

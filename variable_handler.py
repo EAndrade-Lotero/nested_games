@@ -129,6 +129,5 @@ class VariableHandler:
         err_msg += f"The observed trial answer was {answer}\n"
         err_msg += f"The initial values observed were {initial_values}\n"
         err_msg += f"The non-empty values found were {values}"
-        logger.info(err_msg)
         assert len(values) == 1, err_msg
         return values[0]

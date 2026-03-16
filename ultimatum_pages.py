@@ -1,3 +1,4 @@
+from markupsafe import Markup
 from typing import Union
 
 from psynet.graphics import Prompt
@@ -35,9 +36,12 @@ class OuterUltimatumProposalPage(ModularPage):
     ) -> None:
 
         if proposer:
-            prompt = Prompt(
-                f"Choose who will take on the role of PROPOSER: "
-            )
+            prompt = Prompt(Markup(
+                f"<h2>Preparation phase</h2>"
+                f"<br>"
+                f"<p>Choose who will take on the role of PROPOSER: </p>"
+                f"<br>"
+            ))
             control = PushButtonControl(
                 labels=["Myself", "My partner"],
                 choices=["self", "other"],
@@ -45,9 +49,9 @@ class OuterUltimatumProposalPage(ModularPage):
             progress_display = None
             waiting_time = MAX_WAITING_PROPOSALS
         else:
-            prompt = Prompt(
+            prompt = Prompt(Markup(
                 "Click 'Next' to see which player your partner selects as PROPOSER."
-            )
+            ))
             control = NullControl()
             waiting_time = MAX_WAITING_FOR_OTHER
             progress_display = ProgressDisplay(
@@ -132,10 +136,13 @@ class InnerProposalPageOuterUltimatum(ModularPage):
         proposer: bool,
     ):
         if proposer:
-            prompt = Prompt(
-                f"Proposal accepted. You are the PROPOSER. "
-                f"Decide how many of the {ENDOWMENT} coins you will give to your partner: "
-            )
+            prompt = Prompt(Markup(
+                f"<h2>Proposal phase</h2>"
+                f"<br>"
+                f"<p>Proposal accepted. You are the PROPOSER. </p>"
+                f"<p>Decide how many of the {ENDOWMENT} coins you will give to your partner: <p/>"
+                f"<br>"
+            ))
             control = CustomSliderControl(
                 start_value=0,
                 min_value=0,
@@ -278,10 +285,13 @@ class InnerUltimatumFeedbackPage(ModularPage):
                 acceptance = "you rejected"
                 score = 0
 
-        text = (
-            f"The proposal was {proposal} (out of 10), which {acceptance}. "
-            f"Your score is {score}. "
-            f"Your accumulated score is {accumulated_score}"
+        text = Markup(
+            f"<h2>Feedback</h2>"
+            f"<br>"
+            f"<p>The proposal was {proposal} coins (out of 10), which {acceptance}. </p>"
+            f"<p>Your score is {score} coins. </p>"
+            f"<p>Your accumulated score is {accumulated_score} coins. </p>"
+            f"<br>"
         )
         waiting_time = MAX_WAITING_SEEING_INFO
 
