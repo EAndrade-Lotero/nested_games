@@ -15,11 +15,14 @@ from psynet.timeline import (
 )
 from psynet.utils import get_logger
 
-
 from .game_paramters import (
     CURRENCY,
     ENDOWMENT,
+    MAX_WAITING_PROPOSALS,
+    MAX_WAITING_FOR_OTHER,
+    MAX_WAITING_SEEING_INFO,
 )
+from .custom_front_end import CustomSliderControl
 
 
 logger = get_logger()
@@ -40,15 +43,17 @@ class OuterDictatorProposalPage(ModularPage):
                 choices=["self", "other"],
             )
             progress_display = None
+            waiting_time = MAX_WAITING_PROPOSALS
         else:
             prompt = Prompt(
                 "Click 'Next' to see which player your partner selects as PROPOSER."
             )
             control = NullControl()
+            waiting_time = MAX_WAITING_FOR_OTHER
             progress_display = ProgressDisplay(
                 stages=[
                     ProgressStage(
-                        time=15,
+                        time=waiting_time,
                         color="gray"
                     ),
                 ],
@@ -63,7 +68,7 @@ class OuterDictatorProposalPage(ModularPage):
             events={
                 "responseEnable": Event(
                     is_triggered_by="trialStart",
-                    delay=10,
+                    delay=waiting_time,
                     js="onNextButton();",
                 ),
             },
@@ -81,18 +86,26 @@ class InnerProposalPageOuterDictator(ModularPage):
                 f"You are the PROPOSER. "
                 f"Decide how much of the {CURRENCY}{ENDOWMENT} you will give to your partner: "
             )
-            control = NumberControl()
+            control = CustomSliderControl(
+                start_value=0,
+                min_value=0,
+                max_value=ENDOWMENT,
+                n_steps=ENDOWMENT,
+                right_label="coins",
+            )
             progress_display = None
+            waiting_time = MAX_WAITING_PROPOSALS
         else:
             prompt = Prompt(
                 f"You are the RESPONDER. "
                 "Press the 'Next' button to see the proposal from your partner."
             )
             control = NullControl()
+            waiting_time = MAX_WAITING_FOR_OTHER
             progress_display = ProgressDisplay(
                 stages=[
                     ProgressStage(
-                        time=15,
+                        time=waiting_time,
                         color="gray"
                     ),
                 ],
@@ -107,7 +120,7 @@ class InnerProposalPageOuterDictator(ModularPage):
             events={
                 "responseEnable": Event(
                     is_triggered_by="trialStart",
-                    delay=10,
+                    delay=waiting_time,
                     js="onNextButton();",
                 ),
             },
@@ -160,6 +173,8 @@ class InnerDictatorFeedbackPage(ModularPage):
                 f"Your partner has given you {CURRENCY}{proposal}."
             )
 
+        waiting_time = MAX_WAITING_SEEING_INFO
+
         super().__init__(
             label="reward",
             prompt=Prompt(text),
@@ -172,14 +187,14 @@ class InnerDictatorFeedbackPage(ModularPage):
             events={
                 "responseEnable": Event(
                     is_triggered_by="trialStart",
-                    delay=10,
+                    delay=waiting_time,
                     js="onNextButton();",
                 ),
             },
             progress_display=ProgressDisplay(
                 stages=[
                     ProgressStage(
-                        time=15,
+                        time=waiting_time,
                         color="gray"
                     ),
                 ],

@@ -18,7 +18,11 @@ from psynet.utils import get_logger
 from .game_paramters import (
     CURRENCY,
     ENDOWMENT,
+    MAX_WAITING_PROPOSALS,
+    MAX_WAITING_FOR_OTHER,
+    MAX_WAITING_SEEING_INFO,
 )
+from .custom_front_end import CustomSliderControl
 
 
 logger = get_logger()
@@ -39,15 +43,17 @@ class OuterUltimatumProposalPage(ModularPage):
                 choices=["self", "other"],
             )
             progress_display = None
+            waiting_time = MAX_WAITING_PROPOSALS
         else:
             prompt = Prompt(
                 "Click 'Next' to see which player your partner selects as PROPOSER."
             )
             control = NullControl()
+            waiting_time = MAX_WAITING_FOR_OTHER
             progress_display = ProgressDisplay(
                 stages=[
                     ProgressStage(
-                        time=15,
+                        time=waiting_time,
                         color="gray"
                     ),
                 ],
@@ -62,7 +68,7 @@ class OuterUltimatumProposalPage(ModularPage):
             events={
                 "responseEnable": Event(
                     is_triggered_by="trialStart",
-                    delay=10,
+                    delay=waiting_time,
                     js="onNextButton();",
                 ),
             },
@@ -83,10 +89,11 @@ class OuterAcceptancePage(ModularPage):
                 "Press the 'Next' button to see whether your partner accepted the proposal."
             )
             control = NullControl()
+            waiting_time = MAX_WAITING_FOR_OTHER
             progress_display = ProgressDisplay(
                 stages=[
                     ProgressStage(
-                        time=15,
+                        time=waiting_time,
                         color="gray"
                     ),
                 ],
@@ -100,6 +107,7 @@ class OuterAcceptancePage(ModularPage):
                 labels=["Accept", "Reject"],
             )
             progress_display = None
+            waiting_time = MAX_WAITING_PROPOSALS
 
         super().__init__(
             label="outer_accept_answer",
@@ -110,7 +118,7 @@ class OuterAcceptancePage(ModularPage):
             events={
                 "responseEnable": Event(
                     is_triggered_by="trialStart",
-                    delay=10,
+                    delay=waiting_time,
                     js="onNextButton();",
                 ),
             },
@@ -126,22 +134,30 @@ class InnerProposalPageOuterUltimatum(ModularPage):
         if proposer:
             prompt = Prompt(
                 f"Proposal accepted. You are the PROPOSER. "
-                f"Decide how much of the {CURRENCY}{ENDOWMENT} you will give to your partner: "
+                f"Decide how many of the {ENDOWMENT} coins you will give to your partner: "
             )
-            control = NumberControl()
+            control = CustomSliderControl(
+                start_value=0,
+                min_value=0,
+                max_value=ENDOWMENT,
+                n_steps=ENDOWMENT,
+                right_label="coins",
+            )
             progress_display = None
             text = (
             )
+            waiting_time = MAX_WAITING_PROPOSALS
         else:
             prompt = Prompt(
                 f"Proposal accepted. You are the RESPONDER."
                 "Press the 'Next' button to see the proposal from your partner."
             )
             control = NullControl()
+            waiting_time = MAX_WAITING_FOR_OTHER
             progress_display = ProgressDisplay(
                 stages=[
                     ProgressStage(
-                        time=15,
+                        time=waiting_time,
                         color="gray"
                     ),
                 ],
@@ -156,7 +172,7 @@ class InnerProposalPageOuterUltimatum(ModularPage):
             events={
                 "responseEnable": Event(
                     is_triggered_by="trialStart",
-                    delay=10,
+                    delay=waiting_time,
                     js="onNextButton();",
                 ),
             },
@@ -170,7 +186,6 @@ class InnerProposalPageOuterUltimatum(ModularPage):
             answer = int(raw_answer)
             error_txt = f"Error: Answer should be a whole number between 0 and {ENDOWMENT} but got {answer}!"
             assert (0 <= answer <= ENDOWMENT), error_txt
-
             return answer
         except (ValueError, AssertionError) as e:
             text = f" Incorrect answer {raw_answer}: {raw_answer}"
@@ -202,10 +217,11 @@ class InnerAcceptancePage(ModularPage):
                 "Press the 'Next' button to see whether your partner accepted the proposal."
             )
             control = NullControl()
+            waiting_time = MAX_WAITING_FOR_OTHER
             progress_display = ProgressDisplay(
                 stages=[
                     ProgressStage(
-                        time=15,
+                        time=waiting_time,
                         color="gray"
                     ),
                 ],
@@ -219,6 +235,7 @@ class InnerAcceptancePage(ModularPage):
                 labels=["Accept", "Reject"],
             )
             progress_display = None
+            waiting_time = MAX_WAITING_PROPOSALS
 
         super().__init__(
             label="inner_accept_answer",
@@ -229,7 +246,7 @@ class InnerAcceptancePage(ModularPage):
             events={
                 "responseEnable": Event(
                     is_triggered_by="trialStart",
-                    delay=10,
+                    delay=waiting_time,
                     js="onNextButton();",
                 ),
             },
@@ -266,6 +283,7 @@ class InnerUltimatumFeedbackPage(ModularPage):
             f"Your score is {score}. "
             f"Your accumulated score is {accumulated_score}"
         )
+        waiting_time = MAX_WAITING_SEEING_INFO
 
         super().__init__(
             label="reward",
@@ -286,7 +304,7 @@ class InnerUltimatumFeedbackPage(ModularPage):
             progress_display=ProgressDisplay(
                 stages=[
                     ProgressStage(
-                        time=15,
+                        time=waiting_time,
                         color="gray"
                     ),
                 ],
