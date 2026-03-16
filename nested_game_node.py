@@ -17,11 +17,19 @@ class NestedGameNode(ChainNode):
     def summarize_trials(self, trials, experiment, participant):
         assert len(trials) == 2
 
+
+        ###################################
+        # FILTER TRIALS
+        ###################################
+        filtered_trials = [
+            trial for trial in trials if trial.failed == False
+        ]
+
         ###################################
         # ACCUMULATE REWARDS
         ###################################
         rewards = {}
-        for trial in trials:
+        for trial in filtered_trials:
             accumulated_reward = variable_handler.get_value(
                 participant=trial.participant,
                 variable="accumulated_reward"
@@ -39,12 +47,12 @@ class NestedGameNode(ChainNode):
         # SANITY CHECKS
         ###################################
         outer_game = self.definition["outer_game"]
-        outer_proposer, outer_responder = NestedGameNode.get_outer_proposer(trials)
+        outer_proposer, outer_responder = NestedGameNode.get_outer_proposer(filtered_trials)
         assert outer_proposer is not None
         assert outer_responder is not None
 
         outer_proposal, outer_acceptance = self.get_outer_proposal(
-            outer_proposer, trials
+            outer_proposer, filtered_trials
         )
         assert outer_proposal is not None
         if outer_game == "ultimatum":
@@ -52,18 +60,26 @@ class NestedGameNode(ChainNode):
 
         inner_game = self.definition["inner_game"]
         inner_proposer, inner_responder = NestedGameNode.get_inner_proposer(
-            outer_proposer, outer_proposal, trials
+            outer_proposer, outer_proposal, filtered_trials
         )
         assert inner_proposer is not None
         assert inner_responder is not None
 
         inner_proposal, inner_acceptance = self.get_inner_proposal(
-            inner_proposer, trials
+            outer_game,
+            outer_acceptance,
+            inner_proposer,
+            filtered_trials,
         )
-        assert inner_proposal is not None
-        if inner_game == "ultimatum":
-            assert inner_acceptance is not None
 
+        if outer_acceptance != "Reject":
+            assert inner_proposal is not None
+            if inner_game == "ultimatum":
+                assert inner_acceptance is not None
+
+        ###################################
+        # CREATE SUMMARY
+        ###################################
         summary = {
             "outer_proposer": outer_proposer,
             "outer_responder": outer_responder,
@@ -133,22 +149,31 @@ class NestedGameNode(ChainNode):
             inner_responder = outer_proposer
         return inner_proposer, inner_responder
 
-    def get_inner_proposal(self, inner_proposer, trials):
+    def get_inner_proposal(self, outer_game, outer_acceptance, inner_proposer, trials):
+
+        if outer_game == "ultimatum":
+            if outer_acceptance == "Reject":
+                return None, None
+
         inner_proposal = None
         inner_acceptance = None
+
         for idx, trial in enumerate(trials):
+
             if trial.participant_id == inner_proposer:
                 inner_proposal = NestedGameNode.get_from_trial(
                     trial=trial,
                     variable="inner_proposal"
                 )
                 inner_game = self.definition["inner_game"]
+
                 if inner_game == "ultimatum":
                     inner_acceptance = NestedGameNode.get_from_trial(
                         trial=trials[1 - idx],
                         variable="inner_accept_answer"
                     )
                 break
+
         return inner_proposal, inner_acceptance
 
     @staticmethod

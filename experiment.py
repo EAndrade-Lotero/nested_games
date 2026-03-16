@@ -45,9 +45,9 @@ def get_start_nodes():
     return [
         NestedGameNode(
             definition={
-                "outer_game": "ultimatum",  # dictator, ultimatum
-                "inner_game": "ultimatum",  # dictator, ultimatum
-                "order": "constant",  # constant, random, bid
+                "outer_game": "dictator",  # dictator, ultimatum
+                "inner_game": "dictator",  # dictator, ultimatum
+                "transition": "constant",  # constant, random, bid
             }
         )
     ]

@@ -5,7 +5,7 @@ logger = get_logger()
 
 class VariableHandler:
 
-    possible_levels = ["top", "trial"]
+    possible_levels = ["top", "trial", "answer"]
     debug = True
 
     def __init__(self, level: str = "top", use_vars: bool = False) -> None:
@@ -82,7 +82,7 @@ class VariableHandler:
             # Here is var and not vars <= note the final 's'
             if self.level == "top":
                 data = participant.var
-            elif self.level == "trial":
+            elif self.level == "answer":
                 error_msg = "Variable handler error: participant doesn't have current_trial.\n"
                 error_msg += f"Attribute of participant's: \n{vars(participant)}"
                 assert hasattr(participant, "current_trial"), error_msg
@@ -95,11 +95,40 @@ class VariableHandler:
     def get_value_from_last_answer(participant, page_label: str):
         last_answer = participant.answer_accumulators[-1]
         assert isinstance(last_answer, dict)
-        assert page_label in last_answer.keys(), f"Error: page with label {page_label} is not in answers. Found only: {last_answer.keys()}"
-        value = last_answer[page_label]
+        # assert page_label in last_answer.keys(), f"Error: page with label {page_label} is not in answers. Found only: {last_answer.keys()}"
+        value = VariableHandler.get_from_answer(
+            answer=last_answer,
+            variable=page_label,
+        )
         return value
 
     @staticmethod
     def set_value_from_last_answer(participant, page_label: str, variable: str):
         value = VariableHandler.get_value_from_last_answer(participant, page_label)
         participant.current_trial.vars[variable] = value
+
+    @staticmethod
+    def get_from_answer(answer, variable):
+
+        if answer is None:
+            return None
+
+        initial_values = [
+            value for key, value in answer.items()
+            if key.startswith(variable)
+        ]
+        values = [
+            value for value in initial_values
+            if (
+                value is not None
+                and str(value) != "null"
+                and value != 'INVALID_RESPONSE'
+            )
+        ]
+        err_msg = f"Error while finding a value for {variable}\n"
+        err_msg += f"The observed trial answer was {answer}\n"
+        err_msg += f"The initial values observed were {initial_values}\n"
+        err_msg += f"The non-empty values found were {values}"
+        logger.info(err_msg)
+        assert len(values) == 1, err_msg
+        return values[0]

@@ -1,3 +1,4 @@
+import numpy as np
 from typing import Union
 
 from psynet.graphics import Prompt
@@ -39,6 +40,7 @@ from .variable_handler import VariableHandler
 from .game_paramters import (
     REWARD_SCALING_FACTOR,
     MAX_BONUS_REWARD,
+    MAX_WAITING_SEEING_INFO,
     RNG,
 )
 
@@ -86,9 +88,7 @@ class NestedGameTrial(ChainTrial):
             conditional(
                 label="check_continue_to_inner_gamme",
                 condition=lambda participant: self.continue_to_inner_game(),
-                logic_if_false=join(
-                    self.show_score(),
-                ),
+                logic_if_false=None,
                 logic_if_true=join(
                     #########################################
                     # INNER GAME
@@ -99,26 +99,32 @@ class NestedGameTrial(ChainTrial):
                         logic_if_true=self.inner_dictator_stage(),
                         logic_if_false=self.inner_ultimatum_stage(),
                     ),
-                    self.show_score(),
                 ),
+            ),
+            CodeBlock(
+                lambda participant: self.assign_inner_proposal(
+                    self.continue_to_inner_game()
+                )
             ),
             GroupBarrier(
                 id_="overall_score",
                 group_type="chain",
             ),
+            self.show_trial_feedback(),
             # switch(
             #     label="choose_new_outer_role",
-            #     function=lambda experiment, participant: participant.definition["order"],
+            #     function=lambda experiment, participant: participant.current_trial.definition["order"],
             #     branches={
             #         "constant": None,
             #         "random": self.shuffle_roles(),
             #         "bid": self.bid(),
             #     }
             # ),
-            # GroupBarrier(
-            #     id_="roles_for_new_round",
-            #     group_type="chain",
-            # ),
+            self.choose_new_outer_role(),
+            GroupBarrier(
+                id_="roles_for_new_round",
+                group_type="chain",
+            ),
         )
 
     ######################################################
@@ -185,37 +191,35 @@ class NestedGameTrial(ChainTrial):
         outer_role = NestedGameTrial.get_outer_role(self.participant)
 
         if outer_role is not None:
-            proposal = ""
-
             if outer_role == "proposer":
                 proposer = True
             elif outer_role == "responder":
                 proposer = False
-
-                # Ask responder
-                proposer_id = self.get_outer_result()
-
-                if proposer_id is not None:
-                    if self.participant.id == proposer_id:
-                        proposal = "PROPOSER"
-                    else:
-                        proposal = "RESPONDER"
             else:
                 raise ValueError(f"outer_role should be either proposer or responder but got {outer_role}")
 
-            return OuterAcceptancePage(
-                proposer=proposer,
-                proposal=proposal,
-            )
+            proposer_id = self.get_outer_result()
+            if proposer_id is not None:
+                if self.participant.id == proposer_id:
+                    proposal = "PROPOSER"
+                else:
+                    proposal = "RESPONDER"
+
+                return OuterAcceptancePage(
+                    proposer=proposer,
+                    proposal=proposal,
+                )
+
+        return None
 
     def assign_inner_roles(self):
-        logger.info("Entering assignment of inner roles...")
+        # logger.info("Entering assignment of inner roles...")
         proposer_id = self.get_outer_result()
-        logger.info(f"--> {proposer_id}")
+        # logger.info(f"Proposer id --> {proposer_id}")
 
         roles = None
         if proposer_id is not None:
-            logger.info(f"The proposer is participant {proposer_id}")
+            # logger.info(f"The proposer is participant {proposer_id}")
             if proposer_id == self.participant.id:
                 roles = ["proposer", "responder"]
             else:
@@ -278,31 +282,21 @@ class NestedGameTrial(ChainTrial):
         ids = [participant.id for participant in self.participant.sync_group.participants]
         assert self.participant_id in ids
 
-        other_id = None
-        for idx in ids:
-            if idx != self.participant_id:
-                other_id = idx
-            break
+        ids.remove(self.participant_id)
+        other_id = ids[0]
+        assert other_id is not None, f"{ids} --- {self.participant_id}"
 
         # Determine proposal
         inner_proposer_id = None
-        outer_proposal = None
         for participant in participants:
-            outer_proposal = variable_handler.get_value(participant, "outer_proposal")
-            if outer_proposal is not None:
-                break
-
-        if outer_proposal is not None:
-            if outer_proposal == "self":
-                if self.am_i_the_outer_leader():
-                    inner_proposer_id = self.participant_id
-                else:
-                    inner_proposer_id = other_id
-            else:
-                if self.am_i_the_outer_leader():
-                    inner_proposer_id = other_id
-                else:
-                    inner_proposer_id = self.participant_id
+            if self.is_the_outer_leader(participant):
+                outer_proposal = variable_handler.get_value(participant, "outer_proposal")
+                if outer_proposal is not None:
+                    if outer_proposal == "self":
+                        inner_proposer_id = self.participant_id
+                    else:
+                        inner_proposer_id = other_id
+                    break
 
         return inner_proposer_id
 
@@ -333,7 +327,7 @@ class NestedGameTrial(ChainTrial):
             # Proposal stage
             conditional(
                 label="feedback_depending_on_outer_game",
-                condition=lambda participant: participant.definition['outer_game'] == "dictator",
+                condition=lambda participant: participant.current_trial.definition['outer_game'] == "dictator",
                 logic_if_true=InnerProposalPageOuterDictator(
                     proposer=self.am_i_the_inner_leader(),
                 ),
@@ -352,7 +346,7 @@ class NestedGameTrial(ChainTrial):
             # Proposal stage
             conditional(
                 label="feedback_depending_on_outer_game",
-                condition=lambda participant: participant.definition['outer_game'] == "dictator",
+                condition=lambda participant: participant.current_trial.definition['outer_game'] == "dictator",
                 logic_if_true=InnerProposalPageOuterDictator(
                     proposer=self.am_i_the_inner_leader(),
                 ),
@@ -364,6 +358,9 @@ class NestedGameTrial(ChainTrial):
                 id_="inner_proposal_stage",
                 group_type="chain",
             ),
+            CodeBlock(
+                lambda participant: self.assign_inner_proposal()
+            ),
             # Acceptance stage
             InnerAcceptancePage(
                 proposer=self.am_i_the_inner_leader(),
@@ -374,6 +371,22 @@ class NestedGameTrial(ChainTrial):
                 group_type="chain",
             ),
         )
+
+    def assign_inner_proposal(self, continue_to_inner_game: bool):
+        participants = self.participant.sync_group.participants
+        inner_proposal = None
+        if continue_to_inner_game:
+            for participant in participants:
+                if self.is_the_inner_leader(participant):
+                    inner_proposal = VariableHandler.get_value_from_last_answer(
+                        participant, "inner_proposal"
+                    )
+                    break
+
+        logger.info(f"Assigning inner proposal to {inner_proposal}")
+
+        for participant in participants:
+            variable_handler.set_value(participant, "inner_proposal", inner_proposal)
 
     @staticmethod
     def get_inner_role(participant) -> Union[str, None]:
@@ -408,14 +421,19 @@ class NestedGameTrial(ChainTrial):
             inner_role = NestedGameTrial.get_inner_role(participant)
             if inner_role is not None:
                 if inner_role == 'proposer':
+                    # proposal = VariableHandler.get_from_answer(
+                    #     answer=participant.current_trial.answer,
+                    #     variable="inner_proposal",
+                    # )
                     proposal = variable_handler.get_value(participant, 'inner_proposal')
                     if proposal is not None:
-                        try:
-                            proposal = int(proposal)
-                            remainder = 10 - proposal
-                        except:
-                            pass
+                        proposal = int(proposal)
+                        remainder = 10 - int(proposal)
                 else:
+                    # proposal = VariableHandler.get_from_answer(
+                    #     answer=participant.current_trial.answer,
+                    #     variable="inner_accept_answer",
+                    # )
                     accept_answer = variable_handler.get_value(participant, "inner_accept_answer")
 
         return {
@@ -430,20 +448,16 @@ class NestedGameTrial(ChainTrial):
     def score_trial(self, participants):
         pass
 
-    def show_score(self):
+    def show_trial_feedback(self):
         try:
             accumulated_scores = self.definition["summary"]["accumulated_rewards"]
-            my_accumulated_score = accumulated_scores[str(self.participant_id)]
+            my_accumulated_score = float(accumulated_scores[str(self.participant_id)])
         except:
             my_accumulated_score = 0.0
 
         inner_game_on = self.continue_to_inner_game()
-        dict_result = self.get_inner_result()
-        accept_answer = dict_result["accept_answer"]
-        proposal = dict_result["proposal"]
-        remainder = dict_result["remainder"]
-
         if not inner_game_on:
+
             return ModularPage(
                 label="reward",
                 prompt=Prompt(
@@ -459,37 +473,44 @@ class NestedGameTrial(ChainTrial):
                 events={
                     "responseEnable": Event(
                         is_triggered_by="trialStart",
-                        delay=10,
+                        delay=MAX_WAITING_SEEING_INFO,
                         js="onNextButton();",
                     ),
                 },
                 progress_display=ProgressDisplay(
                     stages=[
                         ProgressStage(
-                            time=15,
+                            time=MAX_WAITING_SEEING_INFO,
                             color="gray"
                         ),
                     ],
                 ),
             )
-        else:
+
+        dict_result = self.get_inner_result()
+        proposal = dict_result["proposal"]
+        remainder = dict_result["remainder"]
+        accept_answer = dict_result["accept_answer"]
+
+        if proposal is not None:
+
             if accept_answer == "Reject":
-                score = 0.0
+                score = 0
             else:
                 if self.am_i_the_inner_leader():
                     score = remainder
                 else:
                     score = proposal
 
-        if score is not None:
-            my_accumulated_score += score
+            logger.info(f"{proposal} --- {remainder} --- {accept_answer} --- {score}")
+            my_accumulated_score += int(score)
             inner_game = self.definition['inner_game']
             if inner_game == "dictator":
                 return InnerDictatorFeedbackPage(
                     proposer=self.get_outer_result() == self.participant_id,
                     proposal=proposal,
                     remainder=remainder,
-                    accumulated_score=my_accumulated_score,
+                    accumulated_score=int(my_accumulated_score),
                 )
             else:
                 return InnerUltimatumFeedbackPage(
@@ -497,22 +518,37 @@ class NestedGameTrial(ChainTrial):
                     proposal=proposal,
                     remainder=remainder,
                     accept_answer=accept_answer,
-                    accumulated_score=my_accumulated_score,
+                    accumulated_score=int(my_accumulated_score),
                 )
+        else:
+            return None
 
-    def shuffle_roles(self):
+    def choose_new_outer_role(self):
         participants = self.participant.sync_group.participants
         outer_roles = [
             self.get_outer_role(participant) for participant in participants
         ]
-        RNG.shuffle(outer_roles)
 
-        for role, participant in zip(outer_roles, participants):
-            variable_handler.set_value(
-                participant=participant,
-                variable="outer_role",
-                value=role,
-            )
+        if np.all(outer_roles):
+
+            transition = self.participant.current_trial.definition['transition']
+            if transition == "constant":
+                pass
+            elif transition == "random":
+                RNG.shuffle(outer_roles)
+            elif transition == "bid":
+                return self.bid()
+            else:
+                raise NotImplementedError
+
+            for role, participant in zip(outer_roles, participants):
+                variable_handler.set_value(
+                    participant=participant,
+                    variable="outer_role",
+                    value=role,
+                )
+
+        return None
 
     def bid(self):
         max_value = variable_handler.get_value(
@@ -544,6 +580,7 @@ class NestedGameTrial(ChainTrial):
         Scores the participant's answer.
         Returns a numeric score quantifying the participant's success.
         """
+        logger.info(f"==> {answer}")
         if isinstance(answer, dict):
             score = answer["reward"]
         elif isinstance(answer, str):
