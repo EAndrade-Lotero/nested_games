@@ -66,8 +66,8 @@ personality_trial_maker = PersonalityTrialMaker(
     id_="personality",
     trial_class=PersonalityTrial,
     nodes=personality_nodes,
-    expected_trials_per_participant=len(personality_nodes),
-    max_trials_per_participant=len(personality_nodes),
+    expected_trials_per_participant=1,
+    max_trials_per_participant=1,
     allow_repeated_nodes=False,
 )
 

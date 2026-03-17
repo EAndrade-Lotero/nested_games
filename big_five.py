@@ -35,7 +35,7 @@ def format_text(text: str) -> str:
     # Lowercase the first character if it is uppercase and not 'I'
     text = re.sub(
         r"^([A-Z])",
-        lambda m: m.group(1) if m.group(1) == "I" else m.group(1).lower(),
+        lambda m: m.group(1) if (m.group(1) == "I " or m.group(1) == "I'") else m.group(1).lower(),
         text,
     )
 
@@ -73,7 +73,7 @@ class PersonalityTrial(StaticTrial):
                 idx=idx,
                 time_estimate=self.time_estimate,
             )
-            for idx, item in enumerate(short_items[NUM_BIG_FIVE_QUESTIONS])
+            for idx, item in enumerate(short_items[:NUM_BIG_FIVE_QUESTIONS])
         ])
 
     @staticmethod
