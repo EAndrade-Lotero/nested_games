@@ -27,6 +27,7 @@ from .big_five import (
     WaitingTrial,
     waiting_nodes,
 )
+from .consent_science_of_learning import consent_cococo_science_of_learning
 
 logger = get_logger()
 
@@ -81,7 +82,28 @@ class Exp(psynet.experiment.Experiment):
     label = "Nested games"
     initial_recruitment_size = 1
 
+    config = {
+        "server_pem": "~/cap.pem",
+        # "recruiter": "prolific",
+        "recruiter": "hotair",
+        "wage_per_hour": 9,
+        # "currency": "£",
+        "currency": "$",
+        # **get_prolific_settings(),
+        # "title": "Foraging experiment (Chrome browser, ~15 mins, £2.3)",
+        "title": "Proposals game experiment (Chrome browser, ~15 mins, $2.30)",
+        "description": "This experiment is about collective behavior in nested games.",
+        'initial_recruitment_size': 1,
+        "auto_recruit": False,
+        "show_reward": True,
+        "show_progress_bar": True,
+    }
+
     timeline = Timeline(
+        consent_cococo_science_of_learning(
+            DURATION=15,
+            PAYMENT=2.30,
+        ),
         personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(
