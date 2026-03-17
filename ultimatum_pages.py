@@ -50,7 +50,9 @@ class OuterUltimatumProposalPage(ModularPage):
             waiting_time = MAX_WAITING_PROPOSALS
         else:
             prompt = Prompt(Markup(
-                "Click 'Next' to see which player your partner selects as PROPOSER."
+                f"<h2>Preparation phase</h2>"
+                f"<br>"
+                "<p>Click 'Next' to see which player your partner selects as PROPOSER.</p>"
             ))
             control = NullControl()
             waiting_time = MAX_WAITING_FOR_OTHER

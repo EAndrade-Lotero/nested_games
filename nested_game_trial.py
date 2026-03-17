@@ -2,7 +2,7 @@ from markupsafe import Markup
 from typing import Union
 
 from psynet.graphics import Prompt
-from psynet.page import WaitPage
+from psynet.page import WaitPage, InfoPage
 from psynet.modular_page import (
     ModularPage,
     PushButtonControl,
@@ -42,6 +42,21 @@ from .game_paramters import (
     MAX_WAITING_SEEING_INFO,
     RNG,
 )
+from .instructions import (
+    OBJECTIVE,
+    OUTER_DICTATOR_INSTRUCTION,
+    OUTER_ULTIMATUM_INSTRUCTION,
+    SAME_ROLE_INSTRUCTION,
+    RANDOM_ROLE_INSTRUCTION,
+    INNER_DICTATOR_INSTRUCTIONS,
+    INNER_ULTIMATUM_INSTRUCTIONS,
+    EXAMPLE_PREPARATION_PHASE,
+    EXAMPLE_PROPOSAL_PHASE,
+    EXAMPLE_RANDOM,
+    EXAMPLE_CONSTANT,
+    ADD_OUTER_ACCEPTANCE_INSTRUCTION,
+    ADD_INNER_ACCEPTANCE_INSTRUCTION,
+)
 
 logger = get_logger()
 variable_handler = VariableHandler()
@@ -71,6 +86,7 @@ class NestedGameTrial(ChainTrial):
                     content="Please wait while other participants read the instructions..."
                 ),
                 max_wait_time=120,
+                participant_timeout=300,
             ),
             #############################################
             # CHOOSE OUTER ROLES DEPENDING ON TREATMENT
@@ -124,15 +140,58 @@ class NestedGameTrial(ChainTrial):
     # METHODS FOR THE INSTRUCTIONS
     ######################################################
     def instructions_stage(self):
-        return ModularPage(
-            label="outer_role",
-            prompt="This is going to be the instructions",
-            control=PushButtonControl(
-                labels=["Next"],
-                choices=[self.get_outer_role(self.participant)]
+        outer_game = self.participant.current_trial.definition["outer_game"]
+        inner_game = self.participant.current_trial.definition["inner_game"]
+        transition = self.participant.current_trial.definition["transition"]
+
+        example_text = EXAMPLE_PREPARATION_PHASE
+        if outer_game == "dictator":
+            preparation_phase = OUTER_DICTATOR_INSTRUCTION
+        elif outer_game == "ultimatum":
+            preparation_phase = OUTER_ULTIMATUM_INSTRUCTION
+            example_text += ADD_OUTER_ACCEPTANCE_INSTRUCTION
+        else:
+            raise ValueError("outer_game must be dictator or ultimatum")
+
+        example_text += EXAMPLE_PROPOSAL_PHASE
+        if inner_game == "dictator":
+            proposal_phase = INNER_DICTATOR_INSTRUCTIONS
+        elif inner_game == "ultimatum":
+            proposal_phase = INNER_ULTIMATUM_INSTRUCTIONS
+            example_text += ADD_INNER_ACCEPTANCE_INSTRUCTION
+        else:
+            raise ValueError("outer_game must be dictator or ultimatum")
+
+        if transition == "random":
+            preparation_phase += RANDOM_ROLE_INSTRUCTION
+            example_text += EXAMPLE_RANDOM
+        elif transition == "constant":
+            preparation_phase += SAME_ROLE_INSTRUCTION
+            example_text += EXAMPLE_CONSTANT
+        else:
+            raise ValueError("transition must be 'random' or 'constant'")
+
+        list_of_pages = join(
+            InfoPage(
+                Prompt(Markup(OBJECTIVE)),
+                time_estimate=5,
             ),
-            time_estimate=10,
+            InfoPage(
+                Prompt(Markup(preparation_phase)),
+                time_estimate=5,
+            ),
+            ModularPage(
+                label="outer_role",
+                prompt=Prompt(Markup(proposal_phase)),
+                control=PushButtonControl(
+                    labels=["Next"],
+                    choices=[self.get_outer_role(self.participant)]
+                ),
+                time_estimate=10,
+            ),
         )
+
+        return list_of_pages
 
     ######################################################
     # METHODS FOR THE OUTER GAME

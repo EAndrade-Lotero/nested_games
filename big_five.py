@@ -111,7 +111,7 @@ class WaitingTrial(StaticTrial):
 
         item = RNG.choice(full_items)
         question = item["item"]
-        text = "<h2>Before we start</h2>"
+        text = "<h2>Waiting...</h2>"
         text += "<br>"
         text += "<p>We are waiting for other participants. </p>"
         text += "<p>In the meantime, please report how accurate is the following statement: </p>"
