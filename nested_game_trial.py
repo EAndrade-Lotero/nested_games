@@ -91,16 +91,16 @@ class NestedGameTrial(ChainTrial):
                 # participant_timeout=MAX_WAITING_SEEING_INFO,
                 # participant_timeout_action="fail",
             ),
-            InfoPage(
-                content=f"""
-**After instructions**
-Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
-My id: {self.participant_id} ---
-My outer role: {self.get_outer_role(self.participant)} ---
-Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
-""",
-                time_estimate=5,
-            ),
+#             InfoPage(
+#                 content=f"""
+# **After instructions**
+# Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
+# My id: {self.participant_id} ---
+# My outer role: {self.get_outer_role(self.participant)} ---
+# Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
+# """,
+#                 time_estimate=5,
+#             ),
             #############################################
             # CHOOSE OUTER ROLES DEPENDING ON TREATMENT
             #############################################
@@ -114,16 +114,16 @@ Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
                 # participant_timeout=MAX_WAITING_SEEING_INFO,
                 # participant_timeout_action="fail",
             ),
-            InfoPage(
-                content=f"""
-**After new role**
-Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
-My id: {self.participant_id} ---
-My outer role: {self.get_outer_role(self.participant)} ---
-Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
-""",
-                time_estimate=5,
-            ),
+#             InfoPage(
+#                 content=f"""
+# **After new role**
+# Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
+# My id: {self.participant_id} ---
+# My outer role: {self.get_outer_role(self.participant)} ---
+# Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
+# """,
+#                 time_estimate=5,
+#             ),
             #########################################
             # OUTER GAME
             #########################################
@@ -133,20 +133,20 @@ Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
                 logic_if_true=self.outer_dictator_stage(),
                 logic_if_false=self.outer_ultimatum_stage(),
             ),
-            InfoPage(
-                content=f"""
-**After outer game**
-Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
-My id: {self.participant_id} ---
-My outer role: {self.get_outer_role(self.participant)} ---
-Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
-Participant to be the inner PROPOSER: {self.get_outer_result()} ---
-Continue to inner game?: {self.continue_to_inner_game()} ---
-My inner role: {self.get_inner_role(self.participant)} ---
-Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
-""",
-                time_estimate=5,
-            ),
+#             InfoPage(
+#                 content=f"""
+# **After outer game**
+# Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
+# My id: {self.participant_id} ---
+# My outer role: {self.get_outer_role(self.participant)} ---
+# Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
+# Participant to be the inner PROPOSER: {self.get_outer_result()} ---
+# Continue to inner game?: {self.continue_to_inner_game()} ---
+# My inner role: {self.get_inner_role(self.participant)} ---
+# Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
+# """,
+#                 time_estimate=5,
+#             ),
             #########################################
             # DETERMINE IF GAME SHOULD CONTINUE
             #########################################
@@ -166,20 +166,20 @@ Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
                     ),
                 ),
             ),
-            InfoPage(
-                content=f"""
-**After inner game**
-Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
-My id: {self.participant_id} ---
-My outer role: {self.get_outer_role(self.participant)} ---
-Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
-My inner role: {self.get_inner_role(self.participant)} ---
-Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
-Proposal: {variable_handler.get_value(participant, "inner_proposal")} ---
-Result: {self.get_inner_result()} ---
-""",
-                time_estimate=5,
-            ),
+#             InfoPage(
+#                 content=f"""
+# **After inner game**
+# Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
+# My id: {self.participant_id} ---
+# My outer role: {self.get_outer_role(self.participant)} ---
+# Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
+# My inner role: {self.get_inner_role(self.participant)} ---
+# Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
+# Proposal: {variable_handler.get_value(participant, "inner_proposal")} ---
+# Result: {self.get_inner_result()} ---
+# """,
+#                 time_estimate=5,
+#             ),
             CodeBlock(
                 lambda participant: self.assign_inner_proposal(
                     self.continue_to_inner_game()
@@ -240,18 +240,18 @@ Result: {self.get_inner_result()} ---
             raise ValueError("transition must be 'random' or 'constant'")
 
         list_of_pages = join(
-            # InfoPage(
-            #     Markup(OBJECTIVE),
-            #     time_estimate=5,
-            # ),
-            # InfoPage(
-            #     Markup(preparation_phase),
-            #     time_estimate=5,
-            # ),
-            # InfoPage(
-            #     Markup(proposal_phase),
-            #     time_estimate=5,
-            # ),
+            InfoPage(
+                Markup(OBJECTIVE),
+                time_estimate=5,
+            ),
+            InfoPage(
+                Markup(preparation_phase),
+                time_estimate=5,
+            ),
+            InfoPage(
+                Markup(proposal_phase),
+                time_estimate=5,
+            ),
             ModularPage(
                 label="outer_role",
                 prompt=Prompt(Markup(example_text)),
