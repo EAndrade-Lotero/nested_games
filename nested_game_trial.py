@@ -91,10 +91,39 @@ class NestedGameTrial(ChainTrial):
                 # participant_timeout=MAX_WAITING_SEEING_INFO,
                 # participant_timeout_action="fail",
             ),
+            InfoPage(
+                content=f"""
+**After instructions**
+Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
+My id: {self.participant_id} ---
+My outer role: {self.get_outer_role(self.participant)} ---
+Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
+""",
+                time_estimate=5,
+            ),
             #############################################
             # CHOOSE OUTER ROLES DEPENDING ON TREATMENT
             #############################################
-            self.choose_new_outer_role(),
+            # self.choose_new_outer_role(),
+            GroupBarrier(
+                id_="setting_outer_role",
+                group_type="chain",
+                on_release=self.choose_new_outer_role,
+                # max_wait_time=MAX_WAIT_TIME,
+                # waiting_logic_expected_repetitions=15,
+                # participant_timeout=MAX_WAITING_SEEING_INFO,
+                # participant_timeout_action="fail",
+            ),
+            InfoPage(
+                content=f"""
+**After new role**
+Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
+My id: {self.participant_id} ---
+My outer role: {self.get_outer_role(self.participant)} ---
+Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
+""",
+                time_estimate=5,
+            ),
             #########################################
             # OUTER GAME
             #########################################
@@ -103,6 +132,20 @@ class NestedGameTrial(ChainTrial):
                 condition=lambda participant: participant.current_trial.definition["outer_game"] == "dictator",
                 logic_if_true=self.outer_dictator_stage(),
                 logic_if_false=self.outer_ultimatum_stage(),
+            ),
+            InfoPage(
+                content=f"""
+**After outer game**
+Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
+My id: {self.participant_id} ---
+My outer role: {self.get_outer_role(self.participant)} ---
+Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
+Participant to be the inner PROPOSER: {self.get_outer_result()} ---
+Continue to inner game?: {self.continue_to_inner_game()} ---
+My inner role: {self.get_inner_role(self.participant)} ---
+Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
+""",
+                time_estimate=5,
             ),
             #########################################
             # DETERMINE IF GAME SHOULD CONTINUE
@@ -122,6 +165,20 @@ class NestedGameTrial(ChainTrial):
                         logic_if_false=self.inner_ultimatum_stage(),
                     ),
                 ),
+            ),
+            InfoPage(
+                content=f"""
+**After inner game**
+Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
+My id: {self.participant_id} ---
+My outer role: {self.get_outer_role(self.participant)} ---
+Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
+My inner role: {self.get_inner_role(self.participant)} ---
+Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
+Proposal: {variable_handler.get_value(participant, "inner_proposal")} ---
+Result: {self.get_inner_result()} ---
+""",
+                time_estimate=5,
             ),
             CodeBlock(
                 lambda participant: self.assign_inner_proposal(
@@ -641,12 +698,8 @@ class NestedGameTrial(ChainTrial):
             # return self.bid()
         else:
             raise NotImplementedError
-        for role, participant in zip(outer_roles, ordered):
-            variable_handler.set_value(
-                participant=participant,
-                variable="outer_role",
-                value=role,
-            )
+        for participant, role in zip(ordered, outer_roles):
+            participant.var.outer_role = role
 
     def bid(self):
         max_value = variable_handler.get_value(

@@ -71,14 +71,14 @@ class OuterUltimatumProposalPage(ModularPage):
             control=control,
             time_estimate=5,
             save_answer="outer_proposal",
-            events={
-                "responseEnable": Event(
-                    is_triggered_by="trialStart",
-                    delay=waiting_time,
-                    js="onNextButton();",
-                ),
-            },
-            progress_display=progress_display,
+            # events={
+            #     "responseEnable": Event(
+            #         is_triggered_by="trialStart",
+            #         delay=waiting_time,
+            #         js="onNextButton();",
+            #     ),
+            # },
+            # progress_display=progress_display,
         )
 
 
@@ -121,14 +121,14 @@ class OuterAcceptancePage(ModularPage):
             control=control,
             time_estimate=5,
             save_answer="outer_accept_answer",
-            events={
-                "responseEnable": Event(
-                    is_triggered_by="trialStart",
-                    delay=waiting_time,
-                    js="onNextButton();",
-                ),
-            },
-            progress_display=progress_display,
+            # events={
+            #     "responseEnable": Event(
+            #         is_triggered_by="trialStart",
+            #         delay=waiting_time,
+            #         js="onNextButton();",
+            #     ),
+            # },
+            # progress_display=progress_display,
         )
 
 
@@ -138,13 +138,13 @@ class InnerProposalPageOuterUltimatum(ModularPage):
         proposer: bool,
     ):
         if proposer:
-            prompt = Prompt(Markup(
+            prompt = Markup(
                 f"<h2>Proposal phase</h2>"
                 f"<br>"
                 f"<p>Proposal accepted. You are the PROPOSER. </p>"
                 f"<p>Decide how many of the {ENDOWMENT} coins you will give to your partner: <p/>"
                 f"<br>"
-            ))
+            )
             control = CustomSliderControl(
                 start_value=0,
                 min_value=0,
@@ -157,7 +157,7 @@ class InnerProposalPageOuterUltimatum(ModularPage):
             )
             waiting_time = MAX_WAITING_PROPOSALS
         else:
-            prompt = Prompt(
+            prompt = Markup(
                 f"<p>Proposal accepted. You are the RESPONDER.</p>"
                 "<p>Press the 'Next' button to see the proposal from your partner.</p>"
             )
@@ -178,14 +178,14 @@ class InnerProposalPageOuterUltimatum(ModularPage):
             control=control,
             time_estimate=5,
             save_answer="inner_proposal",
-            events={
-                "responseEnable": Event(
-                    is_triggered_by="trialStart",
-                    delay=waiting_time,
-                    js="onNextButton();",
-                ),
-            },
-            progress_display=progress_display,
+            # events={
+            #     "responseEnable": Event(
+            #         is_triggered_by="trialStart",
+            #         delay=waiting_time,
+            #         js="onNextButton();",
+            #     ),
+            # },
+            # progress_display=progress_display,
         )
 
     def format_answer(self, raw_answer, **kwargs) -> Union[float, str, None]:
@@ -222,7 +222,7 @@ class InnerAcceptancePage(ModularPage):
     ) -> None:
 
         if proposer:
-            prompt = Prompt(
+            prompt = Markup(
                 "<p>Press the 'Next' button to see whether your partner accepted the proposal.</p>"
             )
             control = NullControl()
@@ -236,7 +236,7 @@ class InnerAcceptancePage(ModularPage):
                 ],
             )
         else:
-            prompt = Prompt(
+            prompt = Markup(
                 f"<p>Do you accept your partner's proposal of {proposal} out of {10}? </p>"
             )
             control = PushButtonControl(
@@ -252,14 +252,14 @@ class InnerAcceptancePage(ModularPage):
             control=control,
             time_estimate=5,
             save_answer="inner_accept_answer",
-            events={
-                "responseEnable": Event(
-                    is_triggered_by="trialStart",
-                    delay=waiting_time,
-                    js="onNextButton();",
-                ),
-            },
-            progress_display=progress_display,
+            # events={
+            #     "responseEnable": Event(
+            #         is_triggered_by="trialStart",
+            #         delay=waiting_time,
+            #         js="onNextButton();",
+            #     ),
+            # },
+            # progress_display=progress_display,
         )
 
 
@@ -306,19 +306,19 @@ class InnerUltimatumFeedbackPage(ModularPage):
             ),
             time_estimate=5,
             save_answer="reward",
-            events={
-                "responseEnable": Event(
-                    is_triggered_by="trialStart",
-                    delay=10,
-                    js="onNextButton();",
-                ),
-            },
-            progress_display=ProgressDisplay(
-                stages=[
-                    ProgressStage(
-                        time=waiting_time,
-                        color="gray"
-                    ),
-                ],
-            ),
+            # events={
+            #     "responseEnable": Event(
+            #         is_triggered_by="trialStart",
+            #         delay=10,
+            #         js="onNextButton();",
+            #     ),
+            # },
+            # progress_display=ProgressDisplay(
+            #     stages=[
+            #         ProgressStage(
+            #             time=waiting_time,
+            #             color="gray"
+            #         ),
+            #     ],
+            # ),
         )

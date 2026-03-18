@@ -18,8 +18,6 @@ from .nested_game_trial import (
 from .game_paramters import (
     MAX_WAITING_BIG_FIVE_QUESTIONS,
     NUMBER_OF_REPEATED_GAMES,
-    MAX_WAITING_SEEING_INFO,
-    MAX_WAIT_TIME,
     RNG,
 )
 from .big_five import (
@@ -92,10 +90,10 @@ class Exp(psynet.experiment.Experiment):
         # "currency": "£",
         "currency": "$",
         # **get_prolific_settings(),
-        # "title": "Foraging experiment (Chrome browser, ~15 mins, £2.3)",
-        "title": "Nested games experiment (Chrome browser, ~15 mins, $2.30)",
+        # "title": "Foraging experiment (Chrome browser, ~15 minutes, £2.3)",
+        "title": "Nested games experiment (Chrome browser, ~15 minutes, $2.30)",
         "description": "This experiment is about collective behavior in nested games.",
-        'initial_recruitment_size': 1,
+        'initial_recruitment_size': 2,
         "auto_recruit": False,
         "show_reward": True,
         "show_progress_bar": True,

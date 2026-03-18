@@ -71,14 +71,14 @@ class OuterDictatorProposalPage(ModularPage):
             control=control,
             time_estimate=5,
             save_answer="outer_proposal",
-            events={
-                "responseEnable": Event(
-                    is_triggered_by="trialStart",
-                    delay=waiting_time,
-                    js="onNextButton();",
-                ),
-            },
-            progress_display=progress_display,
+            # events={
+            #     "responseEnable": Event(
+            #         is_triggered_by="trialStart",
+            #         delay=waiting_time,
+            #         js="onNextButton();",
+            #     ),
+            # },
+            # progress_display=progress_display,
         )
 
 
@@ -129,14 +129,14 @@ class InnerProposalPageOuterDictator(ModularPage):
             control=control,
             time_estimate=5,
             save_answer="inner_proposal",
-            events={
-                "responseEnable": Event(
-                    is_triggered_by="trialStart",
-                    delay=waiting_time,
-                    js="onNextButton();",
-                ),
-            },
-            progress_display=progress_display,
+            # events={
+            #     "responseEnable": Event(
+            #         is_triggered_by="trialStart",
+            #         delay=waiting_time,
+            #         js="onNextButton();",
+            #     ),
+            # },
+            # progress_display=progress_display,
         )
 
     def format_answer(self, raw_answer, **kwargs) -> Union[float, str, None]:
@@ -203,20 +203,20 @@ class InnerDictatorFeedbackPage(ModularPage):
             ),
             time_estimate=5,
             save_answer="reward",
-            events={
-                "responseEnable": Event(
-                    is_triggered_by="trialStart",
-                    delay=waiting_time,
-                    js="onNextButton();",
-                ),
-            },
-            progress_display=ProgressDisplay(
-                stages=[
-                    ProgressStage(
-                        time=waiting_time,
-                        color="gray"
-                    ),
-                ],
-            ),
+            # events={
+            #     "responseEnable": Event(
+            #         is_triggered_by="trialStart",
+            #         delay=waiting_time,
+            #         js="onNextButton();",
+            #     ),
+            # },
+            # progress_display=ProgressDisplay(
+            #     stages=[
+            #         ProgressStage(
+            #             time=waiting_time,
+            #             color="gray"
+            #         ),
+            #     ],
+            # ),
         )
 
