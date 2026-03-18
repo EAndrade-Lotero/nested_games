@@ -40,6 +40,7 @@ from .game_paramters import (
     REWARD_SCALING_FACTOR,
     MAX_BONUS_REWARD,
     MAX_WAITING_SEEING_INFO,
+    MAX_WAIT_TIME,
     RNG,
 )
 from .instructions import (
@@ -85,8 +86,10 @@ class NestedGameTrial(ChainTrial):
                     wait_time=1,
                     content="Please wait while other participants read the instructions..."
                 ),
-                max_wait_time=120,
-                participant_timeout=300,
+                # max_wait_time=MAX_WAIT_TIME,
+                # waiting_logic_expected_repetitions=15,
+                # participant_timeout=MAX_WAITING_SEEING_INFO,
+                # participant_timeout_action="fail",
             ),
             #############################################
             # CHOOSE OUTER ROLES DEPENDING ON TREATMENT
@@ -128,11 +131,19 @@ class NestedGameTrial(ChainTrial):
             GroupBarrier(
                 id_="taking_stock",
                 group_type="chain",
+                # max_wait_time=MAX_WAIT_TIME,
+                # waiting_logic_expected_repetitions=15,
+                # participant_timeout=MAX_WAITING_SEEING_INFO,
+                # participant_timeout_action="fail",
             ),
             self.show_trial_feedback(),
             GroupBarrier(
                 id_="overall_score",
                 group_type="chain",
+                # max_wait_time=MAX_WAIT_TIME,
+                # waiting_logic_expected_repetitions=15,
+                # participant_timeout=MAX_WAITING_SEEING_INFO,
+                # participant_timeout_action="fail",
             ),
         )  # end main join
 
@@ -172,17 +183,21 @@ class NestedGameTrial(ChainTrial):
             raise ValueError("transition must be 'random' or 'constant'")
 
         list_of_pages = join(
-            InfoPage(
-                Prompt(Markup(OBJECTIVE)),
-                time_estimate=5,
-            ),
-            InfoPage(
-                Prompt(Markup(preparation_phase)),
-                time_estimate=5,
-            ),
+            # InfoPage(
+            #     Markup(OBJECTIVE),
+            #     time_estimate=5,
+            # ),
+            # InfoPage(
+            #     Markup(preparation_phase),
+            #     time_estimate=5,
+            # ),
+            # InfoPage(
+            #     Markup(proposal_phase),
+            #     time_estimate=5,
+            # ),
             ModularPage(
                 label="outer_role",
-                prompt=Prompt(Markup(proposal_phase)),
+                prompt=Prompt(Markup(example_text)),
                 control=PushButtonControl(
                     labels=["Next"],
                     choices=[self.get_outer_role(self.participant)]
@@ -204,6 +219,10 @@ class NestedGameTrial(ChainTrial):
             GroupBarrier(
                 id_="outer_proposal_stage",
                 group_type="chain",
+                # max_wait_time=MAX_WAIT_TIME,
+                # waiting_logic_expected_repetitions=15,
+                # participant_timeout=MAX_WAITING_SEEING_INFO,
+                # participant_timeout_action="fail",
             ),
             # Save to participant.var
             CodeBlock(
@@ -220,12 +239,20 @@ class NestedGameTrial(ChainTrial):
             GroupBarrier(
                 id_="outer_proposal_stage",
                 group_type="chain",
+                # max_wait_time=MAX_WAIT_TIME,
+                # waiting_logic_expected_repetitions=15,
+                # participant_timeout=MAX_WAITING_SEEING_INFO,
+                # participant_timeout_action="fail",
             ),
             # Acceptance stage
             self.outer_ultimatum_acceptance_stage(),
             GroupBarrier(
                 id_="outer_acceptance_stage",
                 group_type="chain",
+                # max_wait_time=MAX_WAIT_TIME,
+                # waiting_logic_expected_repetitions=15,
+                # participant_timeout=MAX_WAITING_SEEING_INFO,
+                # participant_timeout_action="fail",
             ),
             # Save to participant.var
             CodeBlock(
@@ -388,6 +415,10 @@ class NestedGameTrial(ChainTrial):
             GroupBarrier(
                 id_="inner_proposal_stage",
                 group_type="chain",
+                # max_wait_time=MAX_WAIT_TIME,
+                # waiting_logic_expected_repetitions=15,
+                # participant_timeout=MAX_WAITING_SEEING_INFO,
+                # participant_timeout_action="fail",
             ),
         )
 
@@ -407,6 +438,10 @@ class NestedGameTrial(ChainTrial):
             GroupBarrier(
                 id_="inner_proposal_stage",
                 group_type="chain",
+                # max_wait_time=MAX_WAIT_TIME,
+                # waiting_logic_expected_repetitions=15,
+                # participant_timeout=MAX_WAITING_SEEING_INFO,
+                # participant_timeout_action="fail",
             ),
             CodeBlock(
                 lambda participant: self.assign_inner_proposal(
@@ -421,6 +456,10 @@ class NestedGameTrial(ChainTrial):
             GroupBarrier(
                 id_="inner_acceptance_stage",
                 group_type="chain",
+                # max_wait_time=MAX_WAIT_TIME,
+                # waiting_logic_expected_repetitions=15,
+                # participant_timeout=MAX_WAITING_SEEING_INFO,
+                # participant_timeout_action="fail",
             ),
         )
 
@@ -590,23 +629,24 @@ class NestedGameTrial(ChainTrial):
 
     def choose_new_outer_role(self):
         transition = self.participant.current_trial.definition['transition']
+        participants = self.participant.sync_group.participants
+        ordered = sorted(participants, key=lambda p: p.id)
+        outer_roles = ["proposer", "responder"]
         if transition == "constant":
             pass
         elif transition == "random":
-            outer_roles = ["proposer", "responder"]
             RNG.shuffle(outer_roles)
-            participants = self.participant.sync_group.participants
-            for role, participant in zip(outer_roles, participants):
-                variable_handler.set_value(
-                    participant=participant,
-                    variable="outer_role",
-                    value=role,
-                )
         elif transition == "bid":
             pass
             # return self.bid()
         else:
             raise NotImplementedError
+        for role, participant in zip(outer_roles, ordered):
+            variable_handler.set_value(
+                participant=participant,
+                variable="outer_role",
+                value=role,
+            )
 
     def bid(self):
         max_value = variable_handler.get_value(
@@ -629,6 +669,10 @@ class NestedGameTrial(ChainTrial):
                 GroupBarrier(
                     id_="bidding_stage",
                     group_type="chain",
+                    # max_wait_time=MAX_WAIT_TIME,
+                    # waiting_logic_expected_repetitions=15,
+                    # participant_timeout=MAX_WAITING_SEEING_INFO,
+                    # participant_timeout_action="fail",
                 ),
             )
         return None

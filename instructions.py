@@ -3,7 +3,7 @@ from .game_paramters import ENDOWMENT
 OBJECTIVE = f"""
     <h2>Instructions</h2>
     <br>
-    <p>Welcome to the Proposals Game!</p>
+    <p>Welcome to the Nested Games experiment!</p>
     <br>
     <p>You will be paired with another participant. Each round consists of two phases:
     the preparation phase and the proposal phase. In the preparation phase, 
@@ -11,7 +11,7 @@ OBJECTIVE = f"""
     In the proposal phase, the proposer will decide how to split the endowment between the 
     two players.</p>
     <br>
-    <p><em>Objective:</em> Your goal is to accumulate as many coins as possible across all rounds.</p>
+    <p><em>Goal:</em> Your goal is to accumulate as many coins as possible across all rounds.</p>
     <br>
 """
 
@@ -34,21 +34,21 @@ OUTER_ULTIMATUM_INSTRUCTION = f"""
 """
 
 SAME_ROLE_INSTRUCTION = f"""
-    <p>In every round, the same participant will decide who will be the
+    <p>In every round, the same participant will propose who will be the
     <strong>PROPOSER</strong>.</p>
     <br>
 """
 
 RANDOM_ROLE_INSTRUCTION = f"""
     <p>In every round, the system will randomly select which participant
-    decides who will be the <strong>PROPOSER</strong>.</p>
+    gets to propose who will be the <strong>PROPOSER</strong>.</p>
     <br>
 """
 
 INNER_ULTIMATUM_INSTRUCTIONS = f"""
     <h2>Proposal phase</h2>
     <br>
-    <p>The <strong>PROPOSER</strong> offers some of their endowment to the
+    <p>The <strong>PROPOSER</strong> offers some of their coins to the
     <strong>RESPONDER</strong>. The RESPONDER may either accept or reject the
     offer. If the RESPONDER rejects the offer, neither participant receives
     any coins for that round.</p>
@@ -66,7 +66,7 @@ INNER_DICTATOR_INSTRUCTIONS = f"""
 EXAMPLE_PREPARATION_PHASE = f"""
     <h2>Example</h2>
     <br>
-    <p><strong>Round 1:</strong> 
+    <p><strong>ROUND 1:</strong> 
     <p><em>Preparation phase:</em> Player 1 gets to propose who will receive the endowment of {ENDOWMENT} coins.
     <p>Player 1 proposes Player 2 to be the PROPOSER.</p>
 """
@@ -78,7 +78,6 @@ ADD_OUTER_ACCEPTANCE_INSTRUCTION = f"""
 EXAMPLE_PROPOSAL_PHASE = f"""
     <br>
     <p><em>Proposal phase:</em> Player 2 proposes how to split the {ENDOWMENT} coins between the two players.</p>
-    <br>
     <p>Player 2 proposes to give 4 coins to Player 1 and keep the remaining 6 coins.</p>
 """
 

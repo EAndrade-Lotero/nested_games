@@ -158,8 +158,8 @@ class InnerProposalPageOuterUltimatum(ModularPage):
             waiting_time = MAX_WAITING_PROPOSALS
         else:
             prompt = Prompt(
-                f"Proposal accepted. You are the RESPONDER."
-                "Press the 'Next' button to see the proposal from your partner."
+                f"<p>Proposal accepted. You are the RESPONDER.</p>"
+                "<p>Press the 'Next' button to see the proposal from your partner.</p>"
             )
             control = NullControl()
             waiting_time = MAX_WAITING_FOR_OTHER
@@ -223,7 +223,7 @@ class InnerAcceptancePage(ModularPage):
 
         if proposer:
             prompt = Prompt(
-                "Press the 'Next' button to see whether your partner accepted the proposal."
+                "<p>Press the 'Next' button to see whether your partner accepted the proposal.</p>"
             )
             control = NullControl()
             waiting_time = MAX_WAITING_FOR_OTHER
@@ -237,7 +237,7 @@ class InnerAcceptancePage(ModularPage):
             )
         else:
             prompt = Prompt(
-                f"Do you accept your partner's proposal of {proposal} out of {10}? "
+                f"<p>Do you accept your partner's proposal of {proposal} out of {10}? </p>"
             )
             control = PushButtonControl(
                 choices=["Accept", "Reject"],

@@ -18,6 +18,8 @@ from .nested_game_trial import (
 from .game_paramters import (
     MAX_WAITING_BIG_FIVE_QUESTIONS,
     NUMBER_OF_REPEATED_GAMES,
+    MAX_WAITING_SEEING_INFO,
+    MAX_WAIT_TIME,
     RNG,
 )
 from .big_five import (
@@ -48,7 +50,7 @@ def get_start_nodes():
             definition={
                 "outer_game": "ultimatum",  # dictator, ultimatum
                 "inner_game": "ultimatum",  # dictator, ultimatum
-                "transition": "constant",  # constant, random, bid
+                "transition": "random",  # constant, random, bid
             }
         )
     ]
@@ -91,7 +93,7 @@ class Exp(psynet.experiment.Experiment):
         "currency": "$",
         # **get_prolific_settings(),
         # "title": "Foraging experiment (Chrome browser, ~15 mins, £2.3)",
-        "title": "Proposals game experiment (Chrome browser, ~15 mins, $2.30)",
+        "title": "Nested games experiment (Chrome browser, ~15 mins, $2.30)",
         "description": "This experiment is about collective behavior in nested games.",
         'initial_recruitment_size': 1,
         "auto_recruit": False,
@@ -100,11 +102,11 @@ class Exp(psynet.experiment.Experiment):
     }
 
     timeline = Timeline(
-        consent_cococo_science_of_learning(
-            DURATION=15,
-            PAYMENT=2.30,
-        ),
-        personality_trial_maker,
+        # consent_cococo_science_of_learning(
+        #     DURATION=15,
+        #     PAYMENT=2.30,
+        # ),
+        # personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(
                 group_type="chain",
@@ -125,6 +127,10 @@ class Exp(psynet.experiment.Experiment):
                 content="Please wait while other participants finish completing the personality trait questions..."
             ),
             on_release=assign_roles,
+            # max_wait_time=MAX_WAIT_TIME,
+            # waiting_logic_expected_repetitions=15,
+            # participant_timeout=MAX_WAITING_SEEING_INFO,
+            # participant_timeout_action="fail",
         ),
         NestedGameTrialMaker(
             id_="nested_games_trial_maker",

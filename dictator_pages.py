@@ -110,7 +110,7 @@ class InnerProposalPageOuterDictator(ModularPage):
                 f"<br>"
                 f"<p>You are the RESPONDER. </p>"
                 f"<br>"
-                "Press the 'Next' button to see the proposal from your partner."
+                "<p>Press the 'Next' button to see the proposal from your partner.</p>"
             ))
             control = NullControl()
             waiting_time = MAX_WAITING_FOR_OTHER
