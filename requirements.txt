@@ -6,7 +6,8 @@ markupsafe
 
 dallinger
 # psynet==13.1.1
-psynet@git+https://gitlab.com/PsyNetDev/PsyNet@eedb172cd338e0efb3a56653c5e6895fd46ea5f0#egg=psynet
+# psynet@git+https://gitlab.com/PsyNetDev/PsyNet@eedb172cd338e0efb3a56653c5e6895fd46ea5f0#egg=psynet
+psynet@git+https://gitlab.com/PsyNetDev/PsyNet@3e9aabaf4d3ed65811c17e948d1ea84903049b96#egg=psynet
 
 # Alternatively, you can use one of the following syntaxes to specify a custom PsyNet version
 # psynet@git+https://gitlab.com/PsyNetDev/PsyNet@v10.4.0#egg=psynet

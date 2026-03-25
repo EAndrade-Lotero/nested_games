@@ -39,6 +39,7 @@ from .variable_handler import VariableHandler
 from .game_paramters import (
     REWARD_SCALING_FACTOR,
     MAX_BONUS_REWARD,
+    MAX_WAITING_PROPOSALS,
     MAX_WAITING_SEEING_INFO,
     MAX_WAIT_TIME,
     RNG,
@@ -82,12 +83,13 @@ class NestedGameTrial(ChainTrial):
             GroupBarrier(
                 id_="instructions_stage",
                 group_type="chain",
+                on_release=self.choose_new_outer_role,
                 waiting_logic=WaitPage(
                     wait_time=1,
                     content="Please wait while other participants read the instructions..."
                 ),
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
+                max_wait_time=MAX_WAIT_TIME,
+                waiting_logic_expected_repetitions=15,
                 # participant_timeout=MAX_WAITING_SEEING_INFO,
                 # participant_timeout_action="fail",
             ),
@@ -104,16 +106,15 @@ class NestedGameTrial(ChainTrial):
             #############################################
             # CHOOSE OUTER ROLES DEPENDING ON TREATMENT
             #############################################
-            # self.choose_new_outer_role(),
-            GroupBarrier(
-                id_="setting_outer_role",
-                group_type="chain",
-                on_release=self.choose_new_outer_role,
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
-            ),
+            # GroupBarrier(
+            #     id_="setting_outer_role",
+            #     group_type="chain",
+            #     on_release=self.choose_new_outer_role,
+            #     # max_wait_time=MAX_WAIT_TIME,
+            #     # waiting_logic_expected_repetitions=15,
+            #     # participant_timeout=MAX_WAITING_SEEING_INFO,
+            #     # participant_timeout_action="fail",
+            # ),
 #             InfoPage(
 #                 content=f"""
 # **After new role**
@@ -240,18 +241,18 @@ class NestedGameTrial(ChainTrial):
             raise ValueError("transition must be 'random' or 'constant'")
 
         list_of_pages = join(
-            InfoPage(
-                Markup(OBJECTIVE),
-                time_estimate=5,
-            ),
-            InfoPage(
-                Markup(preparation_phase),
-                time_estimate=5,
-            ),
-            InfoPage(
-                Markup(proposal_phase),
-                time_estimate=5,
-            ),
+            # InfoPage(
+            #     Markup(OBJECTIVE),
+            #     time_estimate=5,
+            # ),
+            # InfoPage(
+            #     Markup(preparation_phase),
+            #     time_estimate=5,
+            # ),
+            # InfoPage(
+            #     Markup(proposal_phase),
+            #     time_estimate=5,
+            # ),
             ModularPage(
                 label="outer_role",
                 prompt=Prompt(Markup(example_text)),
@@ -290,13 +291,25 @@ class NestedGameTrial(ChainTrial):
 
     def outer_ultimatum_stage(self):
         list_of_pages = join(
-            OuterUltimatumProposalPage(
-                proposer=self.am_i_the_outer_leader(),
+            conditional(
+                label="is_leader",
+                condition=lambda participant: self.is_the_outer_leader(participant),
+                logic_if_true=OuterUltimatumProposalPage(
+                    proposer=self.am_i_the_outer_leader(),
+                ),
+                logic_if_false=None,
             ),
+            # OuterUltimatumProposalPage(
+            #     proposer=self.am_i_the_outer_leader(),
+            # ),
             GroupBarrier(
                 id_="outer_proposal_stage",
                 group_type="chain",
-                # max_wait_time=MAX_WAIT_TIME,
+                waiting_logic=WaitPage(
+                    wait_time=MAX_WAITING_PROPOSALS,
+                    content="Please wait while the other participant makes their move..."
+                ),
+                max_wait_time=MAX_WAIT_TIME,
                 # waiting_logic_expected_repetitions=15,
                 # participant_timeout=MAX_WAITING_SEEING_INFO,
                 # participant_timeout_action="fail",
@@ -341,10 +354,19 @@ class NestedGameTrial(ChainTrial):
                 else:
                     proposal = "RESPONDER"
 
-                return OuterAcceptancePage(
-                    proposer=proposer,
-                    proposal=proposal,
-                )
+                # return OuterAcceptancePage(
+                #     proposer=proposer,
+                #     proposal=proposal,
+                # )
+                return join(conditional(
+                    label="is_responder",
+                    condition=lambda participant: proposer is True,
+                    logic_if_true=None,
+                    logic_if_false=OuterAcceptancePage(
+                        proposer=proposer,
+                        proposal=proposal,
+                    )
+                ))
 
         return None
 

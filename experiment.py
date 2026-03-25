@@ -17,6 +17,9 @@ from .nested_game_trial import (
 )
 from .game_paramters import (
     MAX_WAITING_BIG_FIVE_QUESTIONS,
+    MAX_WAITING_PROPOSALS,
+    MAX_WAITING_SEEING_INFO,
+    MAX_WAIT_TIME,
     NUMBER_OF_REPEATED_GAMES,
     RNG,
 )
@@ -90,7 +93,6 @@ class Exp(psynet.experiment.Experiment):
         # "currency": "£",
         "currency": "$",
         # **get_prolific_settings(),
-        # "title": "Foraging experiment (Chrome browser, ~15 minutes, £2.3)",
         "title": "Nested games experiment (Chrome browser, ~15 minutes, $2.30)",
         "description": "This experiment is about collective behavior in nested games.",
         'initial_recruitment_size': 2,
@@ -100,11 +102,11 @@ class Exp(psynet.experiment.Experiment):
     }
 
     timeline = Timeline(
-        consent_cococo_science_of_learning(
-            DURATION=15,
-            PAYMENT=2.30,
-        ),
-        personality_trial_maker,
+        # consent_cococo_science_of_learning(
+        #     DURATION=15,
+        #     PAYMENT=2.30,
+        # ),
+        # personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(
                 group_type="chain",
@@ -121,12 +123,12 @@ class Exp(psynet.experiment.Experiment):
             id_="assign_roles",
             group_type="chain",
             waiting_logic=WaitPage(
-                wait_time=1,
+                wait_time=MAX_WAITING_PROPOSALS,
                 content="Please wait while other participants finish completing the personality trait questions..."
             ),
             on_release=assign_roles,
-            # max_wait_time=MAX_WAIT_TIME,
-            # waiting_logic_expected_repetitions=15,
+            max_wait_time=MAX_WAIT_TIME,
+            waiting_logic_expected_repetitions=15,
             # participant_timeout=MAX_WAITING_SEEING_INFO,
             # participant_timeout_action="fail",
         ),
