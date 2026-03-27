@@ -17,6 +17,7 @@ from .nested_game_trial import (
 )
 from .game_paramters import (
     MAX_WAITING_BIG_FIVE_QUESTIONS,
+    WAIT_PAGE_TIME,
     MAX_WAITING_PROPOSALS,
     MAX_WAITING_SEEING_INFO,
     MAX_WAIT_TIME,
@@ -123,7 +124,7 @@ class Exp(psynet.experiment.Experiment):
             id_="assign_roles",
             group_type="chain",
             waiting_logic=WaitPage(
-                wait_time=MAX_WAITING_PROPOSALS,
+                wait_time=WAIT_PAGE_TIME,
                 content="Please wait while other participants finish completing the personality trait questions..."
             ),
             on_release=assign_roles,

@@ -42,6 +42,7 @@ from .game_paramters import (
     MAX_WAITING_PROPOSALS,
     MAX_WAITING_SEEING_INFO,
     MAX_WAIT_TIME,
+    WAIT_PAGE_TIME,
     RNG,
 )
 from .instructions import (
@@ -77,122 +78,43 @@ class NestedGameTrial(ChainTrial):
             conditional(
                 label="only_first_round",
                 condition=lambda participant: self.position == 0,
-                logic_if_true=self.instructions_stage(),
+                logic_if_true=join(
+                    self.instructions_stage(),
+                    GroupBarrier(
+                        id_="instructions_stage",
+                        group_type="chain",
+                        on_release=self.choose_new_outer_role,
+                        waiting_logic=WaitPage(
+                            wait_time=WAIT_PAGE_TIME,
+                            content="Please wait while other participants read the instructions..."
+                        ),
+                        max_wait_time=MAX_WAIT_TIME,
+                        waiting_logic_expected_repetitions=15,
+                        # participant_timeout=MAX_WAITING_SEEING_INFO,
+                        # participant_timeout_action="fail",
+                    ),
+                ),
                 logic_if_false=None
             ),
-            GroupBarrier(
-                id_="instructions_stage",
-                group_type="chain",
-                on_release=self.choose_new_outer_role,
-                waiting_logic=WaitPage(
-                    wait_time=1,
-                    content="Please wait while other participants read the instructions..."
-                ),
-                max_wait_time=MAX_WAIT_TIME,
-                waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
-            ),
-#             InfoPage(
-#                 content=f"""
-# **After instructions**
-# Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
-# My id: {self.participant_id} ---
-# My outer role: {self.get_outer_role(self.participant)} ---
-# Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
-# """,
-#                 time_estimate=5,
-#             ),
-            #############################################
-            # CHOOSE OUTER ROLES DEPENDING ON TREATMENT
-            #############################################
-            # GroupBarrier(
-            #     id_="setting_outer_role",
-            #     group_type="chain",
-            #     on_release=self.choose_new_outer_role,
-            #     # max_wait_time=MAX_WAIT_TIME,
-            #     # waiting_logic_expected_repetitions=15,
-            #     # participant_timeout=MAX_WAITING_SEEING_INFO,
-            #     # participant_timeout_action="fail",
-            # ),
-#             InfoPage(
-#                 content=f"""
-# **After new role**
-# Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
-# My id: {self.participant_id} ---
-# My outer role: {self.get_outer_role(self.participant)} ---
-# Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
-# """,
-#                 time_estimate=5,
-#             ),
-            #########################################
             # OUTER GAME
-            #########################################
-            conditional(
-                label="outer_game_type",
-                condition=lambda participant: participant.current_trial.definition["outer_game"] == "dictator",
-                logic_if_true=self.outer_dictator_stage(),
-                logic_if_false=self.outer_ultimatum_stage(),
-            ),
-#             InfoPage(
-#                 content=f"""
-# **After outer game**
-# Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
-# My id: {self.participant_id} ---
-# My outer role: {self.get_outer_role(self.participant)} ---
-# Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
-# Participant to be the inner PROPOSER: {self.get_outer_result()} ---
-# Continue to inner game?: {self.continue_to_inner_game()} ---
-# My inner role: {self.get_inner_role(self.participant)} ---
-# Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
-# """,
-#                 time_estimate=5,
-#             ),
-            #########################################
+            self.outer_stage(),
             # DETERMINE IF GAME SHOULD CONTINUE
-            #########################################
             conditional(
                 label="check_continue_to_inner_gamme",
                 condition=lambda participant: self.continue_to_inner_game(),
                 logic_if_false=None,
+                # INNER GAME
                 logic_if_true=join(
-                    #########################################
-                    # INNER GAME
-                    #########################################
-                    conditional(
-                        label="outer_game_type",
-                        condition=lambda participant: participant.current_trial.definition["inner_game"] == "dictator",
-                        logic_if_true=self.inner_dictator_stage(),
-                        logic_if_false=self.inner_ultimatum_stage(),
+                    self.inner_stage(),
+                    GroupBarrier(
+                        id_="taking_stock",
+                        group_type="chain",
+                        # max_wait_time=MAX_WAIT_TIME,
+                        # waiting_logic_expected_repetitions=15,
+                        # participant_timeout=MAX_WAITING_SEEING_INFO,
+                        # participant_timeout_action="fail",
                     ),
-                ),
-            ),
-#             InfoPage(
-#                 content=f"""
-# **After inner game**
-# Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
-# My id: {self.participant_id} ---
-# My outer role: {self.get_outer_role(self.participant)} ---
-# Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
-# My inner role: {self.get_inner_role(self.participant)} ---
-# Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
-# Proposal: {variable_handler.get_value(participant, "inner_proposal")} ---
-# Result: {self.get_inner_result()} ---
-# """,
-#                 time_estimate=5,
-#             ),
-            CodeBlock(
-                lambda participant: self.assign_inner_proposal(
-                    self.continue_to_inner_game()
                 )
-            ),
-            GroupBarrier(
-                id_="taking_stock",
-                group_type="chain",
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
             ),
             self.show_trial_feedback(),
             GroupBarrier(
@@ -265,32 +187,11 @@ class NestedGameTrial(ChainTrial):
         )
 
         return list_of_pages
-
     ######################################################
     # METHODS FOR THE OUTER GAME
     ######################################################
-    def outer_dictator_stage(self):
-        list_of_pages = join(
-            OuterDictatorProposalPage(
-                proposer=self.am_i_the_outer_leader(),
-            ),
-            GroupBarrier(
-                id_="outer_proposal_stage",
-                group_type="chain",
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
-            ),
-            # Save to participant.var
-            CodeBlock(
-                lambda participant: self.assign_inner_roles()
-            ),
-        )
-        return list_of_pages
-
-    def outer_ultimatum_stage(self):
-        list_of_pages = join(
+    def outer_stage(self):
+        return join(
             conditional(
                 label="is_leader",
                 condition=lambda participant: self.is_the_outer_leader(participant),
@@ -299,27 +200,14 @@ class NestedGameTrial(ChainTrial):
                 ),
                 logic_if_false=None,
             ),
-            # OuterUltimatumProposalPage(
-            #     proposer=self.am_i_the_outer_leader(),
-            # ),
             GroupBarrier(
                 id_="outer_proposal_stage",
                 group_type="chain",
                 waiting_logic=WaitPage(
-                    wait_time=MAX_WAITING_PROPOSALS,
+                    wait_time=WAIT_PAGE_TIME,
                     content="Please wait while the other participant makes their move..."
                 ),
                 max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
-            ),
-            # Acceptance stage
-            self.outer_ultimatum_acceptance_stage(),
-            GroupBarrier(
-                id_="outer_acceptance_stage",
-                group_type="chain",
-                # max_wait_time=MAX_WAIT_TIME,
                 # waiting_logic_expected_repetitions=15,
                 # participant_timeout=MAX_WAITING_SEEING_INFO,
                 # participant_timeout_action="fail",
@@ -328,47 +216,54 @@ class NestedGameTrial(ChainTrial):
             CodeBlock(
                 lambda participant: self.assign_inner_roles()
             ),
-            # Save to participant.var
-            CodeBlock(
-                lambda participant: self.assign_outer_acceptance()
+            conditional(
+                label="outer_game_type",
+                condition=lambda participant: participant.current_trial.definition["outer_game"] == "ultimatum",
+                logic_if_true=self.outer_ultimatum_stage(),
+                logic_if_false=None,
             ),
         )
-        return list_of_pages
 
-    def outer_ultimatum_acceptance_stage(self):
-        # Check outer role and act accordingly
-        outer_role = NestedGameTrial.get_outer_role(self.participant)
-
-        if outer_role is not None:
-            if outer_role == "proposer":
-                proposer = True
-            elif outer_role == "responder":
-                proposer = False
+    def outer_ultimatum_stage(self):
+        proposer_id = self.get_outer_result()
+        proposal = None
+        if proposer_id is not None:
+            if self.participant.id == proposer_id:
+                proposal = "PROPOSER"
             else:
-                raise ValueError(f"outer_role should be either proposer or responder but got {outer_role}")
+                proposal = "RESPONDER"
 
-            proposer_id = self.get_outer_result()
-            if proposer_id is not None:
-                if self.participant.id == proposer_id:
-                    proposal = "PROPOSER"
-                else:
-                    proposal = "RESPONDER"
-
-                # return OuterAcceptancePage(
-                #     proposer=proposer,
-                #     proposal=proposal,
-                # )
-                return join(conditional(
+        if proposal is not None:
+            return join(
+                # Acceptance stage
+                conditional(
                     label="is_responder",
-                    condition=lambda participant: proposer is True,
+                    condition=lambda participant: self.is_the_outer_leader(participant),
                     logic_if_true=None,
                     logic_if_false=OuterAcceptancePage(
-                        proposer=proposer,
-                        proposal=proposal,
-                    )
-                ))
-
-        return None
+                            proposer=False,
+                            proposal=proposal,
+                        ),
+                ),
+                GroupBarrier(
+                    id_="outer_acceptance_stage",
+                    group_type="chain",
+                    waiting_logic=WaitPage(
+                        wait_time=WAIT_PAGE_TIME,
+                        content="Please wait while the other participant makes their move..."
+                    ),
+                    max_wait_time=MAX_WAIT_TIME,
+                    # waiting_logic_expected_repetitions=15,
+                    # participant_timeout=MAX_WAITING_SEEING_INFO,
+                    # participant_timeout_action="fail",
+                ),
+                # Save to participant.var
+                CodeBlock(
+                    lambda participant: self.assign_outer_acceptance()
+                ),
+            )
+        else:
+            return None
 
     def assign_inner_roles(self):
         # logger.info("Entering assignment of inner roles...")
@@ -478,67 +373,74 @@ class NestedGameTrial(ChainTrial):
     ######################################################
     # METHODS FOR THE INNER GAME
     ######################################################
-    def inner_dictator_stage(self):
+    def inner_stage(self):
         return join(
-            # Proposal stage
             conditional(
                 label="feedback_depending_on_outer_game",
                 condition=lambda participant: participant.current_trial.definition['outer_game'] == "dictator",
-                logic_if_true=InnerProposalPageOuterDictator(
-                    proposer=self.am_i_the_inner_leader(),
+                logic_if_true=conditional(
+                    label="is_leader",
+                    condition=lambda participant: self.is_the_inner_leader(participant),
+                    logic_if_true=InnerProposalPageOuterDictator(
+                        proposer=self.am_i_the_inner_leader(),
+                    ),
+                    logic_if_false=None,
                 ),
-                logic_if_false=InnerProposalPageOuterUltimatum(
-                    proposer=self.am_i_the_inner_leader(),
+                logic_if_false=conditional(
+                    label="is_leader",
+                    condition=lambda participant: self.is_the_inner_leader(participant),
+                    logic_if_true=InnerProposalPageOuterUltimatum(
+                        proposer=self.am_i_the_inner_leader(),
+                    ),
+                    logic_if_false=None,
                 ),
             ),
             GroupBarrier(
                 id_="inner_proposal_stage",
                 group_type="chain",
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
-            ),
-        )
-
-    def inner_ultimatum_stage(self):
-        return join(
-            # Proposal stage
-            conditional(
-                label="feedback_depending_on_outer_game",
-                condition=lambda participant: participant.current_trial.definition['outer_game'] == "dictator",
-                logic_if_true=InnerProposalPageOuterDictator(
-                    proposer=self.am_i_the_inner_leader(),
+                waiting_logic=WaitPage(
+                    wait_time=WAIT_PAGE_TIME,
+                    content="Please wait while the other participant makes their move..."
                 ),
-                logic_if_false=InnerProposalPageOuterUltimatum(
-                    proposer=self.am_i_the_inner_leader(),
-                ),
-            ),
-            GroupBarrier(
-                id_="inner_proposal_stage",
-                group_type="chain",
-                # max_wait_time=MAX_WAIT_TIME,
+                max_wait_time=MAX_WAIT_TIME,
                 # waiting_logic_expected_repetitions=15,
                 # participant_timeout=MAX_WAITING_SEEING_INFO,
                 # participant_timeout_action="fail",
             ),
             CodeBlock(
-                lambda participant: self.assign_inner_proposal(
-                    self.continue_to_inner_game()
+                    lambda participant: self.assign_inner_proposal(
+                        self.continue_to_inner_game()
                 )
             ),
-            # Acceptance stage
-            InnerAcceptancePage(
-                proposer=self.am_i_the_inner_leader(),
-                **self.get_inner_result()
+            conditional(
+                label="inner_game_type",
+                condition=lambda participant: participant.current_trial.definition["inner_game"] == "ultimatum",
+                logic_if_true=conditional(
+                    label="inner_acceptance",
+                    condition=lambda participant: self.is_the_inner_leader(participant),
+                    logic_if_true=None,
+                    logic_if_false=InnerAcceptancePage(
+                        proposer=self.am_i_the_inner_leader(),
+                        **self.get_inner_result()
+                    ),
+                ),
+                logic_if_false=None,
             ),
-            GroupBarrier(
-                id_="inner_acceptance_stage",
-                group_type="chain",
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
+            InfoPage(
+                content=f"""
+                My id: {self.participant_id} ---
+                # My outer role: {self.get_outer_role(self.participant)} ---
+                # Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
+                # Participant to be the inner PROPOSER: {self.get_outer_result()} ---
+                # Continue to inner game?: {self.continue_to_inner_game()} ---
+                My inner role: {self.get_inner_role(self.participant)} ---
+                Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
+                Proposal: {variable_handler.get_value(self.participant, "inner_proposal")} ---
+                Result: {self.get_inner_result()} ---
+                Answer: {self.participant.answer} ---
+                Answer accumulators: {self.participant.answer_accumulators} ---
+                """,
+                time_estimate=5,
             ),
         )
 
@@ -707,6 +609,14 @@ class NestedGameTrial(ChainTrial):
             )
 
     def choose_new_outer_role(self):
+        inner_result = self.get_inner_result()
+        proposal = inner_result["proposal"]
+        if proposal is None:
+            return
+        if self.participant.current_trial.definition['inner_game'] == "ultimatum":
+            accept_answer = inner_result["accept_answer"]
+            if accept_answer is None:
+                return
         transition = self.participant.current_trial.definition['transition']
         participants = self.participant.sync_group.participants
         ordered = sorted(participants, key=lambda p: p.id)
