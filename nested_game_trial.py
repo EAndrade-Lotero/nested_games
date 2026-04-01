@@ -178,7 +178,7 @@ class NestedGameTrial(ChainTrial):
             conditional(
                 label="is_leader",
                 condition=lambda participant: self.is_the_outer_leader(participant),
-                logic_if_true=OuterProposalPage(),
+                logic_if_true=OuterProposalPage(self.context),
                 logic_if_false=None,
             ),
             CustomBarrier("outer_proposal_stage"),

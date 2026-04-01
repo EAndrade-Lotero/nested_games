@@ -1,11 +1,10 @@
 from markupsafe import Markup
-from typing import Union
+from typing import Union, Dict
 
 from psynet.graphics import Prompt
 from psynet.modular_page import (
     ModularPage,
     PushButtonControl,
-    NumberControl,
     NullControl,
 )
 from psynet.timeline import (
@@ -16,12 +15,11 @@ from psynet.timeline import (
 )
 from psynet.utils import get_logger
 
+from .custom_front_end import OuterGameControl
 from .game_paramters import (
-    CURRENCY,
     ENDOWMENT,
     MAX_WAITING_PROPOSALS,
     MAX_WAITING_FOR_OTHER,
-    MAX_WAITING_SEEING_INFO,
 )
 from .custom_front_end import CustomSliderControl
 
@@ -30,7 +28,7 @@ logger = get_logger()
 
 
 class OuterProposalPage(ModularPage):
-    def __init__(self) -> None:
+    def __init__(self, context: Dict[str, str]) -> None:
 
         prompt = Prompt(Markup(
             f"<h2>Preparation phase</h2>"
@@ -38,25 +36,23 @@ class OuterProposalPage(ModularPage):
             f"<p>Choose who will take on the role of PROPOSER: </p>"
             f"<br>"
         ))
-        control = PushButtonControl(
-            labels=["Myself", "My partner"],
-            choices=["self", "other"],
+        control = OuterGameControl(
+            context=context,
+            timeout=MAX_WAITING_PROPOSALS,
         )
-
         super().__init__(
             label="outer_proposal",
             prompt=prompt,
             control=control,
             time_estimate=5,
             save_answer="outer_proposal",
-            # events={
-            #     "responseEnable": Event(
-            #         is_triggered_by="trialStart",
-            #         delay=waiting_time,
-            #         js="onNextButton();",
-            #     ),
-            # },
-            # progress_display=progress_display,
+            events={
+                "done": Event(
+                    is_triggered_by="done",
+                    js="psynet.submitResponse();",
+                    delay=0.0,
+                ),
+            },
         )
 
 

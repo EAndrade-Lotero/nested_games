@@ -53,6 +53,11 @@ def get_start_nodes():
                 "outer_game": "ultimatum",  # dictator, ultimatum
                 "inner_game": "ultimatum",  # dictator, ultimatum
                 "transition": "random",  # constant, random, bid
+            },
+            context={
+                "coin_url": "static/coin_url.png",
+                "generic_url": "static/generic_url.png",
+                "plate_url": "static/plate_url.png",
             }
         )
     ]

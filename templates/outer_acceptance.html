@@ -7,7 +7,7 @@
 <style>
 body {
   font-family: Arial, sans-serif;
-  background: #eeffda;
+  background: #eceaea;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -17,14 +17,25 @@ body {
 
 .tabletop {
   width: 700px;
-  height: 650px;
-  background: #eeffda;
+  height: 550px;
+  background: #eceaea;
   border-radius: 20px;
   padding: 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+}
+
+#countdown {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  font-family: "Book Antiqua", Palatino, serif;
+  font-size: 22px;
+  font-weight: bold;
+  color: rgb(83, 83, 83);
 }
 
 .zone {
@@ -39,12 +50,12 @@ body {
 
 .center-top {
   width: 320px;
-  height: 200px;
+  height: 250px;
 }
 
 .center-middle {
   width: 320px;
-  height: 250px;
+  height: 200px;
 }
 
 .center-bottom {
@@ -55,7 +66,7 @@ body {
 .rectangle {
   width: 150px;
   height: 50px;
-  background: rgb(228, 237, 252);
+  background: rgb(221, 233, 255);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -65,12 +76,13 @@ body {
 }
 
 .basket {
-  width: 350px;
+  width: 250px;
+  height: 150px;
   aspect-ratio: 1 / 1;
-  background-image: url("plate.png");
+  background-image: url("../static/plate.png");
   background-size: contain;
-  background-repeat: no-repeat;
-  /* background-position: center; */
+  /* background-repeat: no-repeat; */
+  background-position: center;
   position: relative;
 }
 
@@ -82,9 +94,9 @@ body {
 }
 
 .coin {
-  width: 40px;
-  height: 40px;
-  background-image: url("coin.png");
+  width: 25px;
+  aspect-ratio: 1 / 1;
+  background-image: url("../static/coin.png");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -94,7 +106,7 @@ body {
 .avatar {
   width: 80px;
   height: 80px;
-  background-image: url("generic.png");
+  background-image: url("../static/generic.png");
   background-size: cover;
   background-position: center;
   border-radius: 50%;
@@ -106,7 +118,7 @@ body {
 }
 
 .avatar.partner {
-  background-image: url("generic.png");
+  background-image: url("../static/generic.png");
 }
 
 .avatar.dragging {
@@ -124,9 +136,9 @@ body {
   border-radius: 6px;
 }
 
-.dropzone {
+.avatarzone {
   min-height: 90px;
-  width: 100%;
+  width: 30%;
   border: 2px dashed rgb(55, 0, 255);
   display: flex;
   justify-content: center;
@@ -148,9 +160,16 @@ body {
 
 <div class="tabletop">
 
+  <div id="countdown">02:00</div>
+
   <!-- TOP PLACE -->
   <div class="zone center-top">
     <div class="rectangle">RESPONDER</div>
+    <div class="avatarzone">
+        <div class="avatar partner" draggable="false" id="partner">
+            <span class="avatar-label">...</span>
+        </div>
+    </div>
     <div class="basket"></div>
   </div>
 
@@ -169,74 +188,39 @@ body {
     <div class="coin" draggable="true" id="coin10"></div>
     </div>
     <div class="rectangle">PROPOSER</div>
-    <div class="dropzone" id="dropzone">
-    <span class="dropzone-text">
-        Who do you want the PROPOSER to be?<br>Drop avatar here
-    </span>
-    </div>
-  </div>
-
-  <!-- THIRD PLACE (AVATARS SOURCE) -->
-  <div class="zone center-bottom">
-    <div class="avatar" draggable="true" id="me">
-    <span class="avatar-label">Me</span>
-    </div>
-    <div class="avatar partner" draggable="true" id="partner">
-        <span class="avatar-label">Partner</span>
+    <div class="avatarzone" id="dropzone">
+        <div class="avatar" draggable="false" id="me">
+        <span class="avatar-label">...</span>
+        </div>
     </div>
   </div>
 
 </div>
 
 <script>
-const avatars = document.querySelectorAll('.avatar');
-const dropzone = document.getElementById('dropzone');
-const bottomZone = document.querySelector('.center-bottom');
+const avatars = document.querySelectorAll('.avatar-label');
+avatars[0].textContent = 'P1';
+avatars[1].textContent = 'P2';
 
-avatars.forEach(avatar => {
-  avatar.addEventListener('dragstart', e => {
-    avatar.classList.add('dragging');
-    e.dataTransfer.setData('text/plain', avatar.id);
-  });
+let timeRemaining = 120; // seconds (2 minutes)
 
-  avatar.addEventListener('dragend', () => {
-    avatar.classList.remove('dragging');
-  });
-});
+function updateClock() {
+  const minutes = Math.floor(timeRemaining / 60);
+  const seconds = timeRemaining % 60;
 
+  document.getElementById("countdown").textContent =
+    `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
-dropzone.addEventListener('dragover', e => {
-  e.preventDefault();
-});
-
-
-dropzone.addEventListener('drop', e => {
-  e.preventDefault();
-
-  // allow only ONE avatar inside dropzone
-  if (dropzone.querySelector('.avatar')) {
-    return;
+  if (timeRemaining > 0) {
+    timeRemaining--;
+  } else {
+    clearInterval(timer);
   }
+}
 
-  const id = e.dataTransfer.getData('text/plain');
-  const avatar = document.getElementById(id);
+updateClock();
 
-  dropzone.appendChild(avatar);
-});
-
-bottomZone.addEventListener('dragover', e => {
-  e.preventDefault();
-});
-
-bottomZone.addEventListener('drop', e => {
-  e.preventDefault();
-
-  const id = e.dataTransfer.getData('text/plain');
-  const avatar = document.getElementById(id);
-
-  bottomZone.appendChild(avatar);
-});
-
+const timer = setInterval(updateClock, 1000);
 </script>
 
 </body>

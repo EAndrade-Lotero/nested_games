@@ -1,0 +1,374 @@
+{% macro progress(config) %}
+
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    body { margin: 24px; max-width: 980px; }
+    h1 { margin: 0 0 14px; font-size: 22px; }
+    .card { border: 1px solid #ddd; border-radius: 14px; padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,.04); }
+
+    .row { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: start; }
+    @media (max-width: 780px) { .row { grid-template-columns: 1fr; } }
+
+    .minimap-wrap { display: grid; gap: 10px; }
+    canvas { border: 1px solid #ccc; border-radius: 12px; background: #fafafa; }
+
+    .controls { display: grid; gap: 14px; }
+    .bot h3 { margin: 0 0 10px; font-size: 15px; }
+
+    input[type="range"] { width: 100%; }
+    .note { font-size: 13px; color: #555; margin-top: 10px; line-height: 1.35; }
+    code { background: #f3f3f3; padding: 1px 6px; border-radius: 8px; }
+  </style>
+
+  <div class="card">
+    <div class="row">
+      <div class="minimap-wrap">
+        <canvas id="minimap" width="320" height="200"></canvas>
+        <div class="note">
+          Starting positions are shown as rings.<br/>
+        </div>
+      </div>
+
+      <div class="controls" id="controls"></div>
+    </div>
+  </div>
+
+  <script>
+    /**********************
+     * CONFIG YOU PROVIDE
+     **********************/
+    // World dimensions (minimap represents the full world)
+    const world = {{ config.map }};
+    const WORLD_W = {{ config.world_w }};
+    const WORLD_H = {{ config.world_h }};
+
+    const FORAGER_PATHS = {{ config.tiles_visited }}.map(path =>
+      path.map(([x, y]) => ({ x, y }))
+    );
+
+    // Starting fuel: default = number of moves possible (path length - 1)
+    // You can override per bot here if desired.
+    // Example: const START_FUEL = [20, 12, 30];
+    const START_FUEL = null;
+
+    // Movement timing (ms) per step
+    const STEP_MS = 170;   ////////////////////////////// <=====================
+    {#const STEP_MS = 1;#}
+
+    /**********************
+     * UTILS
+     **********************/
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+    const randInt = (lo, hi) => Math.floor(Math.random() * (hi - lo + 1)) + lo;
+
+    function isValidTile(t) {
+      return t && Number.isInteger(t.x) && Number.isInteger(t.y)
+        && t.x >= 0 && t.x < WORLD_W && t.y >= 0 && t.y < WORLD_H;
+    }
+
+    function assertPaths(paths) {
+      if (!Array.isArray(paths) || paths.length !== 3) {
+        throw new Error("FORAGER_PATHS must be an array of 3 paths.");
+      }
+      for (let i = 0; i < paths.length; i++) {
+        if (!Array.isArray(paths[i]) || paths[i].length < 1) {
+          throw new Error(`Path ${i} must be a non-empty list of tiles.`);
+        }
+        for (let j = 0; j < paths[i].length; j++) {
+          if (!isValidTile(paths[i][j])) {
+            throw new Error(`Invalid tile in path ${i} at index ${j}: ${JSON.stringify(paths[i][j])}`);
+          }
+        }
+      }
+    }
+
+    /**********************
+     * MODEL
+     **********************/
+    class Forager extends EventTarget {
+      constructor(id, path, startDelaySec, fuelMax) {
+        super();
+        this.id = id;
+        this.path = path;
+        this.startDelaySec = startDelaySec;
+        this.fuelMax = fuelMax;
+        this.fuel = fuelMax;
+        this.coins = 0;
+
+        this.idx = 0;
+        this.active = false;
+        this.done = false;
+
+        this.timerStart = null;
+        this.timerMove = null;
+      }
+
+      get pos() { return this.path[this.idx]; }
+
+      start(onTick) {
+        this.timerStart = setTimeout(() => {
+          this.active = true;
+
+          // optional: signal start
+          this.dispatchEvent(new CustomEvent("started", { detail: { id: this.id } }));
+
+          this.timerMove = setInterval(() => {
+            if (this.done) return;
+
+            // Stop if no fuel OR end of path
+            const outOfFuel = this.fuel <= 0;
+            const endOfPath = this.idx >= this.path.length - 1;
+
+            if (outOfFuel || endOfPath) {
+              this.done = true;
+              this.active = false;
+              clearInterval(this.timerMove);
+
+              // signal done
+              this.dispatchEvent(new CustomEvent("done", {
+                detail: {
+                  id: this.id,
+                  reason: outOfFuel ? "fuel" : "path",
+                  finalPos: this.pos,
+                  turns: this.idx,      // how many moves taken
+                  fuelLeft: this.fuel
+                }
+              }));
+
+              onTick?.();
+              return;
+            }
+
+            // Move one tile
+            this.idx += 1;
+            this.fuel -= 1;
+
+            // Check if coin collected
+            const position = this.pos;
+            if (world[this.pos.y][this.pos.x] === 1) {
+                world[this.pos.y][this.pos.x] = 0;
+                this.coins += 1;
+            }
+
+            onTick?.();
+          }, STEP_MS);
+
+          onTick?.();
+        }, this.startDelaySec * 1000);
+      }
+    }
+
+    /**********************
+     * VIEW: Minimap canvas
+     **********************/
+    const canvas = document.getElementById("minimap");
+    const ctx = canvas.getContext("2d");
+
+    function worldToCanvas(tile) {
+      const px = (tile.x + 0.5) * (canvas.width / WORLD_W);
+      const py = (tile.y + 0.5) * (canvas.height / WORLD_H);
+      return { px, py };
+    }
+
+    function drawMinimap(bots) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Light grid (optional, cheap)
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = "rgba(0,0,0,0.06)";
+      ctx.lineWidth = 1;
+      const gx = canvas.width / WORLD_W;
+      const gy = canvas.height / WORLD_H;
+      // draw a coarser grid for performance
+      const step = 5;
+      for (let x = 0; x <= WORLD_W; x += step) {
+        ctx.beginPath();
+        ctx.moveTo(x * gx, 0);
+        ctx.lineTo(x * gx, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= WORLD_H; y += step) {
+        ctx.beginPath();
+        ctx.moveTo(0, y * gy);
+        ctx.lineTo(canvas.width, y * gy);
+        ctx.stroke();
+      }
+
+      // Draw each forager: starting position marker + current position dot
+      bots.forEach((b, i) => {
+        const start = b.path[0];
+        const cur = b.pos;
+
+        const { px: sx, py: sy } = worldToCanvas(start);
+        const { px: cx, py: cy } = worldToCanvas(cur);
+
+        // Starting position: ring
+        ctx.beginPath();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = ["#1f77b4", "#d62728", "#2ca02c"][i % 3];
+        ctx.arc(sx, sy, 9, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Current position: filled dot (slightly larger when active)
+        ctx.beginPath();
+        ctx.fillStyle = ["#1f77b4", "#d62728", "#2ca02c"][i % 3];
+        const r = b.active ? 6 : 5;
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Label
+        ctx.font = "12px system-ui, -apple-system, Segue UI, Roboto, sans-serif";
+        ctx.fillStyle = "rgba(0,0,0,0.85)";
+        ctx.fillText(`F${b.id + 1}`, cx + 8, cy - 8);
+      });
+    }
+
+    /**********************
+     * VIEW: Controls
+     **********************/
+    const controls = document.getElementById("controls");
+
+    function makeBotPanel(bot, color) {
+      const el = document.createElement("div");
+      el.className = "bot";
+
+      const title = document.createElement("h3");
+      title.textContent = `Forager ${bot.id + 1}`;
+      title.style.color = color;
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+
+      const posLine = document.createElement("div");
+      const coinsLine = document.createElement("div");
+      const fuelLine = document.createElement("div");
+      const statusLine = document.createElement("div");
+
+      const fuelRow = document.createElement("div");
+      fuelRow.className = "fuel-row";
+
+      const slider = document.createElement("input");
+      slider.type = "range";
+      slider.min = "0";
+      slider.max = String(100);
+      slider.value = String(bot.fuel / bot.fuelMax * 100);
+      slider.disabled = true;
+
+      {#fuelRow.appendChild(fuelTop);#}
+      fuelRow.appendChild(slider);
+
+      meta.appendChild(posLine);
+      meta.appendChild(coinsLine);
+      meta.appendChild(statusLine);
+      meta.appendChild(fuelLine);
+
+      el.appendChild(title);
+      el.appendChild(meta);
+      el.appendChild(fuelRow);
+
+      function render() {
+        posLine.innerHTML = `Position: <strong>(${bot.pos.x}, ${bot.pos.y})</strong>`;
+        coinsLine.innerHTML = `Coins collected: <strong>${bot.coins}</strong>`;
+        fuelLine.innerHTML = `Fuel: <strong>${Math.round(bot.fuel / bot.fuelMax * 100)}`;
+        {#fuelLeft.textContent = "0";#}
+        {#fuelRight.textContent = String(100);#}
+        slider.value = String(bot.fuel / bot.fuelMax * 100);
+
+        let status = "waiting";
+        if (bot.active) status = "moving";
+        if (bot.done) status = "done";
+        statusLine.innerHTML = `Status: <strong>${status}</strong>`;
+      }
+
+      render();
+      return { el, render };
+    }
+
+    /**********************
+     * BOOT
+     **********************/
+    assertPaths(FORAGER_PATHS);
+
+    const colors = ["#1f77b4", "#d62728", "#2ca02c"];
+    const bots = FORAGER_PATHS.map((path, i) => {
+      const delay = randInt(1, 3); // seconds //////////////////////////<=======================
+      {#const delay = 0; // seconds#}
+      const defaultFuel = Math.max(0, path.length - 1); // 1 fuel per move
+      const fuelMax = START_FUEL?.[i] ?? defaultFuel;
+      return new Forager(i, path, delay, fuelMax);
+    });
+
+    const finished = new Set();
+
+    bots.forEach(bot => {
+      bot.addEventListener("done", (e) => {
+        finished.add(e.detail.id);
+
+        // (optional) per-bot finish hook
+        console.log("Bot finished:", e.detail);
+
+        if (finished.size === bots.length) {
+          console.log("All bots finished!");
+          // Trigger your global event
+          window.dispatchEvent(new CustomEvent("allForagersFinished", {}));
+          psynet.trial.registerEvent(
+                "allForagersFinished",
+                {info: "OK"}
+            );
+          }
+      });
+    });
+
+
+    const panels = bots.map((b, i) => makeBotPanel(b, colors[i]));
+    panels.forEach(p => controls.appendChild(p.el));
+
+    function renderAll() {
+      drawMinimap(bots);
+      panels.forEach(p => p.render());
+    }
+
+    // 3) At the beginning, show the starting positions on the minimap
+    // (and current positions = starts, since idx=0)
+    renderAll();
+
+    async function startSequentially(bots, onTick) {
+      for (let i = 0; i < bots.length; i++) {
+        // Start this bot
+        bots[i].start(onTick);
+
+        // Wait until it finishes
+        await new Promise(resolve => {
+          const handler = () => {
+            bots[i].removeEventListener("done", handler);
+            resolve();
+          };
+          bots[i].addEventListener("done", handler);
+        });
+      }
+
+      // Optional: global "all finished" event
+      window.dispatchEvent(new CustomEvent("allForagersFinished", {
+        detail: {
+          results: bots.map(b => ({
+            id: b.id,
+            finalPos: b.pos,
+            fuelLeft: b.fuel,
+            movesTaken: b.idx
+          }))
+        }
+      }));
+    }
+
+    startSequentially(bots, renderAll);
+
+    /////////////////////////////////////////////////////
+    // Function to stage the response for PsyNet
+    /////////////////////////////////////////////////////
+    psynet.stageResponse = function() {
+          psynet.response.staged.rawAnswer = "OK";
+    }
+
+</script>
+
+{% endmacro %}
