@@ -1,10 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tabletop Layout</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #eeffda;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.tabletop {
+  width: 700px;
+  height: 650px;
+  background: #eeffda;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.zone {
+  border: 2px solid #365c5c;
+  border-radius: 12px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.center-top {
+  width: 320px;
+  height: 200px;
+}
+
+.center-middle {
+  width: 320px;
+  height: 250px;
+}
+
+.center-bottom {
+  flex-direction: row;
+  justify-content: center;
+}
+
+.rectangle {
+  width: 150px;
+  height: 50px;
+  background: rgb(228, 237, 252);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Book Antiqua", Palatino, serif;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.basket {
+  width: 350px;
+  aspect-ratio: 1 / 1;
+  background-image: url("plate.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  /* background-position: center; */
+  position: relative;
+}
+
+.coin-pile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.coin {
+  width: 40px;
+  height: 40px;
+  background-image: url("coin.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: grab;
+}
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  background-image: url("generic.png");
+  background-size: cover;
+  background-position: center;
+  border-radius: 50%;
+  position: relative;
+  cursor: grab;
+  user-select: none;
+  color: white;
+  font-weight: bold;
+}
+
+.avatar.partner {
+  background-image: url("generic.png");
+}
+
+.avatar.dragging {
+  opacity: 0.5;
+}
+
+.avatar-label {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  background: rgba(168, 168, 168, 0.5);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.dropzone {
+  min-height: 90px;
+  width: 100%;
+  border: 2px dashed rgb(55, 0, 255);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  text-align: center;
+}
+
+.dropzone .avatar {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+</style>
 </head>
 <body>
-$END$
+
+<div class="tabletop">
+
+  <!-- TOP PLACE -->
+  <div class="zone center-top">
+    <div class="rectangle">RESPONDER</div>
+    <div class="basket"></div>
+  </div>
+
+  <!-- SECOND PLACE (DROP TARGET) -->
+  <div class="zone center-middle">
+    <div class="coin-pile">
+    <div class="coin" draggable="true" id="coin1"></div>
+    <div class="coin" draggable="true" id="coin2"></div>
+    <div class="coin" draggable="true" id="coin3"></div>
+    <div class="coin" draggable="true" id="coin4"></div>
+    <div class="coin" draggable="true" id="coin5"></div>
+    <div class="coin" draggable="true" id="coin6"></div>
+    <div class="coin" draggable="true" id="coin7"></div>
+    <div class="coin" draggable="true" id="coin8"></div>
+    <div class="coin" draggable="true" id="coin9"></div>
+    <div class="coin" draggable="true" id="coin10"></div>
+    </div>
+    <div class="rectangle">PROPOSER</div>
+    <div class="dropzone" id="dropzone">
+    <span class="dropzone-text">
+        Who do you want the PROPOSER to be?<br>Drop avatar here
+    </span>
+    </div>
+  </div>
+
+  <!-- THIRD PLACE (AVATARS SOURCE) -->
+  <div class="zone center-bottom">
+    <div class="avatar" draggable="true" id="me">
+    <span class="avatar-label">Me</span>
+    </div>
+    <div class="avatar partner" draggable="true" id="partner">
+        <span class="avatar-label">Partner</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const avatars = document.querySelectorAll('.avatar');
+const dropzone = document.getElementById('dropzone');
+const bottomZone = document.querySelector('.center-bottom');
+
+avatars.forEach(avatar => {
+  avatar.addEventListener('dragstart', e => {
+    avatar.classList.add('dragging');
+    e.dataTransfer.setData('text/plain', avatar.id);
+  });
+
+  avatar.addEventListener('dragend', () => {
+    avatar.classList.remove('dragging');
+  });
+});
+
+
+dropzone.addEventListener('dragover', e => {
+  e.preventDefault();
+});
+
+
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+
+  // allow only ONE avatar inside dropzone
+  if (dropzone.querySelector('.avatar')) {
+    return;
+  }
+
+  const id = e.dataTransfer.getData('text/plain');
+  const avatar = document.getElementById(id);
+
+  dropzone.appendChild(avatar);
+});
+
+bottomZone.addEventListener('dragover', e => {
+  e.preventDefault();
+});
+
+bottomZone.addEventListener('drop', e => {
+  e.preventDefault();
+
+  const id = e.dataTransfer.getData('text/plain');
+  const avatar = document.getElementById(id);
+
+  bottomZone.appendChild(avatar);
+});
+
+</script>
+
 </body>
 </html>
