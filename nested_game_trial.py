@@ -1,5 +1,7 @@
+from math import remainder
+
 from markupsafe import Markup
-from typing import Union
+from typing import Union, Tuple, Dict
 
 from psynet.graphics import Prompt
 from psynet.page import WaitPage, InfoPage
@@ -23,16 +25,17 @@ from psynet.trial.chain import (
 from psynet.sync import GroupBarrier
 from psynet.utils import get_logger
 
+from .custom_barriers import CustomBarrier
+from .custom_pages import (
+    OuterProposalPage,
+    OuterAcceptancePage,
+    InnerProposalPage,
+    InnerAcceptancePage,
+)
 from .dictator_pages import (
-    OuterDictatorProposalPage,
-    InnerProposalPageOuterDictator,
     InnerDictatorFeedbackPage,
 )
 from .ultimatum_pages import (
-    OuterUltimatumProposalPage,
-    OuterAcceptancePage,
-    InnerProposalPageOuterUltimatum,
-    InnerAcceptancePage,
     InnerUltimatumFeedbackPage,
 )
 from .variable_handler import VariableHandler
@@ -78,53 +81,32 @@ class NestedGameTrial(ChainTrial):
             conditional(
                 label="only_first_round",
                 condition=lambda participant: self.position == 0,
-                logic_if_true=join(
-                    self.instructions_stage(),
-                    GroupBarrier(
-                        id_="instructions_stage",
-                        group_type="chain",
-                        on_release=self.choose_new_outer_role,
-                        waiting_logic=WaitPage(
-                            wait_time=WAIT_PAGE_TIME,
-                            content="Please wait while other participants read the instructions..."
-                        ),
-                        max_wait_time=MAX_WAIT_TIME,
-                        waiting_logic_expected_repetitions=15,
-                        # participant_timeout=MAX_WAITING_SEEING_INFO,
-                        # participant_timeout_action="fail",
-                    ),
-                ),
+                logic_if_true=self.instructions_stage(),
                 logic_if_false=None
             ),
+            #########################################
             # OUTER GAME
+            #########################################
+            CustomBarrier(
+                id_="instructions_stage",
+                on_release=self.choose_new_outer_role,
+            ),
             self.outer_stage(),
             # DETERMINE IF GAME SHOULD CONTINUE
             conditional(
                 label="check_continue_to_inner_gamme",
-                condition=lambda participant: self.continue_to_inner_game(),
+                condition=self.continue_to_inner_game,
                 logic_if_false=None,
+                #########################################
                 # INNER GAME
-                logic_if_true=join(
-                    self.inner_stage(),
-                    GroupBarrier(
-                        id_="taking_stock",
-                        group_type="chain",
-                        # max_wait_time=MAX_WAIT_TIME,
-                        # waiting_logic_expected_repetitions=15,
-                        # participant_timeout=MAX_WAITING_SEEING_INFO,
-                        # participant_timeout_action="fail",
-                    ),
-                )
+                #########################################
+                logic_if_true=self.inner_stage(),
             ),
+            #########################################
+            # SHOW SCORE
+            #########################################
             self.show_trial_feedback(),
-            GroupBarrier(
-                id_="overall_score",
-                group_type="chain",
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
-            ),
+            CustomBarrier("overall_score"),
         )  # end main join
 
     ######################################################
@@ -187,6 +169,7 @@ class NestedGameTrial(ChainTrial):
         )
 
         return list_of_pages
+
     ######################################################
     # METHODS FOR THE OUTER GAME
     ######################################################
@@ -195,27 +178,15 @@ class NestedGameTrial(ChainTrial):
             conditional(
                 label="is_leader",
                 condition=lambda participant: self.is_the_outer_leader(participant),
-                logic_if_true=OuterUltimatumProposalPage(
-                    proposer=self.am_i_the_outer_leader(),
-                ),
+                logic_if_true=OuterProposalPage(),
                 logic_if_false=None,
             ),
-            GroupBarrier(
-                id_="outer_proposal_stage",
-                group_type="chain",
-                waiting_logic=WaitPage(
-                    wait_time=WAIT_PAGE_TIME,
-                    content="Please wait while the other participant makes their move..."
-                ),
-                max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
-            ),
+            CustomBarrier("outer_proposal_stage"),
             # Save to participant.var
             CodeBlock(
                 lambda participant: self.assign_inner_roles()
             ),
+            # Check if game is ultimatum, ask for acceptance
             conditional(
                 label="outer_game_type",
                 condition=lambda participant: participant.current_trial.definition["outer_game"] == "ultimatum",
@@ -240,23 +211,9 @@ class NestedGameTrial(ChainTrial):
                     label="is_responder",
                     condition=lambda participant: self.is_the_outer_leader(participant),
                     logic_if_true=None,
-                    logic_if_false=OuterAcceptancePage(
-                            proposer=False,
-                            proposal=proposal,
-                        ),
+                    logic_if_false=OuterAcceptancePage(proposal),
                 ),
-                GroupBarrier(
-                    id_="outer_acceptance_stage",
-                    group_type="chain",
-                    waiting_logic=WaitPage(
-                        wait_time=WAIT_PAGE_TIME,
-                        content="Please wait while the other participant makes their move..."
-                    ),
-                    max_wait_time=MAX_WAIT_TIME,
-                    # waiting_logic_expected_repetitions=15,
-                    # participant_timeout=MAX_WAITING_SEEING_INFO,
-                    # participant_timeout_action="fail",
-                ),
+                CustomBarrier("outer_acceptance_stage"),
                 # Save to participant.var
                 CodeBlock(
                     lambda participant: self.assign_outer_acceptance()
@@ -293,7 +250,7 @@ class NestedGameTrial(ChainTrial):
                 logger.info(f"Participant {participant.id} got the role {role}")
 
     def assign_outer_acceptance(self):
-        logger.info("Entering assignment of outer acceptance...")
+        # logger.info("Entering assignment of outer acceptance...")
         accept_answer = self.get_outer_acceptance()
 
         if accept_answer is not None:
@@ -304,7 +261,7 @@ class NestedGameTrial(ChainTrial):
                 else:
                     variable_handler.set_value(participant, "continue_to_inner_game", False)
 
-            logger.info(f"Proposal was {accept_answer}")
+            # logger.info(f"Proposal was {accept_answer}")
 
     @staticmethod
     def get_outer_role(participant) -> Union[str, None]:
@@ -375,64 +332,39 @@ class NestedGameTrial(ChainTrial):
     ######################################################
     def inner_stage(self):
         return join(
-            conditional(
-                label="feedback_depending_on_outer_game",
-                condition=lambda participant: participant.current_trial.definition['outer_game'] == "dictator",
+        conditional(
+                label="is_leader",
+                condition=lambda participant: self.is_the_inner_leader(participant),
+                logic_if_false=None,
                 logic_if_true=conditional(
-                    label="is_leader",
-                    condition=lambda participant: self.is_the_inner_leader(participant),
-                    logic_if_true=InnerProposalPageOuterDictator(
-                        proposer=self.am_i_the_inner_leader(),
-                    ),
-                    logic_if_false=None,
-                ),
-                logic_if_false=conditional(
-                    label="is_leader",
-                    condition=lambda participant: self.is_the_inner_leader(participant),
-                    logic_if_true=InnerProposalPageOuterUltimatum(
-                        proposer=self.am_i_the_inner_leader(),
-                    ),
-                    logic_if_false=None,
+                    label="feedback_depending_on_outer_game",
+                    condition=lambda participant: participant.current_trial.definition['outer_game'] == "dictator",
+                    logic_if_true=InnerProposalPage("dictator"),
+                    logic_if_false=InnerProposalPage("ultimatum"),
                 ),
             ),
-            GroupBarrier(
-                id_="inner_proposal_stage",
-                group_type="chain",
-                waiting_logic=WaitPage(
-                    wait_time=WAIT_PAGE_TIME,
-                    content="Please wait while the other participant makes their move..."
-                ),
-                max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
-            ),
+            CustomBarrier("inner_proposal_stage"),
             CodeBlock(
-                    lambda participant: self.assign_inner_proposal(
-                        self.continue_to_inner_game()
-                )
+                lambda participant: self.assign_inner_proposal()
             ),
             conditional(
                 label="inner_game_type",
                 condition=lambda participant: participant.current_trial.definition["inner_game"] == "ultimatum",
-                logic_if_true=conditional(
-                    label="inner_acceptance",
-                    condition=lambda participant: self.is_the_inner_leader(participant),
-                    logic_if_true=None,
-                    logic_if_false=InnerAcceptancePage(
-                        proposer=self.am_i_the_inner_leader(),
-                        **self.get_inner_result()
-                    ),
-                ),
+                logic_if_true=self.inner_ultimatum_stage(),
                 logic_if_false=None,
             ),
-            InfoPage(
-                content=f"""
+        )
+
+    def inner_ultimatum_stage(self):
+        result = self.get_inner_result()
+        proposal = result["proposal"]
+
+        if proposal is not None:
+            return join(
+                InfoPage(
+                    content=f"""
+                1 ---
                 My id: {self.participant_id} ---
-                # My outer role: {self.get_outer_role(self.participant)} ---
-                # Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
-                # Participant to be the inner PROPOSER: {self.get_outer_result()} ---
-                # Continue to inner game?: {self.continue_to_inner_game()} ---
                 My inner role: {self.get_inner_role(self.participant)} ---
                 Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
                 Proposal: {variable_handler.get_value(self.participant, "inner_proposal")} ---
@@ -440,22 +372,56 @@ class NestedGameTrial(ChainTrial):
                 Answer: {self.participant.answer} ---
                 Answer accumulators: {self.participant.answer_accumulators} ---
                 """,
-                time_estimate=5,
-            ),
-        )
+                    time_estimate=5,
+                ),
+                conditional(
+                    label="inner_acceptance_stage",
+                    condition=lambda participant: self.is_the_inner_leader(participant),
+                    logic_if_true=None,
+                    logic_if_false=InnerAcceptancePage(int(proposal)),
+                ),
+                # InfoPage(
+                #     content=f"""
+                #     1b ---
+                #     # Result: {self.get_inner_result()} ---
+                #     Answer accumulators: {self.participant.answer_accumulators} ---
+                #     """,
+                #     time_estimate=5,
+                # ),
+                # CustomBarrier("inner_acceptance_stage"),
+                # InfoPage(
+                #     content=f"""
+                #     2 ---
+                #     # Result: {self.get_inner_result()} ---
+                #     Answer accumulators: {self.participant.answer_accumulators} ---
+                #     """,
+                #     time_estimate=5,
+                # ),
+                # CodeBlock(
+                #     lambda participant: self.assign_inner_acceptance()
+                # ),
+                # InfoPage(
+                #     content=f"""
+                # 3 ---
+                # # Result: {self.get_inner_result()} ---
+                # Answer accumulators: {self.participant.answer_accumulators} ---
+                # """,
+                #     time_estimate=5,
+                # ),
+            )
+        return None
 
-    def assign_inner_proposal(self, continue_to_inner_game: bool):
+    def assign_inner_proposal(self):
         participants = self.participant.sync_group.participants
         inner_proposal = None
-        if continue_to_inner_game:
-            for participant in participants:
-                if self.is_the_inner_leader(participant):
-                    inner_proposal = VariableHandler.get_value_from_last_answer(
-                        participant, "inner_proposal"
-                    )
-                    break
+        for participant in participants:
+            if self.is_the_inner_leader(participant):
+                inner_proposal = VariableHandler.get_value_from_last_answer(
+                    participant, "inner_proposal"
+                )
+                break
 
-        logger.info(f"Assigning inner proposal to {inner_proposal}")
+        logger.info(f"Inner proposal of {inner_proposal} assigned")
 
         for participant in participants:
             variable_handler.set_value(participant, "inner_proposal", inner_proposal)
@@ -480,14 +446,14 @@ class NestedGameTrial(ChainTrial):
             return inner_role == 'proposer'
         return None
 
-    def get_inner_result(self):
+    def get_inner_result(self) -> Dict[str, Union[str, int]]:
 
         participants = self.participant.sync_group.participants
         assert len(participants) == 2
 
         # Determine proposal
         proposal = None
-        remainder = None
+        remainder_ = None
         accept_answer = None
         for participant in participants:
             inner_role = NestedGameTrial.get_inner_role(participant)
@@ -500,7 +466,7 @@ class NestedGameTrial(ChainTrial):
                     proposal = variable_handler.get_value(participant, 'inner_proposal')
                     if proposal is not None:
                         proposal = int(proposal)
-                        remainder = 10 - int(proposal)
+                        remainder_ = 10 - int(proposal)
                 else:
                     # proposal = VariableHandler.get_from_answer(
                     #     answer=participant.current_trial.answer,
@@ -510,9 +476,23 @@ class NestedGameTrial(ChainTrial):
 
         return {
             "proposal": proposal,
-            "remainder": remainder,
+            "remainder": remainder_,
             "accept_answer": accept_answer
         }
+
+    def assign_inner_acceptance(self):
+        # logger.info("Entering assignment of inner acceptance...")
+        accept_answer = self.get_inner_result()["accept_answer"]
+
+        if accept_answer is not None:
+            participants = self.participant.sync_group.participants
+            for participant in participants:
+                if accept_answer == 'Accept':
+                    variable_handler.set_value(participant, "inner_acceptance", True)
+                else:
+                    variable_handler.set_value(participant, "inner_acceptance", False)
+
+            # logger.info(f"Proposal was {accept_answer}")
 
     ######################################################
     # END OF ROUND METHODS
@@ -521,92 +501,119 @@ class NestedGameTrial(ChainTrial):
     #     pass
 
     def show_trial_feedback(self):
-        if "summary" in self.participant.current_trial.definition.keys():
-            accumulated_scores = self.participant.current_trial.definition["summary"]["accumulated_rewards"]
-            my_accumulated_score = float(accumulated_scores[str(self.participant_id)])
-        else:
-            my_accumulated_score = 0.0
 
-        inner_game_on = self.continue_to_inner_game()
-        if not inner_game_on:
-
-            return ModularPage(
+        return ModularPage(
                 label="reward",
-                prompt=Prompt(Markup(
-                    f"<h2>Score</h2>"
-                    f"<br>"
-                    "<p>Proposal was not accepted. Round finished with score 0 coins. </p>"
-                    f"<p>Your accumulated score is {my_accumulated_score} coins. </p>"
-                    f"<br>"
-                )),
+                prompt=Markup(f"""
+        My id: {self.participant_id} ---
+        # My outer role: {self.get_outer_role(self.participant)} ---
+        # Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
+        # Participant to be the inner PROPOSER: {self.get_outer_result()} ---
+        # Continue to inner game?: {self.continue_to_inner_game()} ---
+        My inner role: {self.get_inner_role(self.participant)} ---
+        Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
+        Proposal: {variable_handler.get_value(self.participant, "inner_proposal")} ---
+        Result: {self.get_inner_result()} ---
+        Answer: {self.participant.answer} ---
+        Answer accumulators: {self.participant.answer_accumulators} ---
+        """),
                 control=PushButtonControl(
-                    labels=["Next"],
-                    choices=[0.0]
+                    labels=["OK"],
+                    choices=[0]
                 ),
                 time_estimate=5,
-                save_answer="reward",
-                events={
-                    "responseEnable": Event(
-                        is_triggered_by="trialStart",
-                        delay=MAX_WAITING_SEEING_INFO,
-                        js="onNextButton();",
-                    ),
-                },
-                progress_display=ProgressDisplay(
-                    stages=[
-                        ProgressStage(
-                            time=MAX_WAITING_SEEING_INFO,
-                            color="gray"
-                        ),
-                    ],
-                ),
-            )
+            ),
 
-        dict_result = self.get_inner_result()
-        proposal = dict_result["proposal"]
-        remainder = dict_result["remainder"]
-        accept_answer = dict_result["accept_answer"]
-        # logger.info(f"{proposal} --- {remainder} --- {accept_answer}")
-
-        if proposal is not None:
-
-            if accept_answer == "Reject":
-                score = 0
-            else:
-                if self.am_i_the_inner_leader():
-                    score = remainder
-                else:
-                    score = proposal
-
-            # logger.info(f"{proposal} --- {remainder} --- {accept_answer} --- {score}")
-            my_accumulated_score += int(score)
-            inner_game = self.participant.current_trial.definition['inner_game']
-            if inner_game == "dictator":
-                return InnerDictatorFeedbackPage(
-                    proposer=self.am_i_the_inner_leader(),
-                    proposal=proposal,
-                    remainder=remainder,
-                    accumulated_score=int(my_accumulated_score),
-                )
-            else:
-                return InnerUltimatumFeedbackPage(
-                    proposer=self.am_i_the_inner_leader(),
-                    proposal=proposal,
-                    remainder=remainder,
-                    accept_answer=accept_answer,
-                    accumulated_score=int(my_accumulated_score),
-                )
-        else:
-            return ModularPage(
-                label="reward",
-                prompt="OK",
-                control=PushButtonControl(
-                    labels=["Next"],
-                    choices=[0],
-                ),
-                save_answer="reward",
-                time_estimate=5,
-            )
+        # if "summary" in self.participant.current_trial.definition.keys():
+        #     accumulated_scores = self.participant.current_trial.definition["summary"]["accumulated_rewards"]
+        #     my_accumulated_score = float(accumulated_scores[str(self.participant_id)])
+        # else:
+        #     my_accumulated_score = 0.0
+        #
+        # logger.info(f"my_accumulated_score: {my_accumulated_score}")
+        #
+        # inner_game_on = self.continue_to_inner_game()
+        # if not inner_game_on:
+        #
+        #     return ModularPage(
+        #         label="reward",
+        #         prompt=Prompt(Markup(
+        #             f"<h2>Score</h2>"
+        #             f"<br>"
+        #             "<p>Proposal was not accepted. Round finished with score 0 coins. </p>"
+        #             f"<p>Your accumulated score is {my_accumulated_score} coins. </p>"
+        #             f"<br>"
+        #         )),
+        #         control=PushButtonControl(
+        #             labels=["Next"],
+        #             choices=[0.0]
+        #         ),
+        #         time_estimate=5,
+        #         save_answer="reward",
+        #         events={
+        #             "responseEnable": Event(
+        #                 is_triggered_by="trialStart",
+        #                 delay=MAX_WAITING_SEEING_INFO,
+        #                 js="onNextButton();",
+        #             ),
+        #         },
+        #         progress_display=ProgressDisplay(
+        #             stages=[
+        #                 ProgressStage(
+        #                     time=MAX_WAITING_SEEING_INFO,
+        #                     color="gray"
+        #                 ),
+        #             ],
+        #         ),
+        #     )
+        #
+        # logger.info("Inner gamme was on!")
+        #
+        # dict_result = self.get_inner_result()
+        # proposal = dict_result["proposal"]
+        # remainder_ = dict_result["remainder"]
+        # accept_answer = dict_result["accept_answer"]
+        # logger.info(f"{proposal} --- {remainder_} --- {accept_answer}")
+        #
+        # if proposal is not None:
+        #
+        #     if accept_answer == "Reject":
+        #         score = 0
+        #     else:
+        #         if self.am_i_the_inner_leader():
+        #             score = remainder_
+        #         else:
+        #             score = proposal
+        #
+        #     # logger.info(f"{proposal} --- {remainder} --- {accept_answer} --- {score}")
+        #     my_accumulated_score += int(score)
+        #     inner_game = self.participant.current_trial.definition['inner_game']
+        #     if inner_game == "dictator":
+        #         return InnerDictatorFeedbackPage(
+        #             proposer=self.am_i_the_inner_leader(),
+        #             proposal=proposal,
+        #             remainder=remainder_,
+        #             accumulated_score=int(my_accumulated_score),
+        #         )
+        #     else:
+        #         return InnerUltimatumFeedbackPage(
+        #             proposer=self.am_i_the_inner_leader(),
+        #             proposal=proposal,
+        #             remainder=remainder_,
+        #             accept_answer=str(accept_answer),
+        #             accumulated_score=int(my_accumulated_score),
+        #         )
+        # else:
+        #     return ModularPage(
+        #         label="reward",
+        #         prompt="OK",
+        #         control=PushButtonControl(
+        #             labels=["Next"],
+        #             choices=[0],
+        #         ),
+        #         save_answer="reward",
+        #         time_estimate=5,
+        #     )
 
     def choose_new_outer_role(self):
         inner_result = self.get_inner_result()

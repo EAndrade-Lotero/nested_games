@@ -82,54 +82,7 @@ class OuterUltimatumProposalPage(ModularPage):
         )
 
 
-class OuterAcceptancePage(ModularPage):
-    def __init__(
-            self,
-            proposer: bool,
-            proposal: str,
-    ) -> None:
-        assert proposal in ["", "PROPOSER", "RESPONDER"]
 
-        if proposer:
-            prompt = Prompt(
-                "Press the 'Next' button to see whether your partner accepted the proposal."
-            )
-            control = NullControl()
-            waiting_time = MAX_WAITING_FOR_OTHER
-            progress_display = ProgressDisplay(
-                stages=[
-                    ProgressStage(
-                        time=waiting_time,
-                        color="gray"
-                    ),
-                ],
-            )
-        else:
-            prompt = Prompt(
-                f"Do you accept your partner's proposal of you to be the {proposal}? "
-            )
-            control = PushButtonControl(
-                choices=["Accept", "Reject"],
-                labels=["Accept", "Reject"],
-            )
-            progress_display = None
-            waiting_time = MAX_WAITING_PROPOSALS
-
-        super().__init__(
-            label="outer_accept_answer",
-            prompt=prompt,
-            control=control,
-            time_estimate=5,
-            save_answer="outer_accept_answer",
-            # events={
-            #     "responseEnable": Event(
-            #         is_triggered_by="trialStart",
-            #         delay=waiting_time,
-            #         js="onNextButton();",
-            #     ),
-            # },
-            # progress_display=progress_display,
-        )
 
 
 class InnerProposalPageOuterUltimatum(ModularPage):
@@ -210,57 +163,6 @@ class InnerProposalPageOuterUltimatum(ModularPage):
             return FailedValidation(error_txt)
         logger.info(f"Validated!")
         return None
-
-
-class InnerAcceptancePage(ModularPage):
-    def __init__(
-            self,
-            proposer: bool,
-            proposal: int,
-            remainder: int,
-            accept_answer: str,
-    ) -> None:
-
-        if proposer:
-            prompt = Markup(
-                "<p>Press the 'Next' button to see whether your partner accepted the proposal.</p>"
-            )
-            control = NullControl()
-            waiting_time = MAX_WAITING_FOR_OTHER
-            progress_display = ProgressDisplay(
-                stages=[
-                    ProgressStage(
-                        time=waiting_time,
-                        color="gray"
-                    ),
-                ],
-            )
-        else:
-            prompt = Markup(
-                f"<p>Do you accept your partner's proposal of {proposal} out of {10}? </p>"
-            )
-            control = PushButtonControl(
-                choices=["Accept", "Reject"],
-                labels=["Accept", "Reject"],
-            )
-            progress_display = None
-            waiting_time = MAX_WAITING_PROPOSALS
-
-        super().__init__(
-            label="inner_accept_answer",
-            prompt=prompt,
-            control=control,
-            time_estimate=5,
-            save_answer="inner_accept_answer",
-            # events={
-            #     "responseEnable": Event(
-            #         is_triggered_by="trialStart",
-            #         delay=waiting_time,
-            #         js="onNextButton();",
-            #     ),
-            # },
-            # progress_display=progress_display,
-        )
 
 
 class InnerUltimatumFeedbackPage(ModularPage):
