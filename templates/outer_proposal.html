@@ -1,19 +1,24 @@
 {% macro outer_proposal(config) %}
 
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
 <style>
 body {
   font-family: Arial, sans-serif;
   background: #eceaea;
-  display: flex;
+  display: block;
   justify-content: center;
-  align-items: center;
-  height: 100vh;
+  align-items: flex-start; /* ← change this */
+  min-height: 100vh;
   margin: 0;
+  overflow-y: auto;
+  padding-top: 20px; /* optional spacing from top */
 }
 
 .tabletop {
   width: 700px;
-  height: 700px;
+  min-height: 650px;
   background: #eceaea;
   border-radius: 20px;
   padding: 20px;
@@ -22,6 +27,7 @@ body {
   justify-content: space-between;
   align-items: center;
   position: relative;
+  margin: auto;
 }
 
 #countdown {
@@ -45,13 +51,13 @@ body {
 }
 
 .center-top {
-  width: 320px;
+  width: 340px;
   height: 250px;
 }
 
 .center-middle {
-  width: 320px;
-  height: 200px;
+  width: 340px;
+  height: 250px;
 }
 
 .center-bottom {
@@ -74,9 +80,10 @@ body {
 .basket {
   width: 250px;
   height: 150px;
-  background-image: url("{{ config.plate_url }}");
+  {#background-image: url("{{ config.plate_url }}");#}
+  background-image: url("../static/plate.png");
   background-size: contain;
-  /* background-repeat: no-repeat; */
+  background-repeat: no-repeat;
   background-position: center;
   position: relative;
 }
@@ -91,7 +98,8 @@ body {
 .coin {
   width: 25px;
   aspect-ratio: 1 / 1;
-  background-image: url("{{ config.coin_url }}");
+  {#background-image: url("{{ config.coin_url }}");#}
+  background-image: url("../static/coin.png");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -101,7 +109,8 @@ body {
 .avatar {
   width: 80px;
   height: 80px;
-  background-image: url("{{ config.generic_url }}");
+  {#background-image: url("{{ config.generic_url }}");#}
+  background-image: url("../static/generic.png");
   background-size: cover;
   background-position: center;
   border-radius: 50%;
@@ -113,7 +122,8 @@ body {
 }
 
 .avatar.partner {
-  background-image: url("{{ config.generic_url }}");
+  {#background-image: url("{{ config.generic_url }}");#}
+  background-image: url("../static/generic.png");
 }
 
 .avatar.dragging {
@@ -161,6 +171,8 @@ body {
 }
 
 </style>
+</head>
+
 
 <div class="tabletop">
 
@@ -169,23 +181,20 @@ body {
   <!-- TOP PLACE -->
   <div class="zone center-top">
     <div class="rectangle">RESPONDER</div>
-    <div class="avatarzone">?</div>
+    <div class="avatarzone">
+        <div class="avatar partner" draggable="false" id="partner">
+            <span class="avatar-label">?</span>
+        </div>
+    </div>
     <div class="basket"></div>
   </div>
 
   <!-- SECOND PLACE (DROP TARGET) -->
   <div class="zone center-middle">
     <div class="coin-pile">
-    <div class="coin" draggable="true" id="coin1"></div>
-    <div class="coin" draggable="true" id="coin2"></div>
-    <div class="coin" draggable="true" id="coin3"></div>
-    <div class="coin" draggable="true" id="coin4"></div>
-    <div class="coin" draggable="true" id="coin5"></div>
-    <div class="coin" draggable="true" id="coin6"></div>
-    <div class="coin" draggable="true" id="coin7"></div>
-    <div class="coin" draggable="true" id="coin8"></div>
-    <div class="coin" draggable="true" id="coin9"></div>
-    <div class="coin" draggable="true" id="coin10"></div>
+      {% for i in range(10) %}
+        <div id="coin{{ i }}" class="coin"></div>
+      {% endfor %}
     </div>
     <div class="rectangle">PROPOSER</div>
     <div class="dropzone" id="dropzone">
@@ -199,11 +208,9 @@ body {
   <div class="zone center-bottom">
     <div class="avatar" draggable="true" id="me">
         <span class="avatar-label">Me</span>
-        <img src="{{ config.generic_url }}">
     </div>
     <div class="avatar partner" draggable="true" id="partner">
         <span class="avatar-label">Partner</span>
-        <img src="{{ config.img_url }}">
     </div>
   </div>
 
@@ -215,9 +222,9 @@ body {
     const bottomZone = document.querySelector('.center-bottom');
 
     avatars.forEach(avatar => {
-    avatar.addEventListener('dragstart', e => {
-        avatar.classList.add('dragging');
-        e.dataTransfer.setData('text/plain', avatar.id);
+        avatar.addEventListener('dragstart', e => {
+            avatar.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', avatar.id);
     });
 
     avatar.addEventListener('dragend', () => {
@@ -258,7 +265,7 @@ body {
     bottomZone.appendChild(avatar);
     });
 
-    let timeRemaining = {{ config.timeout }}; // seconds (2 minutes)
+    let timeRemaining = {{ config.timeout }};
 
     function updateClock() {
         const minutes = Math.floor(timeRemaining / 60);
@@ -271,7 +278,12 @@ body {
             timeRemaining--;
         } else {
             clearInterval(timer);
-            document.dispatchEvent(new CustomEvent("done"));
+            console.log(`${timeRemaining} seconds`);
+            document.dispatchEvent(new Event("done"));
+            psynet.trial.registerEvent(
+                "done",
+                {info: "timeout"}
+              );
         }
     }
 

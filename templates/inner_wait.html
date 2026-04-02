@@ -1,4 +1,4 @@
-{% macro outer_acceptance(config) %}
+{% macro inner_wait(config) %}
 
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -81,6 +81,12 @@ body {
   /* background-repeat: no-repeat; */
   background-position: center;
   position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding: 10px;
 }
 
 .coin-pile {
@@ -164,15 +170,15 @@ body {
     <div class="rectangle">RESPONDER</div>
     <div class="avatarzone">
         <div class="avatar partner" draggable="false" id="partner">
-            <span class="avatar-label">...</span>
+            <span class="avatar-label">Me</span>
         </div>
     </div>
-    <div class="basket"></div>
+    <div class="basket" id="basket"></div>
   </div>
 
   <!-- SECOND PLACE (DROP TARGET) -->
   <div class="zone center-middle">
-    <div class="coin-pile">
+    <div class="coin-pile" id="coinPile">
     <div class="coin" draggable="false" id="coin1"></div>
     <div class="coin" draggable="false" id="coin2"></div>
     <div class="coin" draggable="false" id="coin3"></div>
@@ -187,12 +193,12 @@ body {
     <div class="rectangle">PROPOSER</div>
     <div class="avatarzone" id="dropzone">
         <div class="avatar" draggable="false" id="me">
-        <span class="avatar-label">...</span>
+        <span class="avatar-label">Partner</span>
         </div>
     </div>
   </div>
 
-</div>
+  </div>
 
 <script>
     let timeRemaining = {{ config.timeout }};
@@ -221,23 +227,12 @@ body {
 
     const timer = setInterval(updateClock, 1000);
 
-    const avatars = document.querySelectorAll('.avatar-label');
-
-    let p1 = "Me";
-    let p2 = "Partner";
-
-    const proposer = "{{ config.proposal }}";
-
-    console.log(proposer);
-
-    if (proposer === "PROPOSER") {
-        console.log("Me proposer");
-        p1 = "Partner";
-        p2 = "Me";
+    /////////////////////////////////////////////////////
+    // Function to stage the response for PsyNet
+    /////////////////////////////////////////////////////
+    psynet.stageResponse = function() {
+          psynet.response.staged.rawAnswer = "OK";
     }
-
-    avatars[0].textContent = p1; // RESPONDER
-    avatars[1].textContent = p2; // PROPOSER
 
 </script>
 {% endmacro %}

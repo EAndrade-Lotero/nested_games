@@ -1,4 +1,4 @@
-{% macro outer_acceptance(config) %}
+{% macro outer_wait(config) %}
 
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -136,7 +136,7 @@ body {
 .avatarzone {
   min-height: 90px;
   width: 30%;
-  border: 0px dashed rgb(55, 0, 255);
+  border: 2px dashed rgb(55, 0, 255);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -154,7 +154,6 @@ body {
 </style>
 </head>
 
-<div>{{ config.text }}</div>
 <div class="tabletop">
 
   <div id="countdown">02:00</div>
@@ -164,7 +163,7 @@ body {
     <div class="rectangle">RESPONDER</div>
     <div class="avatarzone">
         <div class="avatar partner" draggable="false" id="partner">
-            <span class="avatar-label">...</span>
+            <span class="avatar-label">?</span>
         </div>
     </div>
     <div class="basket"></div>
@@ -187,7 +186,7 @@ body {
     <div class="rectangle">PROPOSER</div>
     <div class="avatarzone" id="dropzone">
         <div class="avatar" draggable="false" id="me">
-        <span class="avatar-label">...</span>
+        <span class="avatar-label">?</span>
         </div>
     </div>
   </div>
@@ -221,23 +220,13 @@ body {
 
     const timer = setInterval(updateClock, 1000);
 
-    const avatars = document.querySelectorAll('.avatar-label');
-
-    let p1 = "Me";
-    let p2 = "Partner";
-
-    const proposer = "{{ config.proposal }}";
-
-    console.log(proposer);
-
-    if (proposer === "PROPOSER") {
-        console.log("Me proposer");
-        p1 = "Partner";
-        p2 = "Me";
+    /////////////////////////////////////////////////////
+    // Function to stage the response for PsyNet
+    /////////////////////////////////////////////////////
+    psynet.stageResponse = function() {
+        psynet.response.staged.rawAnswer = "OK";
     }
-
-    avatars[0].textContent = p1; // RESPONDER
-    avatars[1].textContent = p2; // PROPOSER
 
 </script>
 {% endmacro %}
+

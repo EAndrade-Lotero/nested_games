@@ -4,7 +4,7 @@ from markupsafe import Markup
 from typing import Union, Tuple, Dict
 
 from psynet.graphics import Prompt
-from psynet.page import WaitPage, InfoPage
+from psynet.page import InfoPage
 from psynet.modular_page import (
     ModularPage,
     PushButtonControl,
@@ -14,9 +14,6 @@ from psynet.timeline import (
     join,
     conditional,
     CodeBlock,
-    Event,
-    ProgressDisplay,
-    ProgressStage,
 )
 from psynet.trial.chain import (
     ChainTrial,
@@ -28,15 +25,10 @@ from psynet.utils import get_logger
 from .custom_barriers import CustomBarrier
 from .custom_pages import (
     OuterProposalPage,
+    OuterProposalWaitingPage,
     OuterAcceptancePage,
     InnerProposalPage,
     InnerAcceptancePage,
-)
-from .dictator_pages import (
-    InnerDictatorFeedbackPage,
-)
-from .ultimatum_pages import (
-    InnerUltimatumFeedbackPage,
 )
 from .variable_handler import VariableHandler
 from .game_paramters import (
@@ -181,7 +173,14 @@ class NestedGameTrial(ChainTrial):
                 logic_if_true=OuterProposalPage(self.context),
                 logic_if_false=None,
             ),
-            CustomBarrier("outer_proposal_stage"),
+            CustomBarrier(
+                id_="outer_proposal_stage",
+                proposer=self.am_i_the_outer_leader(),
+                wait_page=OuterProposalWaitingPage(
+                    wait_time=WAIT_PAGE_TIME,
+                    template_path=self.context['outer_wait_path'],
+                ),
+            ),
             # Save to participant.var
             CodeBlock(
                 lambda participant: self.assign_inner_roles()
@@ -211,7 +210,7 @@ class NestedGameTrial(ChainTrial):
                     label="is_responder",
                     condition=lambda participant: self.is_the_outer_leader(participant),
                     logic_if_true=None,
-                    logic_if_false=OuterAcceptancePage(proposal),
+                    logic_if_false=OuterAcceptancePage(self.context, proposal),
                 ),
                 CustomBarrier("outer_acceptance_stage"),
                 # Save to participant.var
@@ -339,8 +338,8 @@ class NestedGameTrial(ChainTrial):
                 logic_if_true=conditional(
                     label="feedback_depending_on_outer_game",
                     condition=lambda participant: participant.current_trial.definition['outer_game'] == "dictator",
-                    logic_if_true=InnerProposalPage("dictator"),
-                    logic_if_false=InnerProposalPage("ultimatum"),
+                    logic_if_true=InnerProposalPage("dictator", self.context),
+                    logic_if_false=InnerProposalPage("ultimatum", self.context),
                 ),
             ),
             CustomBarrier("inner_proposal_stage"),
@@ -378,7 +377,7 @@ class NestedGameTrial(ChainTrial):
                     label="inner_acceptance_stage",
                     condition=lambda participant: self.is_the_inner_leader(participant),
                     logic_if_true=None,
-                    logic_if_false=InnerAcceptancePage(int(proposal)),
+                    logic_if_false=InnerAcceptancePage(self.context, int(proposal)),
                 ),
                 # InfoPage(
                 #     content=f"""
