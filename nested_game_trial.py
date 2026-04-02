@@ -369,17 +369,23 @@ class NestedGameTrial(ChainTrial):
         return join(
             # Proposal stage
             conditional(
-                label="feedback_depending_on_outer_game",
-                condition=lambda participant: participant.current_trial.definition['outer_game'] == "dictator",
-                logic_if_true=InnerProposalPageOuterDictator(
-                    proposer=self.am_i_the_inner_leader(),
+                label="inner_leader",
+                condition=lambda participant: self.is_the_inner_leader(participant),
+                logic_if_true=conditional(
+                    label="feedback_depending_on_outer_game",
+                    condition=lambda participant: participant.current_trial.definition['outer_game'] == "dictator",
+                    logic_if_true=InnerProposalPageOuterDictator(
+                        proposer=self.am_i_the_inner_leader(),
+                    ),
+                    logic_if_false=InnerProposalPageOuterUltimatum(
+                        proposer=self.am_i_the_inner_leader(),
+                    ),
                 ),
-                logic_if_false=InnerProposalPageOuterUltimatum(
-                    proposer=self.am_i_the_inner_leader(),
-                ),
+                logic_if_false=None,
             ),
             CustomBarrier(
                 id_="inner_proposal_stage",
+                content="Waiting for inner proposer...",
                 on_release=self.assign_inner_proposal,
             ),
         )
@@ -388,26 +394,68 @@ class NestedGameTrial(ChainTrial):
         return join(
             # Proposal stage
             conditional(
-                label="feedback_depending_on_outer_game",
-                condition=lambda participant: participant.current_trial.definition['outer_game'] == "dictator",
-                logic_if_true=InnerProposalPageOuterDictator(
-                    proposer=self.am_i_the_inner_leader(),
+                label="inner_leader",
+                condition=lambda participant: self.is_the_inner_leader(participant),
+                logic_if_true=conditional(
+                    label="feedback_depending_on_outer_game",
+                    condition=lambda participant: participant.current_trial.definition['outer_game'] == "dictator",
+                    logic_if_true=InnerProposalPageOuterDictator(
+                        proposer=self.am_i_the_inner_leader(),
+                    ),
+                    logic_if_false=InnerProposalPageOuterUltimatum(
+                        proposer=self.am_i_the_inner_leader(),
+                    ),
                 ),
-                logic_if_false=InnerProposalPageOuterUltimatum(
-                    proposer=self.am_i_the_inner_leader(),
-                ),
+                logic_if_false=None,
             ),
             CustomBarrier(
                 id_="inner_proposal_stage",
+                content="Waiting for inner proposer...",
                 on_release=self.assign_inner_proposal,
             ),
             # Acceptance stage
-            InnerAcceptancePage(
+            conditional(
+                label="inner_responder",
+                condition=lambda participant: self.is_the_inner_leader(participant),
+                logic_if_false=self.inner_ultimatum_acceptance_stage(),
+                logic_if_true=None,
+            ),
+            CustomBarrier(
+                id_="inner_acceptance_stage",
+                content="Waiting for the inner responder...",
+            ),
+        )
+
+    def inner_ultimatum_acceptance_stage(self):
+        return InnerAcceptancePage(
                 proposer=self.am_i_the_inner_leader(),
                 **self.get_inner_result()
             ),
-            CustomBarrier("inner_acceptance_stage"),
-        )
+
+        # # Check inner role and act accordingly
+        # inner_role = NestedGameTrial.get_inner_role(self.participant)
+        #
+        # if inner_role is not None:
+        #     if inner_role == "proposer":
+        #         proposer = True
+        #     elif inner_role == "responder":
+        #         proposer = False
+        #     else:
+        #         raise ValueError(f"Inner role should be either proposer or responder but got {outer_role}")
+        #
+        #     proposer_id = self.get_inner_result()
+        #     if proposer_id is not None:
+        #         if self.participant.id == proposer_id:
+        #             proposal = "PROPOSER"
+        #         else:
+        #             proposal = "RESPONDER"
+        #
+        #         return OuterAcceptancePage(
+        #             proposer=proposer,
+        #             proposal=proposal,
+        #         )
+        #
+        # return None
 
     def assign_inner_proposal(self):
         participants = self.participant.sync_group.participants
