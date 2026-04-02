@@ -195,17 +195,9 @@ class NestedGameTrial(ChainTrial):
             OuterDictatorProposalPage(
                 proposer=self.am_i_the_outer_leader(),
             ),
-            GroupBarrier(
+            CustomBarrier(
                 id_="outer_proposal_stage",
-                group_type="chain",
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
-            ),
-            # Save to participant.var
-            CodeBlock(
-                lambda participant: self.assign_inner_roles()
+                on_release=self.assign_inner_roles,
             ),
         )
         return list_of_pages
@@ -215,31 +207,15 @@ class NestedGameTrial(ChainTrial):
             OuterUltimatumProposalPage(
                 proposer=self.am_i_the_outer_leader(),
             ),
-            GroupBarrier(
+            CustomBarrier(
                 id_="outer_proposal_stage",
-                group_type="chain",
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
+                on_release=self.assign_inner_roles,
             ),
             # Acceptance stage
             self.outer_ultimatum_acceptance_stage(),
-            GroupBarrier(
+            CustomBarrier(
                 id_="outer_acceptance_stage",
-                group_type="chain",
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
-            ),
-            # Save to participant.var
-            CodeBlock(
-                lambda participant: self.assign_inner_roles()
-            ),
-            # Save to participant.var
-            CodeBlock(
-                lambda participant: self.assign_outer_acceptance()
+                on_release=self.assign_outer_acceptance,
             ),
         )
         return list_of_pages
