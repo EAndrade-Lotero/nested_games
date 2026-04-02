@@ -1,6 +1,7 @@
 from markupsafe import Markup
 from typing import Union
 
+from psynet.page import InfoPage
 from psynet.graphics import Prompt
 from psynet.modular_page import (
     ModularPage,
@@ -184,11 +185,17 @@ class NestedGameTrial(ChainTrial):
     ######################################################
     def outer_dictator_stage(self):
         list_of_pages = join(
-            OuterDictatorProposalPage(
-                proposer=self.am_i_the_outer_leader(),
+            conditional(
+                label="outer_leader",
+                condition=lambda participant: self.is_the_outer_leader(participant),
+                logic_if_true=OuterDictatorProposalPage(
+                    proposer=self.am_i_the_outer_leader(),
+                ),
+                logic_if_false=None,
             ),
             CustomBarrier(
                 id_="outer_proposal_stage",
+                content="Waiting for the outer leader...",
                 on_release=self.assign_inner_roles,
             ),
         )
@@ -196,17 +203,29 @@ class NestedGameTrial(ChainTrial):
 
     def outer_ultimatum_stage(self):
         list_of_pages = join(
-            OuterUltimatumProposalPage(
-                proposer=self.am_i_the_outer_leader(),
+            conditional(
+                label="outer_leader",
+                condition=lambda participant: self.is_the_outer_leader(participant),
+                logic_if_true=OuterDictatorProposalPage(
+                    proposer=self.am_i_the_outer_leader(),
+                ),
+                logic_if_false=None,
             ),
             CustomBarrier(
                 id_="outer_proposal_stage",
+                content="Waiting for the outer leader...",
                 on_release=self.assign_inner_roles,
             ),
+            conditional(
+                label="outer_responder",
+                condition=lambda participant: self.is_the_outer_leader(participant),
+                logic_if_false=self.outer_ultimatum_acceptance_stage(),
+                logic_if_true=None,
+            ),
             # Acceptance stage
-            self.outer_ultimatum_acceptance_stage(),
             CustomBarrier(
                 id_="outer_acceptance_stage",
+                content="Waiting for the outer responder...",
                 on_release=self.assign_outer_acceptance,
             ),
         )
