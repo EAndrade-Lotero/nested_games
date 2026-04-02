@@ -29,9 +29,11 @@ class CustomBarrier(GroupBarrier):
                 ),
 
         if wait_page is None:
+            if content is None:
+                content = "Waiting for your partner..."
             wait_page = WaitPage(
                 wait_time=WAIT_PAGE_TIME,
-                content="Waiting for your partner..."
+                content=content,
             ),
 
         super().__init__(
