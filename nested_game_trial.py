@@ -203,19 +203,7 @@ class NestedGameTrial(ChainTrial):
 
     def outer_ultimatum_stage(self):
         list_of_pages = join(
-            conditional(
-                label="outer_leader",
-                condition=lambda participant: self.is_the_outer_leader(participant),
-                logic_if_true=OuterDictatorProposalPage(
-                    proposer=self.am_i_the_outer_leader(),
-                ),
-                logic_if_false=None,
-            ),
-            CustomBarrier(
-                id_="outer_proposal_stage",
-                content="Waiting for the outer leader...",
-                on_release=self.assign_inner_roles,
-            ),
+            self.outer_dictator_stage(),
             conditional(
                 label="outer_responder",
                 condition=lambda participant: self.is_the_outer_leader(participant),
@@ -393,26 +381,7 @@ class NestedGameTrial(ChainTrial):
     def inner_ultimatum_stage(self):
         return join(
             # Proposal stage
-            conditional(
-                label="inner_leader",
-                condition=lambda participant: self.is_the_inner_leader(participant),
-                logic_if_true=conditional(
-                    label="feedback_depending_on_outer_game",
-                    condition=lambda participant: participant.current_trial.definition['outer_game'] == "dictator",
-                    logic_if_true=InnerProposalPageOuterDictator(
-                        proposer=self.am_i_the_inner_leader(),
-                    ),
-                    logic_if_false=InnerProposalPageOuterUltimatum(
-                        proposer=self.am_i_the_inner_leader(),
-                    ),
-                ),
-                logic_if_false=None,
-            ),
-            CustomBarrier(
-                id_="inner_proposal_stage",
-                content="Waiting for inner proposer...",
-                on_release=self.assign_inner_proposal,
-            ),
+            self.inner_dictator_stage(),
             # Acceptance stage
             conditional(
                 label="inner_responder",
