@@ -2,7 +2,6 @@ from markupsafe import Markup
 from typing import Union
 
 from psynet.graphics import Prompt
-from psynet.page import WaitPage, InfoPage
 from psynet.modular_page import (
     ModularPage,
     PushButtonControl,
@@ -11,7 +10,6 @@ from psynet.modular_page import (
 from psynet.timeline import (
     join,
     conditional,
-    CodeBlock,
     Event,
     ProgressDisplay,
     ProgressStage,
@@ -20,7 +18,6 @@ from psynet.trial.chain import (
     ChainTrial,
     ChainTrialMaker,
 )
-from psynet.sync import GroupBarrier
 from psynet.utils import get_logger
 
 from .dictator_pages import (
@@ -592,14 +589,7 @@ class NestedGameTrial(ChainTrial):
                     ),
                     save_answer="bid_phase"
                 ),
-                GroupBarrier(
-                    id_="bidding_stage",
-                    group_type="chain",
-                    # max_wait_time=MAX_WAIT_TIME,
-                    # waiting_logic_expected_repetitions=15,
-                    # participant_timeout=MAX_WAITING_SEEING_INFO,
-                    # participant_timeout_action="fail",
-                ),
+                CustomBarrier("bidding_stage"),
             )
         return None
 
