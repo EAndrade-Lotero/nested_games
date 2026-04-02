@@ -116,11 +116,6 @@ class NestedGameTrial(ChainTrial):
                     ),
                 ),
             ),
-            CodeBlock(
-                lambda participant: self.assign_inner_proposal(
-                    self.continue_to_inner_game()
-                )
-            ),
             CustomBarrier("taking_stock"),
             self.show_trial_feedback(),
             CustomBarrier("overall_score"),
@@ -367,13 +362,9 @@ class NestedGameTrial(ChainTrial):
                     proposer=self.am_i_the_inner_leader(),
                 ),
             ),
-            GroupBarrier(
+            CustomBarrier(
                 id_="inner_proposal_stage",
-                group_type="chain",
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
+                on_release=self.assign_inner_proposal,
             ),
         )
 
@@ -390,38 +381,22 @@ class NestedGameTrial(ChainTrial):
                     proposer=self.am_i_the_inner_leader(),
                 ),
             ),
-            GroupBarrier(
+            CustomBarrier(
                 id_="inner_proposal_stage",
-                group_type="chain",
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
-            ),
-            CodeBlock(
-                lambda participant: self.assign_inner_proposal(
-                    self.continue_to_inner_game()
-                )
+                on_release=self.assign_inner_proposal,
             ),
             # Acceptance stage
             InnerAcceptancePage(
                 proposer=self.am_i_the_inner_leader(),
                 **self.get_inner_result()
             ),
-            GroupBarrier(
-                id_="inner_acceptance_stage",
-                group_type="chain",
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
-            ),
+            CustomBarrier("inner_acceptance_stage"),
         )
 
-    def assign_inner_proposal(self, continue_to_inner_game: bool):
+    def assign_inner_proposal(self):
         participants = self.participant.sync_group.participants
         inner_proposal = None
-        if continue_to_inner_game:
+        if self.continue_to_inner_game():
             for participant in participants:
                 if self.is_the_inner_leader(participant):
                     inner_proposal = VariableHandler.get_value_from_last_answer(
