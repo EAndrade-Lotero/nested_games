@@ -1,9 +1,5 @@
 import psynet.experiment
-from psynet.page import WaitPage
-from psynet.sync import (
-    GroupBarrier,
-    SimpleGrouper,
-)
+from psynet.sync import SimpleGrouper
 from psynet.timeline import (
     Timeline,
     PageMaker,
@@ -27,6 +23,7 @@ from .big_five import (
     WaitingTrial,
     waiting_nodes,
 )
+from .custom_barriers import CustomBarrier
 from .consent_science_of_learning import consent_cococo_science_of_learning
 
 logger = get_logger()
@@ -117,18 +114,10 @@ class Exp(psynet.experiment.Experiment):
                 max_wait_time=120,
             ),
         ),
-        GroupBarrier(
+        CustomBarrier(
             id_="assign_roles",
-            group_type="chain",
-            waiting_logic=WaitPage(
-                wait_time=1,
-                content="Please wait while other participants finish completing the personality trait questions..."
-            ),
+            content="Please wait while other participants finish completing the personality trait questions...",
             on_release=assign_roles,
-            # max_wait_time=MAX_WAIT_TIME,
-            # waiting_logic_expected_repetitions=15,
-            # participant_timeout=MAX_WAITING_SEEING_INFO,
-            # participant_timeout_action="fail",
         ),
         NestedGameTrialMaker(
             id_="nested_games_trial_maker",
