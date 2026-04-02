@@ -57,6 +57,13 @@ from .instructions import (
     ADD_INNER_ACCEPTANCE_INSTRUCTION,
 )
 from .custom_barriers import CustomBarrier
+from .custom_pages import (
+    OuterProposalPage,
+    # OuterProposalWaitingPage,
+    # OuterAcceptancePage,
+    # InnerProposalPage,
+    # InnerAcceptancePage,
+)
 
 logger = get_logger()
 variable_handler = VariableHandler()
@@ -188,9 +195,10 @@ class NestedGameTrial(ChainTrial):
             conditional(
                 label="outer_leader",
                 condition=lambda participant: self.is_the_outer_leader(participant),
-                logic_if_true=OuterDictatorProposalPage(
-                    proposer=self.am_i_the_outer_leader(),
-                ),
+                logic_if_true=OuterProposalPage(self.context),
+                # logic_if_true=OuterDictatorProposalPage(
+                #     proposer=self.am_i_the_outer_leader(),
+                # ),
                 logic_if_false=None,
             ),
             CustomBarrier(
