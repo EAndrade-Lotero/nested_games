@@ -58,6 +58,7 @@ from .instructions import (
     ADD_OUTER_ACCEPTANCE_INSTRUCTION,
     ADD_INNER_ACCEPTANCE_INSTRUCTION,
 )
+from .custom_barriers import CustomBarrier
 
 logger = get_logger()
 variable_handler = VariableHandler()
@@ -79,51 +80,14 @@ class NestedGameTrial(ChainTrial):
                 logic_if_true=self.instructions_stage(),
                 logic_if_false=None
             ),
-            GroupBarrier(
-                id_="instructions_stage",
-                group_type="chain",
-                waiting_logic=WaitPage(
-                    wait_time=1,
-                    content="Please wait while other participants read the instructions..."
-                ),
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
-            ),
-#             InfoPage(
-#                 content=f"""
-# **After instructions**
-# Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
-# My id: {self.participant_id} ---
-# My outer role: {self.get_outer_role(self.participant)} ---
-# Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
-# """,
-#                 time_estimate=5,
-#             ),
             #############################################
             # CHOOSE OUTER ROLES DEPENDING ON TREATMENT
             #############################################
-            # self.choose_new_outer_role(),
-            GroupBarrier(
-                id_="setting_outer_role",
-                group_type="chain",
-                on_release=self.choose_new_outer_role,
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
+            CustomBarrier(
+                id_="instructions_stage",
+                content="Please wait while other participants read the instructions...",
+                on_release = self.choose_new_outer_role,
             ),
-#             InfoPage(
-#                 content=f"""
-# **After new role**
-# Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
-# My id: {self.participant_id} ---
-# My outer role: {self.get_outer_role(self.participant)} ---
-# Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
-# """,
-#                 time_estimate=5,
-#             ),
             #########################################
             # OUTER GAME
             #########################################
@@ -133,20 +97,6 @@ class NestedGameTrial(ChainTrial):
                 logic_if_true=self.outer_dictator_stage(),
                 logic_if_false=self.outer_ultimatum_stage(),
             ),
-#             InfoPage(
-#                 content=f"""
-# **After outer game**
-# Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
-# My id: {self.participant_id} ---
-# My outer role: {self.get_outer_role(self.participant)} ---
-# Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
-# Participant to be the inner PROPOSER: {self.get_outer_result()} ---
-# Continue to inner game?: {self.continue_to_inner_game()} ---
-# My inner role: {self.get_inner_role(self.participant)} ---
-# Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
-# """,
-#                 time_estimate=5,
-#             ),
             #########################################
             # DETERMINE IF GAME SHOULD CONTINUE
             #########################################
@@ -166,42 +116,14 @@ class NestedGameTrial(ChainTrial):
                     ),
                 ),
             ),
-#             InfoPage(
-#                 content=f"""
-# **After inner game**
-# Me and my partner: {[participant.id for participant in self.participant.sync_group.participants]} --- ---
-# My id: {self.participant_id} ---
-# My outer role: {self.get_outer_role(self.participant)} ---
-# Am I the outer leader?: {self.is_the_outer_leader(self.participant)} ---
-# My inner role: {self.get_inner_role(self.participant)} ---
-# Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
-# Proposal: {variable_handler.get_value(participant, "inner_proposal")} ---
-# Result: {self.get_inner_result()} ---
-# """,
-#                 time_estimate=5,
-#             ),
             CodeBlock(
                 lambda participant: self.assign_inner_proposal(
                     self.continue_to_inner_game()
                 )
             ),
-            GroupBarrier(
-                id_="taking_stock",
-                group_type="chain",
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
-            ),
+            CustomBarrier("taking_stock"),
             self.show_trial_feedback(),
-            GroupBarrier(
-                id_="overall_score",
-                group_type="chain",
-                # max_wait_time=MAX_WAIT_TIME,
-                # waiting_logic_expected_repetitions=15,
-                # participant_timeout=MAX_WAITING_SEEING_INFO,
-                # participant_timeout_action="fail",
-            ),
+            CustomBarrier("overall_score"),
         )  # end main join
 
     ######################################################
@@ -240,18 +162,18 @@ class NestedGameTrial(ChainTrial):
             raise ValueError("transition must be 'random' or 'constant'")
 
         list_of_pages = join(
-            InfoPage(
-                Markup(OBJECTIVE),
-                time_estimate=5,
-            ),
-            InfoPage(
-                Markup(preparation_phase),
-                time_estimate=5,
-            ),
-            InfoPage(
-                Markup(proposal_phase),
-                time_estimate=5,
-            ),
+            # InfoPage(
+            #     Markup(OBJECTIVE),
+            #     time_estimate=5,
+            # ),
+            # InfoPage(
+            #     Markup(preparation_phase),
+            #     time_estimate=5,
+            # ),
+            # InfoPage(
+            #     Markup(proposal_phase),
+            #     time_estimate=5,
+            # ),
             ModularPage(
                 label="outer_role",
                 prompt=Prompt(Markup(example_text)),
