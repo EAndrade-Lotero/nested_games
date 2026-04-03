@@ -197,7 +197,7 @@ class NestedGameTrial(ChainTrial):
             CustomBarrier(
                 id_="outer_proposal_stage",
                 on_release=self.assign_inner_roles,
-                proposer=self.am_i_the_outer_leader(),
+                active_participant=self.am_i_the_outer_leader(),
                 wait_page=OuterWaitingPage(
                     template_path=self.context["outer_proposal_wait_path"],
                     content="Waiting for the leader...",
@@ -222,11 +222,11 @@ class NestedGameTrial(ChainTrial):
             CustomBarrier(
                 id_="outer_acceptance_stage",
                 on_release=self.assign_outer_acceptance,
-                proposer=not self.am_i_the_outer_leader(),
+                active_participant=not self.am_i_the_outer_leader(),
                 wait_page=OuterWaitingPage(
                     template_path=self.context["outer_acceptance_wait_path"],
-                    content="Waiting for the participant...",
-                    proposal=self.get_outer_proposal(),
+                    content="Waiting for acceptance...",
+                    proposal="RESPONDER" if self.get_outer_proposal() else "PROPOSER",
                 )
             ),
         )

@@ -52,7 +52,7 @@ def get_start_nodes():
                 "generic_url": "static/generic_url.png",
                 "plate_url": "static/plate_url.png",
                 "outer_proposal_wait_path": "templates/outer_proposal_wait.html",
-                "outer_acceptance_wait_path": "templates/outer_acceptance_wait.html",
+                "outer_acceptance_wait_path": "templates/waiting_page.html",
             }
         )
     ]

@@ -16,13 +16,13 @@ class CustomBarrier(GroupBarrier):
         self,
         id_:str,
         content:Optional[str|None]=None,
-        proposer:Optional[bool|None]=None,
+        active_participant:Optional[bool | None]=None,
         wait_page:Optional[Page|None]=None,
         on_release:Optional[Callable]=None,
     ) -> None:
 
-        if proposer is not None:
-            if proposer:
+        if active_participant is not None:
+            if active_participant:
                 wait_page = WaitPage(
                     wait_time=WAIT_PAGE_TIME,
                     content="Moving on..."
