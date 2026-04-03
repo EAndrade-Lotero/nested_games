@@ -28,7 +28,6 @@ from .dictator_pages import (
 )
 from .ultimatum_pages import (
     OuterUltimatumProposalPage,
-    OuterAcceptancePage,
     InnerProposalPageOuterUltimatum,
     InnerAcceptancePage,
     InnerUltimatumFeedbackPage,
@@ -59,8 +58,8 @@ from .instructions import (
 from .custom_barriers import CustomBarrier
 from .custom_pages import (
     OuterProposalPage,
-    OuterProposalWaitingPage,
-    # OuterAcceptancePage,
+    OuterWaitingPage,
+    OuterAcceptancePage,
     # InnerProposalPage,
     # InnerAcceptancePage,
 )
@@ -109,21 +108,18 @@ class NestedGameTrial(ChainTrial):
                 label="check_continue_to_inner_gamme",
                 condition=lambda participant: self.continue_to_inner_game(),
                 logic_if_false=None,
-                logic_if_true=join(
-                    #########################################
-                    # INNER GAME
-                    #########################################
-                    conditional(
-                        label="outer_game_type",
-                        condition=lambda participant: participant.current_trial.definition["inner_game"] == "dictator",
-                        logic_if_true=self.inner_dictator_stage(),
-                        logic_if_false=self.inner_ultimatum_stage(),
-                    ),
+                #########################################
+                # INNER GAME
+                #########################################
+                logic_if_true=conditional(
+                    label="outer_game_type",
+                    condition=lambda participant: participant.current_trial.definition["inner_game"] == "dictator",
+                    logic_if_true=self.inner_dictator_stage(),
+                    logic_if_false=self.inner_ultimatum_stage(),
                 ),
             ),
             CustomBarrier("taking_stock"),
             self.show_trial_feedback(),
-            CustomBarrier("overall_score"),
         )  # end main join
 
     ######################################################
@@ -196,18 +192,15 @@ class NestedGameTrial(ChainTrial):
                 label="outer_leader",
                 condition=lambda participant: self.is_the_outer_leader(participant),
                 logic_if_true=OuterProposalPage(self.context),
-                # logic_if_true=OuterDictatorProposalPage(
-                #     proposer=self.am_i_the_outer_leader(),
-                # ),
                 logic_if_false=None,
             ),
             CustomBarrier(
                 id_="outer_proposal_stage",
                 on_release=self.assign_inner_roles,
                 proposer=self.am_i_the_outer_leader(),
-                wait_page=OuterProposalWaitingPage(
-                    template_path=self.context["outer_wait_path"],
-                    content="Waiting for the outer leader...",
+                wait_page=OuterWaitingPage(
+                    template_path=self.context["outer_proposal_wait_path"],
+                    content="Waiting for the leader...",
                 )
             ),
         )
@@ -219,43 +212,35 @@ class NestedGameTrial(ChainTrial):
             conditional(
                 label="outer_responder",
                 condition=lambda participant: self.is_the_outer_leader(participant),
-                logic_if_false=self.outer_ultimatum_acceptance_stage(),
+                logic_if_false=OuterAcceptancePage(
+                    context=self.context,
+                    proposal=self.get_outer_proposal(),
+                ),
                 logic_if_true=None,
             ),
             # Acceptance stage
             CustomBarrier(
                 id_="outer_acceptance_stage",
-                content="Waiting for the outer responder...",
                 on_release=self.assign_outer_acceptance,
+                proposer=not self.am_i_the_outer_leader(),
+                wait_page=OuterWaitingPage(
+                    template_path=self.context["outer_acceptance_wait_path"],
+                    content="Waiting for the participant...",
+                    proposal=self.get_outer_proposal(),
+                )
             ),
         )
         return list_of_pages
 
-    def outer_ultimatum_acceptance_stage(self):
-        # Check outer role and act accordingly
-        outer_role = NestedGameTrial.get_outer_role(self.participant)
-
-        if outer_role is not None:
-            if outer_role == "proposer":
-                proposer = True
-            elif outer_role == "responder":
-                proposer = False
+    def get_outer_proposal(self):
+        proposer_id = self.get_outer_result()
+        proposal = None
+        if proposer_id is not None:
+            if self.participant.id == proposer_id:
+                proposal = "PROPOSER"
             else:
-                raise ValueError(f"outer_role should be either proposer or responder but got {outer_role}")
-
-            proposer_id = self.get_outer_result()
-            if proposer_id is not None:
-                if self.participant.id == proposer_id:
-                    proposal = "PROPOSER"
-                else:
-                    proposal = "RESPONDER"
-
-                return OuterAcceptancePage(
-                    proposer=proposer,
-                    proposal=proposal,
-                )
-
-        return None
+                proposal = "RESPONDER"
+        return proposal
 
     def assign_inner_roles(self):
         # logger.info("Entering assignment of inner roles...")

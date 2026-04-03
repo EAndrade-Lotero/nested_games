@@ -61,17 +61,19 @@ class OuterProposalPage(ModularPage):
         )
 
 
-class OuterProposalWaitingPage(Page):
+class OuterWaitingPage(Page):
 
     def __init__(
         self,
         template_path:str,
         content:Optional[str|None] = None,
+        proposal:Optional[str|None] = None,
         **kwargs
     ) -> None:
         if content is None:
             content = "Waiting for the other player..."
         self.content = content
+        self.proposal = proposal
         self.wait_time = WAIT_PAGE_TIME
         with open(template_path, "r") as file:
             template = file.read()
@@ -97,7 +99,7 @@ class OuterProposalWaitingPage(Page):
 class OuterAcceptancePage(ModularPage):
 
     def __init__(self, context: Dict[str, str], proposal: str) -> None:
-        assert proposal in ["", "PROPOSER", "RESPONDER"]
+        assert proposal in [None, "PROPOSER", "RESPONDER"]
 
         prompt = OuterPrompt(
             text=f"Do you accept your partner's proposal of you to be the {proposal}? ",
