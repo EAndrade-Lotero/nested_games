@@ -29,7 +29,6 @@ from .dictator_pages import (
 from .ultimatum_pages import (
     OuterUltimatumProposalPage,
     InnerProposalPageOuterUltimatum,
-    InnerAcceptancePage,
     InnerUltimatumFeedbackPage,
 )
 from .variable_handler import VariableHandler
@@ -61,7 +60,7 @@ from .custom_pages import (
     CustomWaitingPage,
     OuterAcceptancePage,
     InnerProposalPage,
-    # InnerAcceptancePage,
+    InnerAcceptancePage,
 )
 
 logger = get_logger()
@@ -381,7 +380,10 @@ class NestedGameTrial(ChainTrial):
             conditional(
                 label="inner_responder",
                 condition=lambda participant: self.is_the_inner_leader(participant),
-                logic_if_false=self.inner_ultimatum_acceptance_stage(),
+                logic_if_false=InnerAcceptancePage(
+                    context=self.context,
+                    proposal=self.get_inner_proposal(),
+                ),
                 logic_if_true=None,
             ),
             CustomBarrier(
@@ -389,37 +391,6 @@ class NestedGameTrial(ChainTrial):
                 content="Waiting for the inner responder...",
             ),
         )
-
-    def inner_ultimatum_acceptance_stage(self):
-        return InnerAcceptancePage(
-                proposer=self.am_i_the_inner_leader(),
-                **self.get_inner_result()
-            ),
-
-        # # Check inner role and act accordingly
-        # inner_role = NestedGameTrial.get_inner_role(self.participant)
-        #
-        # if inner_role is not None:
-        #     if inner_role == "proposer":
-        #         proposer = True
-        #     elif inner_role == "responder":
-        #         proposer = False
-        #     else:
-        #         raise ValueError(f"Inner role should be either proposer or responder but got {outer_role}")
-        #
-        #     proposer_id = self.get_inner_result()
-        #     if proposer_id is not None:
-        #         if self.participant.id == proposer_id:
-        #             proposal = "PROPOSER"
-        #         else:
-        #             proposal = "RESPONDER"
-        #
-        #         return OuterAcceptancePage(
-        #             proposer=proposer,
-        #             proposal=proposal,
-        #         )
-        #
-        # return None
 
     def assign_inner_proposal(self):
         participants = self.participant.sync_group.participants
@@ -456,6 +427,23 @@ class NestedGameTrial(ChainTrial):
         if inner_role is not None:
             return inner_role == 'proposer'
         return None
+
+    def get_inner_proposal(self) -> Union[int, None]:
+        participants = self.participant.sync_group.participants
+        assert len(participants) == 2
+
+        # Determine proposal
+        proposal = None
+        for participant in participants:
+            inner_role = NestedGameTrial.get_inner_role(participant)
+            if inner_role is not None:
+                if inner_role == 'proposer':
+                    proposal = variable_handler.get_value(participant, 'inner_proposal')
+                    if proposal is not None:
+                        proposal = int(proposal)
+                    break
+
+        return proposal
 
     def get_inner_result(self):
 
