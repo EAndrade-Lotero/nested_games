@@ -59,7 +59,7 @@ from .instructions import (
 from .custom_barriers import CustomBarrier
 from .custom_pages import (
     OuterProposalPage,
-    # OuterProposalWaitingPage,
+    OuterProposalWaitingPage,
     # OuterAcceptancePage,
     # InnerProposalPage,
     # InnerAcceptancePage,
@@ -89,7 +89,7 @@ class NestedGameTrial(ChainTrial):
             # CHOOSE OUTER ROLES DEPENDING ON TREATMENT
             #############################################
             CustomBarrier(
-                id_="instructions_stage",
+                id_="choose_outer_roles",
                 content="Please wait while other participants read the instructions...",
                 on_release = self.choose_new_outer_role,
             ),
@@ -205,6 +205,10 @@ class NestedGameTrial(ChainTrial):
                 id_="outer_proposal_stage",
                 content="Waiting for the outer leader...",
                 on_release=self.assign_inner_roles,
+                proposer=self.am_i_the_outer_leader(),
+                wait_page=OuterProposalWaitingPage(
+                    template_path=self.context["outer_wait_path"],
+                )
             ),
         )
         return list_of_pages

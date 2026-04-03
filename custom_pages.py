@@ -17,6 +17,7 @@ from .game_paramters import (
     ENDOWMENT,
     MAX_WAITING_PROPOSALS,
     MAX_WAITING_FOR_OTHER,
+    WAIT_PAGE_TIME,
 )
 from .custom_front_end import (
     CustomControl,
@@ -64,19 +65,16 @@ class OuterProposalWaitingPage(Page):
 
     def __init__(
         self,
-        content: str,
-        wait_time: float,
         template_path:str,
         **kwargs
     ) -> None:
-        self.content = content
-        assert wait_time >= 0
-        self.wait_time = wait_time
+        self.content = "Waiting for proposer..."
+        self.wait_time = WAIT_PAGE_TIME
         with open(template_path, "r") as file:
             template = file.read()
         super().__init__(
             label="wait",
-            time_estimate=wait_time,
+            time_estimate=MAX_WAITING_PROPOSALS,
             template_str=template,
             template_arg={"content": self.content, "wait_time": self.wait_time},
             **kwargs,
