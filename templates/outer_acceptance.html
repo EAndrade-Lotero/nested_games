@@ -60,6 +60,7 @@
         width: 200px;
         height: 220px;
     }
+
     .rectangle {
       width: 150px;
       height: 50px;
@@ -73,14 +74,14 @@
     }
 
     .basket {
-      width: 250px;
-      height: 150px;
-      aspect-ratio: 1 / 1;
-      background-image: url("../static/plate.png");
-      background-size: contain;
-      /* background-repeat: no-repeat; */
-      background-position: center;
-      position: relative;
+        width: 200px;
+        height: 100px;
+        /* background-image: url("{{ config.plate_url }}"); */
+        background-image: url("../static/plate.png");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        position: relative;
     }
 
     .coin-pile {
@@ -172,23 +173,23 @@
 
   <!-- SECOND PLACE (DROP TARGET) -->
   <div class="zone center-middle">
-    <div class="coin-pile">
-    <div class="coin" draggable="false" id="coin1"></div>
-    <div class="coin" draggable="false" id="coin2"></div>
-    <div class="coin" draggable="false" id="coin3"></div>
-    <div class="coin" draggable="false" id="coin4"></div>
-    <div class="coin" draggable="false" id="coin5"></div>
-    <div class="coin" draggable="false" id="coin6"></div>
-    <div class="coin" draggable="false" id="coin7"></div>
-    <div class="coin" draggable="false" id="coin8"></div>
-    <div class="coin" draggable="false" id="coin9"></div>
-    <div class="coin" draggable="false" id="coin10"></div>
-    </div>
     <div class="rectangle">PROPOSER</div>
     <div class="avatarzone" id="dropzone">
         <div class="avatar" draggable="false" id="me">
-        <span class="avatar-label">...</span>
+            <span class="avatar-label">...</span>
         </div>
+    </div>
+    <div class="coin-pile">
+        <div class="coin" draggable="false" id="coin1"></div>
+        <div class="coin" draggable="false" id="coin2"></div>
+        <div class="coin" draggable="false" id="coin3"></div>
+        <div class="coin" draggable="false" id="coin4"></div>
+        <div class="coin" draggable="false" id="coin5"></div>
+        <div class="coin" draggable="false" id="coin6"></div>
+        <div class="coin" draggable="false" id="coin7"></div>
+        <div class="coin" draggable="false" id="coin8"></div>
+        <div class="coin" draggable="false" id="coin9"></div>
+        <div class="coin" draggable="false" id="coin10"></div>
     </div>
   </div>
 
