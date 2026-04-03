@@ -187,7 +187,7 @@ class NestedGameTrial(ChainTrial):
     # METHODS FOR THE OUTER GAME
     ######################################################
     def outer_dictator_stage(self):
-        list_of_pages = join(
+        return join(
             conditional(
                 label="outer_leader",
                 condition=lambda participant: self.is_the_outer_leader(participant),
@@ -204,10 +204,9 @@ class NestedGameTrial(ChainTrial):
                 )
             ),
         )
-        return list_of_pages
 
     def outer_ultimatum_stage(self):
-        list_of_pages = join(
+        return join(
             self.outer_dictator_stage(),
             conditional(
                 label="outer_responder",
@@ -230,7 +229,6 @@ class NestedGameTrial(ChainTrial):
                 )
             ),
         )
-        return list_of_pages
 
     def get_outer_proposal(self):
         proposer_id = self.get_outer_result()
@@ -351,30 +349,6 @@ class NestedGameTrial(ChainTrial):
     # METHODS FOR THE INNER GAME
     ######################################################
     def inner_dictator_stage(self):
-        # return join(
-        #     # Proposal stage
-        #     conditional(
-        #         label="inner_leader",
-        #         condition=lambda participant: self.is_the_inner_leader(participant),
-        #         logic_if_true=conditional(
-        #             label="feedback_depending_on_outer_game",
-        #             condition=lambda participant: participant.current_trial.definition['outer_game'] == "dictator",
-        #             logic_if_true=InnerProposalPageOuterDictator(
-        #                 proposer=self.am_i_the_inner_leader(),
-        #             ),
-        #             logic_if_false=InnerProposalPageOuterUltimatum(
-        #                 proposer=self.am_i_the_inner_leader(),
-        #             ),
-        #         ),
-        #         logic_if_false=None,
-        #     ),
-        #     CustomBarrier(
-        #         id_="inner_proposal_stage",
-        #         content="Waiting for inner proposer...",
-        #         on_release=self.assign_inner_proposal,
-        #     ),
-        # )
-
         return join(
             conditional(
                 label="is_leader",
