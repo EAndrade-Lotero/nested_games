@@ -73,14 +73,20 @@
     }
 
     .basket {
-        width: 200px;
-        height: 100px;
-        /* background-image: url("{{ config.plate_url }}"); */
-        background-image: url("../static/plate.png");
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-        position: relative;
+      width: 200px;
+      height: 100px;
+      /* background-image: url("{{ config.plate_url }}"); */
+      background-image: url("../static/plate.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      padding: 10px;
     }
 
     .coin-pile {
@@ -170,7 +176,7 @@
                 <span class="avatar-label">?</span>
             </div>
         </div>
-        <div class="basket"></div>
+        <div class="basket" id="basket"></div>
       </div>
 
       <!-- SECOND PLACE (DROP TARGET) -->
@@ -181,10 +187,17 @@
             <span class="avatar-label">?</span>
             </div>
         </div>
-        <div class="coin-pile">
-          {% for i in range(10) %}
-            <div id="coin{{ i }}" class="coin"></div>
-          {% endfor %}
+        <div class="coin-pile" id="coinPile">
+            <div class="coin" draggable="false" id="coin1"></div>
+            <div class="coin" draggable="false" id="coin2"></div>
+            <div class="coin" draggable="false" id="coin3"></div>
+            <div class="coin" draggable="false" id="coin4"></div>
+            <div class="coin" draggable="false" id="coin5"></div>
+            <div class="coin" draggable="false" id="coin6"></div>
+            <div class="coin" draggable="false" id="coin7"></div>
+            <div class="coin" draggable="false" id="coin8"></div>
+            <div class="coin" draggable="false" id="coin9"></div>
+            <div class="coin" draggable="false" id="coin10"></div>
         </div>
       </div>
 
@@ -224,7 +237,7 @@
 
         updateClock();
 
-        const timer = setInterval(updateClock, 500); // faster animation feels nicer
+        const timer = setInterval(updateClock, 500);
 
         setTimeout(function () {
             psynet.nextPage();
@@ -249,6 +262,37 @@
 
         avatars[0].textContent = p1; // RESPONDER
         avatars[1].textContent = p2; // PROPOSER
+
+        ///BASKET
+        const basket = document.getElementById("basket");
+        const coinPile = document.getElementById("coinPile");
+        const TOTAL_COINS = {{ endowment }}; // adjust if needed
+
+        function updateCoins(value) {
+          basket.innerHTML = "";
+          coinPile.innerHTML = "";
+
+          const basketCoins = Math.round(value);
+          const pileCoins = TOTAL_COINS - basketCoins;
+
+          // Fill basket
+          for (let i = 0; i < basketCoins; i++) {
+            const coin = document.createElement("div");
+            coin.classList.add("coin");
+            basket.appendChild(coin);
+          }
+
+          // Fill remaining pile
+          for (let i = 0; i < pileCoins; i++) {
+            const coin = document.createElement("div");
+            coin.classList.add("coin");
+            coinPile.appendChild(coin);
+          }
+        }
+
+        let v = {{ n_coins }};
+        updateCoins(v);
+        console.log("Proposal:", v);
 
     </script>
 {% endblock %}

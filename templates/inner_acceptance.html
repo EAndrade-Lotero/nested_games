@@ -202,32 +202,8 @@
   </div>
 
 <script>
-    const basket = document.getElementById("basket");
-    const coinPile = document.getElementById("coinPile");
-    const TOTAL_COINS = {{ config.endowment }}; // adjust if needed
 
-    function updateCoins(value) {
-      basket.innerHTML = "";
-      coinPile.innerHTML = "";
-
-      const basketCoins = Math.round(value);
-      const pileCoins = TOTAL_COINS - basketCoins;
-
-      // Fill basket
-      for (let i = 0; i < basketCoins; i++) {
-        const coin = document.createElement("div");
-        coin.classList.add("coin");
-        basket.appendChild(coin);
-      }
-
-      // Fill remaining pile
-      for (let i = 0; i < pileCoins; i++) {
-        const coin = document.createElement("div");
-        coin.classList.add("coin");
-        coinPile.appendChild(coin);
-      }
-    }
-
+    ///TIMER
     let timeRemaining = {{ config.timeout }};
 
     function updateClock() {
@@ -253,6 +229,33 @@
     updateClock();
 
     const timer = setInterval(updateClock, 1000);
+
+    ///BASKET
+    const basket = document.getElementById("basket");
+    const coinPile = document.getElementById("coinPile");
+    const TOTAL_COINS = {{ config.endowment }}; // adjust if needed
+
+    function updateCoins(value) {
+      basket.innerHTML = "";
+      coinPile.innerHTML = "";
+
+      const basketCoins = Math.round(value);
+      const pileCoins = TOTAL_COINS - basketCoins;
+
+      // Fill basket
+      for (let i = 0; i < basketCoins; i++) {
+        const coin = document.createElement("div");
+        coin.classList.add("coin");
+        basket.appendChild(coin);
+      }
+
+      // Fill remaining pile
+      for (let i = 0; i < pileCoins; i++) {
+        const coin = document.createElement("div");
+        coin.classList.add("coin");
+        coinPile.appendChild(coin);
+      }
+    }
 
     let v = {{ config.proposal }};
     updateCoins(v);

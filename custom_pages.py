@@ -67,13 +67,16 @@ class CustomWaitingPage(Page):
         self,
         template_path:str,
         content:Optional[str|None] = None,
-        proposer:Optional[bool | None] = None,
+        proposer:Optional[bool|None] = None,
+        n_coins:Optional[int] = 0,
         **kwargs
     ) -> None:
         if content is None:
             content = "Waiting for the other player..."
         self.content = content
         self.proposer = proposer
+        self.n_coins = n_coins
+        self.endowment = ENDOWMENT
         self.wait_time = WAIT_PAGE_TIME
         with open(template_path, "r") as file:
             template = file.read()
@@ -84,7 +87,9 @@ class CustomWaitingPage(Page):
             template_arg={
                 "content": self.content,
                 "proposer": self.proposer,
-                "wait_time": self.wait_time
+                "n_coins": self.n_coins,
+                "endowment": self.endowment,
+                "wait_time": self.wait_time,
             },
             **kwargs,
         )

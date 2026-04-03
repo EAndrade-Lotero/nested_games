@@ -388,7 +388,13 @@ class NestedGameTrial(ChainTrial):
             ),
             CustomBarrier(
                 id_="inner_acceptance_stage",
-                content="Waiting for the inner responder...",
+                active_participant=not self.am_i_the_inner_leader(),
+                wait_page=CustomWaitingPage(
+                    template_path=self.context["waiting_page_path"],
+                    content="Waiting for acceptance...",
+                    proposer=self.am_i_the_inner_leader(),
+                    n_coins=self.get_inner_proposal(),
+                )
             ),
         )
 
@@ -435,13 +441,11 @@ class NestedGameTrial(ChainTrial):
         # Determine proposal
         proposal = None
         for participant in participants:
-            inner_role = NestedGameTrial.get_inner_role(participant)
-            if inner_role is not None:
-                if inner_role == 'proposer':
-                    proposal = variable_handler.get_value(participant, 'inner_proposal')
-                    if proposal is not None:
-                        proposal = int(proposal)
-                    break
+            if self.is_the_inner_leader(participant):
+                proposal = variable_handler.get_value(participant, 'inner_proposal')
+                if proposal is not None:
+                    proposal = int(proposal)
+                break
 
         return proposal
 
