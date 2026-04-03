@@ -16,15 +16,14 @@ from psynet.utils import get_logger
 from .game_paramters import (
     ENDOWMENT,
     MAX_WAITING_PROPOSALS,
-    MAX_WAITING_FOR_OTHER,
     WAIT_PAGE_TIME,
     MAX_WAITING_SEEING_INFO,
+    RNG,
 )
 from .custom_front_end import (
     CustomControl,
     OuterPrompt,
     InnerProposalControl,
-    InnerControl,
     InnerPrompt,
     ScorePrompt,
 )
@@ -56,7 +55,7 @@ class OuterProposalPage(ModularPage):
             events={
                 "done": Event(
                     is_triggered_by="done",
-                    js="psynet.submitResponse();",
+                    js=f"psynet.response.disable(); psynet.submit.disable(); psynet.nextPage({RNG.choice(['self', 'other'])});",
                     delay=0.0,
                 ),
             },
@@ -134,7 +133,7 @@ class OuterAcceptancePage(ModularPage):
             events={
                 "done": Event(
                     is_triggered_by="done",
-                    js="psynet.submitResponse();",
+                    js=f"psynet.response.disable(); psynet.submit.disable(); psynet.nextPage({RNG.choice([True, False])});",
                     delay=0.0,
                 ),
             },
@@ -170,7 +169,7 @@ class InnerProposalPage(ModularPage):
             events={
                 "done": Event(
                     is_triggered_by="done",
-                    js="psynet.submitResponse();",
+                    js=f"psynet.response.disable(); psynet.submit.disable(); psynet.nextPage({0});",
                     delay=0.0,
                 ),
             },
@@ -204,7 +203,7 @@ class InnerAcceptancePage(ModularPage):
             events={
                 "done": Event(
                     is_triggered_by="done",
-                    js="psynet.submitResponse();",
+                    js=f"psynet.response.disable(); psynet.submit.disable(); psynet.nextPage({RNG.choice([True, False])});",
                     delay=0.0,
                 ),
             },
@@ -250,7 +249,7 @@ class ScorePage(ModularPage):
             events={
                 "done": Event(
                     is_triggered_by="done",
-                    js="psynet.submitResponse();",
+                    js=f"psynet.response.disable(); psynet.submit.disable(); psynet.nextPage({score});",
                     delay=0.0,
                 ),
             },
