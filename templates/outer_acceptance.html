@@ -196,6 +196,7 @@
 </div>
 
 <script>
+    /// TIMER
     let timeRemaining = {{ config.timeout }};
 
     function updateClock() {
@@ -222,6 +223,7 @@
 
     const timer = setInterval(updateClock, 1000);
 
+    /// AVATARS
     const avatars = document.querySelectorAll('.avatar-label');
 
     let p1 = "Me";

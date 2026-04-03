@@ -51,8 +51,7 @@ def get_start_nodes():
                 "coin_url": "static/coin_url.png",
                 "generic_url": "static/generic_url.png",
                 "plate_url": "static/plate_url.png",
-                "outer_proposal_wait_path": "templates/outer_proposal_wait.html",
-                "outer_acceptance_wait_path": "templates/waiting_page.html",
+                "waiting_page_path": "templates/waiting_page.html",
             }
         )
     ]

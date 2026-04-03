@@ -58,7 +58,7 @@ from .instructions import (
 from .custom_barriers import CustomBarrier
 from .custom_pages import (
     OuterProposalPage,
-    OuterWaitingPage,
+    CustomWaitingPage,
     OuterAcceptancePage,
     InnerProposalPage,
     # InnerAcceptancePage,
@@ -198,8 +198,8 @@ class NestedGameTrial(ChainTrial):
                 id_="outer_proposal_stage",
                 on_release=self.assign_inner_roles,
                 active_participant=self.am_i_the_outer_leader(),
-                wait_page=OuterWaitingPage(
-                    template_path=self.context["outer_proposal_wait_path"],
+                wait_page=CustomWaitingPage(
+                    template_path=self.context["waiting_page_path"],
                     content="Waiting for the leader...",
                 )
             ),
@@ -222,10 +222,10 @@ class NestedGameTrial(ChainTrial):
                 id_="outer_acceptance_stage",
                 on_release=self.assign_outer_acceptance,
                 active_participant=not self.am_i_the_outer_leader(),
-                wait_page=OuterWaitingPage(
-                    template_path=self.context["outer_acceptance_wait_path"],
+                wait_page=CustomWaitingPage(
+                    template_path=self.context["waiting_page_path"],
                     content="Waiting for acceptance...",
-                    proposal="RESPONDER" if self.get_outer_proposal() else "PROPOSER",
+                    proposer=self.am_i_the_inner_leader(),
                 )
             ),
         )
@@ -351,7 +351,7 @@ class NestedGameTrial(ChainTrial):
     def inner_dictator_stage(self):
         return join(
             conditional(
-                label="is_leader",
+                label="inner_leader",
                 condition=lambda participant: self.is_the_inner_leader(participant),
                 logic_if_false=None,
                 logic_if_true=conditional(
@@ -363,8 +363,13 @@ class NestedGameTrial(ChainTrial):
             ),
             CustomBarrier(
                 id_="inner_proposal_stage",
-                content="Waiting for inner proposer...",
                 on_release=self.assign_inner_proposal,
+                active_participant=self.am_i_the_inner_leader(),
+                wait_page=CustomWaitingPage(
+                    template_path=self.context["waiting_page_path"],
+                    content="Waiting for the leader...",
+                    proposer=self.am_i_the_inner_leader(),
+                )
             ),
         )
 

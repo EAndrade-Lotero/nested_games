@@ -61,19 +61,19 @@ class OuterProposalPage(ModularPage):
         )
 
 
-class OuterWaitingPage(Page):
+class CustomWaitingPage(Page):
 
     def __init__(
         self,
         template_path:str,
         content:Optional[str|None] = None,
-        proposal:Optional[str|None] = None,
+        proposer:Optional[bool | None] = None,
         **kwargs
     ) -> None:
         if content is None:
             content = "Waiting for the other player..."
         self.content = content
-        self.proposal = proposal
+        self.proposer = proposer
         self.wait_time = WAIT_PAGE_TIME
         with open(template_path, "r") as file:
             template = file.read()
@@ -81,7 +81,11 @@ class OuterWaitingPage(Page):
             label="wait",
             time_estimate=MAX_WAITING_PROPOSALS,
             template_str=template,
-            template_arg={"content": self.content, "wait_time": self.wait_time},
+            template_arg={
+                "content": self.content,
+                "proposer": self.proposer,
+                "wait_time": self.wait_time
+            },
             **kwargs,
         )
 

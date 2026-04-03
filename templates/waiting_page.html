@@ -197,6 +197,7 @@
 
     <script>
 
+        /// TIMER
         let timeRemaining = {{ wait_time }};
         let dots = 0;
 
@@ -229,17 +230,23 @@
             psynet.nextPage();
         }, 1000 * {{ wait_time }});
 
+        /// AVATARS
         const avatars = document.querySelectorAll('.avatar-label');
-        let p1 = "Me";
-        let p2 = "Partner";
-        const proposer = "{{ proposal }}";
+        let p1 = "?";
+        let p2 = "?";
+        const proposer = "{{ proposer }}";
 
-        console.log(proposer);
-        if (proposer === "PROPOSER") {
+        console.log("Proposer:", proposer);
+
+        if (proposer === "True") {
             console.log("Me proposer");
             p1 = "Partner";
             p2 = "Me";
+        } else if (proposer === "False") {
+            p1 = "Me";
+            p2 = "Partner";
         }
+
         avatars[0].textContent = p1; // RESPONDER
         avatars[1].textContent = p2; // PROPOSER
 
