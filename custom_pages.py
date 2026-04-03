@@ -1,5 +1,5 @@
 from markupsafe import Markup
-from typing import Union, Dict
+from typing import Optional, Dict
 
 from psynet.graphics import Prompt
 from psynet.modular_page import (
@@ -66,9 +66,12 @@ class OuterProposalWaitingPage(Page):
     def __init__(
         self,
         template_path:str,
+        content:Optional[str|None] = None,
         **kwargs
     ) -> None:
-        self.content = "Waiting for proposer..."
+        if content is None:
+            content = "Waiting for the other player..."
+        self.content = content
         self.wait_time = WAIT_PAGE_TIME
         with open(template_path, "r") as file:
             template = file.read()

@@ -161,7 +161,7 @@
 
     <div class="tabletop">
 
-      <div id="countdown">02:00</div>
+      <div id="countdown">Please wait...</div>
 
       <!-- TOP PLACE -->
       <div class="zone center-top">
@@ -199,30 +199,32 @@
     <script>
 
         let timeRemaining = {{ wait_time }};
+        let dots = 0;
 
         function updateClock() {
-          const minutes = Math.floor(timeRemaining / 60);
-          const seconds = timeRemaining % 60;
 
-          document.getElementById("countdown").textContent =
-            `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+            dots = (dots + 1) % 4;  // cycles: 0,1,2,3
+            const dotString = ".".repeat(dots);
 
-          if (timeRemaining > 0) {
-            timeRemaining--;
-          } else {
-            clearInterval(timer);
-            console.log(`${timeRemaining} seconds`);
-            document.dispatchEvent(new Event("done"));
-            psynet.trial.registerEvent(
-                "done",
-                {info: "timeout"}
-              );
-          }
+            document.getElementById("countdown").textContent =
+                "Please wait" + dotString;
+
+            if (timeRemaining > 0) {
+                timeRemaining--;
+            } else {
+                clearInterval(timer);
+
+                document.dispatchEvent(new Event("done"));
+                psynet.trial.registerEvent(
+                    "done",
+                    {info: "timeout"}
+                );
+            }
         }
 
         updateClock();
 
-        const timer = setInterval(updateClock, 1000);
+        const timer = setInterval(updateClock, 500); // faster animation feels nicer
 
         setTimeout(function () {
             psynet.nextPage();
