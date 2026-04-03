@@ -18,6 +18,7 @@ from .game_paramters import (
     MAX_WAITING_PROPOSALS,
     MAX_WAITING_FOR_OTHER,
     WAIT_PAGE_TIME,
+    MAX_WAITING_SEEING_INFO,
 )
 from .custom_front_end import (
     CustomControl,
@@ -25,6 +26,7 @@ from .custom_front_end import (
     InnerProposalControl,
     InnerControl,
     InnerPrompt,
+    ScorePrompt,
 )
 
 
@@ -149,6 +151,7 @@ class InnerProposalPage(ModularPage):
         if game == "ultimatum":
             text += "<p>Proposal accepted. You are the PROPOSER. </p>\n"
         text += f"<p>Use the slider below to decide how many of the {ENDOWMENT} coins you will give to your partner: <p/>\n"
+        text += f"<p>(Scroll down the page if necessary.)</p>\n"
         text += f"<br>\n"
 
         prompt = Markup(text)
@@ -164,36 +167,6 @@ class InnerProposalPage(ModularPage):
             control=control,
             time_estimate=5,
             save_answer="inner_proposal",
-            events={
-                "done": Event(
-                    is_triggered_by="done",
-                    js="psynet.submitResponse();",
-                    delay=0.0,
-                ),
-            },
-        )
-
-
-class InnerProposalWaitingPage(ModularPage):
-
-    def __init__(self, context: Dict[str, str]) -> None:
-        prompt = Prompt(Markup(
-            f"<h2>Proposal phase</h2>"
-            f"<br>"
-            "<p>Waiting for your partner's offer. </p>"
-        ))
-        control = CustomControl(
-            context=context,
-            time_estimate=MAX_WAITING_PROPOSALS,
-            external_template="inner_wait.html",
-        )
-
-        super().__init__(
-            label="outer_proposal",
-            prompt=prompt,
-            control=control,
-            time_estimate=5,
-            save_answer="outer_proposal",
             events={
                 "done": Event(
                     is_triggered_by="done",
@@ -236,3 +209,52 @@ class InnerAcceptancePage(ModularPage):
                 ),
             },
         )
+
+
+class ScorePage(ModularPage):
+
+    def __init__(
+        self,
+        proposer: bool,
+        proposal: int,
+        remainder_: int,
+        accumulated_score: int,
+        partners_accumulated_score: int,
+        accepted: Optional[bool] = True,
+    ) -> None:
+
+        if proposer:
+            score = remainder_
+        else:
+            score = proposal
+
+        prompt = ScorePrompt(
+            proposer=proposer,
+            proposal=proposal,
+            remainder_=remainder_,
+            accumulated_score=accumulated_score,
+            partners_accumulated_score=partners_accumulated_score,
+            time_estimate=MAX_WAITING_SEEING_INFO,
+            accepted=accepted,
+        )
+
+        super().__init__(
+            label="reward",
+            prompt=prompt,
+            control=PushButtonControl(
+                labels=["Next"],
+                choices=[score],
+            ),
+            time_estimate=5,
+            save_answer="reward",
+            events={
+                "done": Event(
+                    is_triggered_by="done",
+                    js="psynet.submitResponse();",
+                    delay=0.0,
+                ),
+            },
+        )
+
+
+

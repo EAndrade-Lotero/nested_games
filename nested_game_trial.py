@@ -21,16 +21,6 @@ from psynet.trial.chain import (
 )
 from psynet.utils import get_logger
 
-from .dictator_pages import (
-    OuterDictatorProposalPage,
-    InnerProposalPageOuterDictator,
-    InnerDictatorFeedbackPage,
-)
-from .ultimatum_pages import (
-    OuterUltimatumProposalPage,
-    InnerProposalPageOuterUltimatum,
-    InnerUltimatumFeedbackPage,
-)
 from .variable_handler import VariableHandler
 from .game_paramters import (
     REWARD_SCALING_FACTOR,
@@ -61,6 +51,7 @@ from .custom_pages import (
     OuterAcceptancePage,
     InnerProposalPage,
     InnerAcceptancePage,
+    ScorePage,
 )
 
 logger = get_logger()
@@ -491,49 +482,37 @@ class NestedGameTrial(ChainTrial):
 
     def show_trial_feedback(self):
         if "summary" in self.participant.current_trial.definition.keys():
+            participants = self.participant.sync_group.participants
+            assert len(participants) == 2
+
+            ids = [participant.id for participant in self.participant.sync_group.participants]
+            assert self.participant_id in ids
+            ids.remove(self.participant_id)
+            other_id = ids[0]
+
             accumulated_scores = self.participant.current_trial.definition["summary"]["accumulated_rewards"]
             my_accumulated_score = float(accumulated_scores[str(self.participant_id)])
+            partners_accumulated_score = float(accumulated_scores[str(other_id)])
+
         else:
-            my_accumulated_score = 0.0
+            my_accumulated_score = 0
+            partners_accumulated_score = 0
 
         inner_game_on = self.continue_to_inner_game()
         if not inner_game_on:
 
-            return ModularPage(
-                label="reward",
-                prompt=Prompt(Markup(
-                    f"<h2>Score</h2>"
-                    f"<br>"
-                    "<p>Proposal was not accepted. Round finished with score 0 coins. </p>"
-                    f"<p>Your accumulated score is {my_accumulated_score} coins. </p>"
-                    f"<br>"
-                )),
-                control=PushButtonControl(
-                    labels=["Next"],
-                    choices=[0.0]
-                ),
-                time_estimate=5,
-                save_answer="reward",
-                events={
-                    "responseEnable": Event(
-                        is_triggered_by="trialStart",
-                        delay=MAX_WAITING_SEEING_INFO,
-                        js="onNextButton();",
-                    ),
-                },
-                progress_display=ProgressDisplay(
-                    stages=[
-                        ProgressStage(
-                            time=MAX_WAITING_SEEING_INFO,
-                            color="gray"
-                        ),
-                    ],
-                ),
+            return ScorePage(
+                proposer=True,
+                proposal=0,
+                remainder_=0,
+                accumulated_score=my_accumulated_score,
+                partners_accumulated_score=partners_accumulated_score,
+                accepted=False,
             )
 
         dict_result = self.get_inner_result()
         proposal = dict_result["proposal"]
-        remainder = dict_result["remainder"]
+        remainder_ = dict_result["remainder"]
         accept_answer = dict_result["accept_answer"]
         # logger.info(f"{proposal} --- {remainder} --- {accept_answer}")
 
@@ -541,30 +520,25 @@ class NestedGameTrial(ChainTrial):
 
             if accept_answer == "Reject":
                 score = 0
+                partners_score = 0
             else:
                 if self.am_i_the_inner_leader():
-                    score = remainder
+                    score = remainder_
+                    partners_score = proposal
                 else:
                     score = proposal
+                    partners_score = remainder_
 
             # logger.info(f"{proposal} --- {remainder} --- {accept_answer} --- {score}")
             my_accumulated_score += int(score)
-            inner_game = self.participant.current_trial.definition['inner_game']
-            if inner_game == "dictator":
-                return InnerDictatorFeedbackPage(
-                    proposer=self.am_i_the_inner_leader(),
-                    proposal=proposal,
-                    remainder=remainder,
-                    accumulated_score=int(my_accumulated_score),
-                )
-            else:
-                return InnerUltimatumFeedbackPage(
-                    proposer=self.am_i_the_inner_leader(),
-                    proposal=proposal,
-                    remainder=remainder,
-                    accept_answer=accept_answer,
-                    accumulated_score=int(my_accumulated_score),
-                )
+            partners_accumulated_score += int(partners_score)
+            return ScorePage(
+                proposer=self.am_i_the_inner_leader(),
+                proposal=proposal,
+                remainder_=remainder_,
+                accumulated_score=my_accumulated_score,
+                partners_accumulated_score=partners_accumulated_score,
+            )
         else:
             return ModularPage(
                 label="reward",

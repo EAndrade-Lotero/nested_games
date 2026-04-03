@@ -20,6 +20,41 @@ logger = get_logger()
 # Custom prompts
 ###########################################
 
+class ScorePrompt(Prompt):
+    macro = "scores"
+    external_template = "scores.html"
+
+    def __init__(
+        self,
+        proposer: bool,
+        proposal: int,
+        remainder_: int,
+        accumulated_score: int,
+        partners_accumulated_score: int,
+        time_estimate: int,
+        accepted: Optional[bool]=True,
+    ):
+        super().__init__()
+        self.timeout = time_estimate
+        self.my_score = int(accumulated_score)
+        self.partner_score = int(partners_accumulated_score)
+
+        if accepted:
+            if proposer:
+                self.text = f"""
+                    <p>You have given {proposal} coins to your partner. </p>
+                    <p>You keep the remainder of {remainder_} coins. </p>
+                """
+            else:
+                self.text = f"""
+                    <p>Your partner has given you {proposal} coins. </p>
+                """
+        else:
+            self.text = f"""
+                <p>Proposal was not accepted. Round finished with score 0 coins. </p>
+            """
+
+
 class OuterPrompt(Prompt):
     macro = ""
     external_template = ""

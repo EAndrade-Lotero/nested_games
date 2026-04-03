@@ -1,0 +1,127 @@
+{% macro scores(config) %}
+
+<style>
+
+    .rectangle {
+        width: 650px;          /* match tabletop width from earlier pages */
+        min-height: 350px;     /* ensures outer frame larger than content */
+        background: #ffffff;
+        padding: 60px 40px;
+        position: relative;
+    }
+
+    /* countdown clock */
+
+    #countdown {
+        position: absolute;
+        top: 15px;
+        left: 20px;
+        font-family: "Book Antiqua", Palatino, serif;
+        font-size: 22px;
+        font-weight: bold;
+        color: rgb(83, 83, 83);
+    }
+
+    /* statements */
+
+    .statement {
+        font-size: 22px;
+        margin-bottom: 10px;
+    }
+
+    /* score title */
+
+    .mid_title {
+        font-size: 26px;
+        font-weight: bold;
+        margin: 30px 0 15px 0;
+    }
+
+    /* score layout */
+
+    .score-row {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 10px;
+    }
+
+    .label {
+        font-size: 22px;
+    }
+
+    .score {
+        font-size: 26px;
+        margin-top: 10px;
+    }
+
+</style>
+
+<div class="rectangle">
+
+    <!-- CLOCK -->
+    <div id="countdown">00:00</div>
+
+    <!-- TEXT -->
+
+    <div class="statement">
+        {{ config.text }}
+    </div>
+
+    <div class="mid_title">
+        Accumulated scores
+    </div>
+
+    <!-- SCORES -->
+
+    <div class="score-row">
+
+        <div>
+            <div class="label">Me</div>
+            <div class="score">{{ config.my_score }}</div>
+        </div>
+
+        <div>
+            <div class="label">Partner</div>
+            <div class="score">{{ config.partner_score }}</div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+let timeRemaining = {{ config.timeout }};
+
+function updateClock() {
+
+    const minutes = Math.floor(timeRemaining / 60);
+    const seconds = timeRemaining % 60;
+
+    document.getElementById("countdown").textContent =
+        `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+
+    if (timeRemaining > 0) {
+        timeRemaining--;
+    } else {
+        clearInterval(timer);
+
+        // optional PsyNet integration
+        if (typeof psynet !== "undefined") {
+            document.dispatchEvent(new Event("done"));
+
+            psynet.trial.registerEvent(
+                "done",
+                {info: "timeout"}
+            );
+        }
+    }
+}
+
+updateClock();
+
+const timer = setInterval(updateClock, 1000);
+
+</script>
+{% endmacro %}
