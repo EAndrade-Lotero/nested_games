@@ -1,6 +1,68 @@
-from .game_paramters import ENDOWMENT
+from .game_paramters import ENDOWMENT, ASSETS_PATHS
+
+
+STYLE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to the coordinator and foragers game!</title>
+    <style>
+        body {
+            font-family: "Book Antiqua", "Palatino Linotype", Palatino, serif;
+            font-size: 14pt;
+            line-height: 1.5;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background-color: #f5ecd9;
+            background-image:
+                radial-gradient(circle at top left, rgba(0,0,0,0.06), transparent 60%),
+                radial-gradient(circle at bottom right, rgba(0,0,0,0.06), transparent 60%);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 0.2em;
+        }
+
+        h2 {
+            margin-top: 1.8em;
+            margin-bottom: 0.4em;
+            font-size: 1.3em;
+        }
+
+        p {
+            margin: 0.4em 0;
+            text-align: justify;
+        }
+
+        ul {
+            margin: 0.4em 0 0.4em 1.5em;
+        }
+
+        li {
+            margin: 0.2em 0;
+        }
+
+        .formula-block {
+            margin: 0.6em 0 0.8em 1.5em;
+            font-family: "Courier New", Courier, monospace;
+        }
+
+        .final-note {
+            margin-top: 2em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+"""
 
 OBJECTIVE = f"""
+    {STYLE}
     <h2>Instructions</h2>
     <br>
     <p>Welcome to the Nested Games experiment!</p>
@@ -21,6 +83,7 @@ OUTER_DICTATOR_INSTRUCTION = f"""
     <p>One participant will be asked to choose which of the two players
     will act as the <strong>PROPOSER</strong>.</p>
     <br>
+    <img src={ASSETS_PATHS['drag_and_drop_url']} alt="Drag and dop avatar" width=400px/>
 """
 
 OUTER_ULTIMATUM_INSTRUCTION = f"""

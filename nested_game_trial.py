@@ -152,10 +152,10 @@ class NestedGameTrial(ChainTrial):
             #     Markup(OBJECTIVE),
             #     time_estimate=5,
             # ),
-            # InfoPage(
-            #     Markup(preparation_phase),
-            #     time_estimate=5,
-            # ),
+            InfoPage(
+                Markup(preparation_phase),
+                time_estimate=5,
+            ),
             # InfoPage(
             #     Markup(proposal_phase),
             #     time_estimate=5,
