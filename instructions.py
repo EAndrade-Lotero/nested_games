@@ -77,22 +77,23 @@ OBJECTIVE = f"""
     <br>
 """
 
-OUTER_DICTATOR_INSTRUCTION = f"""
+OUTER_DICTATOR_INSTRUCTION = lambda context: f"""
     <h2>Preparation phase</h2>
     <br>
     <p>One participant will be asked to choose which of the two players
     will act as the <strong>PROPOSER</strong>.</p>
     <br>
-    <img src={ASSETS_PATHS['drag_and_drop_url']} alt="Drag and dop avatar" width=400px/>
+    <img src='static/drag_and_drop.gif' alt="Drag and dop avatar" width=400px/>
 """
 
 OUTER_ULTIMATUM_INSTRUCTION = f"""
     <h2>Preparation phase</h2>
     <br>
     <p>One participant will be asked to propose which of the two players
-    will act as the <strong>PROPOSER</strong>. The other participant will then
-    decide whether to accept or reject this proposal. If the proposal is
-    accepted, the game continues. If it is rejected, the round ends.</p>
+    will act as the <strong>PROPOSER</strong>. </p>
+    <img src='static/drag_and_drop.gif' alt="Drag and dop avatar" width=400px/>
+    <p>The other participant will then decide whether to accept or reject this proposal. 
+    If the proposal is accepted, the game continues. If it is rejected, the round ends.</p>
     <br>
 """
 
@@ -112,7 +113,9 @@ INNER_ULTIMATUM_INSTRUCTIONS = f"""
     <h2>Proposal phase</h2>
     <br>
     <p>The <strong>PROPOSER</strong> offers some of their coins to the
-    <strong>RESPONDER</strong>. The RESPONDER may either accept or reject the
+    <strong>RESPONDER</strong>.</p>
+    <img src='static/slider.gif' alt="Drag and dop avatar" width=400px/>
+    <p>The RESPONDER may either accept or reject the
     offer. If the RESPONDER rejects the offer, neither participant receives
     any coins for that round.</p>
     <br>

@@ -148,18 +148,18 @@ class NestedGameTrial(ChainTrial):
             raise ValueError("transition must be 'random' or 'constant'")
 
         list_of_pages = join(
-            # InfoPage(
-            #     Markup(OBJECTIVE),
-            #     time_estimate=5,
-            # ),
+            InfoPage(
+                Markup(OBJECTIVE),
+                time_estimate=5,
+            ),
             InfoPage(
                 Markup(preparation_phase),
                 time_estimate=5,
             ),
-            # InfoPage(
-            #     Markup(proposal_phase),
-            #     time_estimate=5,
-            # ),
+            InfoPage(
+                Markup(proposal_phase),
+                time_estimate=5,
+            ),
             ModularPage(
                 label="outer_role",
                 prompt=Prompt(Markup(example_text)),
