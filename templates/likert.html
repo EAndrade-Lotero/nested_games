@@ -1,0 +1,129 @@
+{% macro likert(config) %}
+
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #eceaea;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+  text-align: center;
+  width: 600px;
+}
+
+.scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 25px;
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #555;
+}
+
+button {
+  margin-top: 30px;
+  padding: 12px 30px;
+  border: none;
+  border-radius: 8px;
+  background: #4CAF50;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #45a049;
+}
+</style>
+</head>
+
+<body>
+
+<div class="scale" id="likert-scale"></div>
+
+<div class="labels">
+  <span id="min-label"></span>
+  <span id="max-label"></span>
+</div>
+
+
+<script>
+
+    /************* CUSTOMIZE HERE *************/
+
+    const scalePoints = {{ config.n_steps }};
+    const minLabel = "{{ config.lowest_value }}";
+    const maxLabel = "{{ config.highest_value }}";
+
+    /*****************************************/
+
+
+    let selectedValue = null;
+
+
+    function createLikertScale() {
+
+      const container = document.getElementById("likert-scale");
+
+      for (let i = 1; i <= scalePoints; i++) {
+
+        const option = document.createElement("div");
+        option.className = "option";
+
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = "likert";
+        radio.value = String(i);
+
+        radio.onclick = () => selectedValue = i
+
+        const label = document.createElement("label");
+        label.innerText = String(i);
+
+        option.appendChild(radio);
+        option.appendChild(label);
+
+        container.appendChild(option);
+      }
+
+      document.getElementById("min-label").innerText = minLabel;
+      document.getElementById("max-label").innerText = maxLabel;
+    }
+
+    createLikertScale();
+
+    /////////////////////////////////////////////////////
+    // Function to stage the response for PsyNet
+    /////////////////////////////////////////////////////
+    psynet.stageResponse = function() {
+
+        console.log("Value selected:", selectedValue);
+
+        psynet.response.staged.rawAnswer = selectedValue;
+    }
+
+</script>
+
+{% endmacro %}
