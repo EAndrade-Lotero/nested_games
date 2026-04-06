@@ -1,5 +1,5 @@
 from markupsafe import Markup
-from typing import Optional, Dict
+from typing import Union, Dict
 
 from psynet.graphics import Prompt
 from psynet.modular_page import (
@@ -16,16 +16,14 @@ from psynet.utils import get_logger
 from .game_paramters import (
     ENDOWMENT,
     MAX_WAITING_PROPOSALS,
-    WAIT_PAGE_TIME,
-    MAX_WAITING_SEEING_INFO,
-    RNG,
+    MAX_WAITING_FOR_OTHER,
 )
 from .custom_front_end import (
     CustomControl,
     OuterPrompt,
     InnerProposalControl,
+    InnerControl,
     InnerPrompt,
-    ScorePrompt,
 )
 
 
@@ -39,7 +37,7 @@ class OuterProposalPage(ModularPage):
             f"<h2>Preparation phase</h2>"
             f"<br>"
             f"<p>Choose who will take on the role of PROPOSER: </p>"
-            f"<p>When you are ready, press the 'Next' button (scroll down the page if necessary). </p>"
+            f"<br>"
         ))
         control = CustomControl(
             context=context,
@@ -55,43 +53,27 @@ class OuterProposalPage(ModularPage):
             events={
                 "done": Event(
                     is_triggered_by="done",
-                    js=f"psynet.response.disable(); psynet.submit.disable(); psynet.nextPage({RNG.choice(['self', 'other'])});",
+                    js="psynet.submitResponse();",
                     delay=0.0,
                 ),
             },
         )
 
 
-class CustomWaitingPage(Page):
+class OuterProposalWaitingPage(Page):
 
-    def __init__(
-        self,
-        template_path:str,
-        content:Optional[str|None] = None,
-        proposer:Optional[bool|None] = None,
-        n_coins:Optional[int] = 0,
-        **kwargs
-    ) -> None:
-        if content is None:
-            content = "Waiting for the other player..."
-        self.content = content
-        self.proposer = proposer
-        self.n_coins = n_coins
-        self.endowment = ENDOWMENT
-        self.wait_time = WAIT_PAGE_TIME
+    content = "Waiting for your partner to select a PROPOSER"
+
+    def __init__(self, wait_time: float, template_path:str, **kwargs):
+        assert wait_time >= 0
+        self.wait_time = wait_time
         with open(template_path, "r") as file:
             template = file.read()
         super().__init__(
             label="wait",
-            time_estimate=MAX_WAITING_PROPOSALS,
+            time_estimate=wait_time,
             template_str=template,
-            template_arg={
-                "content": self.content,
-                "proposer": self.proposer,
-                "n_coins": self.n_coins,
-                "endowment": self.endowment,
-                "wait_time": self.wait_time,
-            },
+            template_arg={"content": self.content, "wait_time": self.wait_time},
             **kwargs,
         )
 
@@ -109,7 +91,7 @@ class CustomWaitingPage(Page):
 class OuterAcceptancePage(ModularPage):
 
     def __init__(self, context: Dict[str, str], proposal: str) -> None:
-        assert proposal in [None, "PROPOSER", "RESPONDER"]
+        assert proposal in ["", "PROPOSER", "RESPONDER"]
 
         prompt = OuterPrompt(
             text=f"Do you accept your partner's proposal of you to be the {proposal}? ",
@@ -133,7 +115,7 @@ class OuterAcceptancePage(ModularPage):
             events={
                 "done": Event(
                     is_triggered_by="done",
-                    js=f"psynet.response.disable(); psynet.submit.disable(); psynet.nextPage({RNG.choice([True, False])});",
+                    js="psynet.submitResponse();",
                     delay=0.0,
                 ),
             },
@@ -150,7 +132,6 @@ class InnerProposalPage(ModularPage):
         if game == "ultimatum":
             text += "<p>Proposal accepted. You are the PROPOSER. </p>\n"
         text += f"<p>Use the slider below to decide how many of the {ENDOWMENT} coins you will give to your partner: <p/>\n"
-        text += f"<p>(Scroll down the page if necessary.)</p>\n"
         text += f"<br>\n"
 
         prompt = Markup(text)
@@ -169,7 +150,37 @@ class InnerProposalPage(ModularPage):
             events={
                 "done": Event(
                     is_triggered_by="done",
-                    js=f"psynet.response.disable(); psynet.submit.disable(); psynet.nextPage({0});",
+                    js="psynet.submitResponse();",
+                    delay=0.0,
+                ),
+            },
+        )
+
+
+class InnerProposalWaitingPage(ModularPage):
+
+    def __init__(self, context: Dict[str, str]) -> None:
+        prompt = Prompt(Markup(
+            f"<h2>Proposal phase</h2>"
+            f"<br>"
+            "<p>Waiting for your partner's offer. </p>"
+        ))
+        control = CustomControl(
+            context=context,
+            time_estimate=MAX_WAITING_PROPOSALS,
+            external_template="inner_wait.html",
+        )
+
+        super().__init__(
+            label="outer_proposal",
+            prompt=prompt,
+            control=control,
+            time_estimate=5,
+            save_answer="outer_proposal",
+            events={
+                "done": Event(
+                    is_triggered_by="done",
+                    js="psynet.submitResponse();",
                     delay=0.0,
                 ),
             },
@@ -203,57 +214,8 @@ class InnerAcceptancePage(ModularPage):
             events={
                 "done": Event(
                     is_triggered_by="done",
-                    js=f"psynet.response.disable(); psynet.submit.disable(); psynet.nextPage({RNG.choice([True, False])});",
+                    js="psynet.submitResponse();",
                     delay=0.0,
                 ),
             },
         )
-
-
-class ScorePage(ModularPage):
-
-    def __init__(
-        self,
-        proposer: bool,
-        proposal: int,
-        remainder_: int,
-        accumulated_score: int,
-        partners_accumulated_score: int,
-        accepted: Optional[bool] = True,
-    ) -> None:
-
-        if proposer:
-            score = remainder_
-        else:
-            score = proposal
-
-        prompt = ScorePrompt(
-            proposer=proposer,
-            proposal=proposal,
-            remainder_=remainder_,
-            accumulated_score=accumulated_score,
-            partners_accumulated_score=partners_accumulated_score,
-            time_estimate=MAX_WAITING_SEEING_INFO,
-            accepted=accepted,
-        )
-
-        super().__init__(
-            label="reward",
-            prompt=prompt,
-            control=PushButtonControl(
-                labels=["Next"],
-                choices=[score],
-            ),
-            time_estimate=5,
-            save_answer="reward",
-            events={
-                "done": Event(
-                    is_triggered_by="done",
-                    js=f"psynet.response.disable(); psynet.submit.disable(); psynet.nextPage({score});",
-                    delay=0.0,
-                ),
-            },
-        )
-
-
-

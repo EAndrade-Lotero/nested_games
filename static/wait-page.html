@@ -1,0 +1,43 @@
+{% extends "timeline-page.html" %}
+
+{% block stylesheets %}
+    {{ super() }}
+    <style>
+        .vcenter {
+            display: inline-block;
+            vertical-align: middle;
+            float: none;
+            margin: auto;
+            text-align: center;
+        }
+
+        #main-body {
+            padding: 0 !important;
+            margin:0 !important;
+        }
+
+        #wait-page p {
+            font-size: 3em;
+            font-weight: 600;
+        }
+    </style>
+
+{% endblock %}
+
+{% block main_body %}
+    <div class="row colorfadeanim" id="wait-page" style="height: 100%">
+        <div class="col-10 vcenter">
+            <p>{{ content }}</p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+
+    <script>
+        setTimeout(function () {
+            psynet.nextPage();
+        }, 1000 * {{ wait_time }});
+    </script>
+{% endblock %}

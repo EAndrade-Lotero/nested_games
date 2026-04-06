@@ -4,7 +4,7 @@
 # Imports
 ##########################################################################################
 
-from typing import Dict, Optional
+from typing import Dict
 
 from psynet.modular_page import (
     Control, Prompt,
@@ -19,41 +19,6 @@ logger = get_logger()
 ###########################################
 # Custom prompts
 ###########################################
-
-class ScorePrompt(Prompt):
-    macro = "scores"
-    external_template = "scores.html"
-
-    def __init__(
-        self,
-        proposer: bool,
-        proposal: int,
-        remainder_: int,
-        accumulated_score: int,
-        partners_accumulated_score: int,
-        time_estimate: int,
-        accepted: Optional[bool]=True,
-    ):
-        super().__init__()
-        self.timeout = time_estimate
-        self.my_score = int(accumulated_score)
-        self.partner_score = int(partners_accumulated_score)
-
-        if accepted:
-            if proposer:
-                self.text = f"""
-                    <p>You have given {proposal} coins to your partner. </p>
-                    <p>You keep the remainder of {remainder_} coins. </p>
-                """
-            else:
-                self.text = f"""
-                    <p>Your partner has given you {proposal} coins. </p>
-                """
-        else:
-            self.text = f"""
-                <p>Proposal was not accepted. Round finished with score 0 coins. </p>
-            """
-
 
 class OuterPrompt(Prompt):
     macro = ""
@@ -77,7 +42,6 @@ class OuterPrompt(Prompt):
         self.macro = external_template.split(".")[0]
         self.external_template = external_template
 
-
 class InnerPrompt(OuterPrompt):
 
     def __init__(
@@ -91,7 +55,7 @@ class InnerPrompt(OuterPrompt):
     ) -> None:
         super().__init__(
             text=text,
-            proposal=str(proposal),
+            proposal=proposal,
             context=context,
             time_estimate=time_estimate,
             external_template=external_template,
@@ -164,47 +128,4 @@ class InnerControl(CustomControl):
         )
         self.value = value
 
-
-
-class CustomSliderControl(Control):
-    macro = "slider_values"
-    external_template = "slider-control.html"
-
-    def __init__(
-        self,
-            start_value: float,
-            min_value: float,
-            max_value: float,
-            n_steps: int,
-            use_percentage: Optional[bool] = False,
-            left_label: Optional[str] = "",
-            right_label: Optional[str] = "",
-            integer_rule: Optional[bool] = False,
-    ) -> None:
-        super().__init__()
-
-        # Sanity checks
-        assert(min_value <= max_value), f"Error: min_value must be <= max_value (got {min_value} vs. {max_value})"
-        assert(min_value <= start_value), f"Error: min_value must be <= start_value (got {min_value} vs. {start_value})"
-        assert(start_value <= max_value), f"Error: start_value must be <= max_value (got {start_value} vs. {max_value})"
-        assert(n_steps >= 1)
-        if use_percentage:
-            assert(min_value == 0)
-            assert(max_value == 1)
-
-        # Assign attributes
-        self.start_value = start_value
-        self.min_value = min_value
-        self.max_value = max_value
-        self.n_steps = n_steps
-        self.use_percentage = use_percentage
-        self.left_label = left_label
-        self.right_label = right_label
-        self.integer_rule = integer_rule
-
-    def format_answer(self, raw_answer, **kwargs):
-        try:
-            return float(raw_answer)
-        except (ValueError, AssertionError):
-            return f"INVALID_RESPONSE"
 ###########################################

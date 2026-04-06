@@ -4,200 +4,199 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #eceaea;
-      display: block;
-      justify-content: center;
-      align-items: flex-start; /* ← change this */
-      min-height: 100vh;
-      margin: 0;
-      overflow-y: auto;
-      padding-top: 20px; /* optional spacing from top */
-    }
+body {
+  font-family: Arial, sans-serif;
+  background: #eceaea;
+  display: block;
+  justify-content: center;
+  align-items: flex-start; /* ← change this */
+  min-height: 100vh;
+  margin: 0;
+  overflow-y: auto;
+  padding-top: 20px; /* optional spacing from top */
+}
 
-    .tabletop {
-        width: 700px;
-        min-height: 400px;
-        background: #eceaea;
-        border-radius: 20px;
-        padding: 20px;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
-        margin: auto;
-        gap: 20px;
-    }
+.tabletop {
+  width: 700px;
+  min-height: 650px;
+  background: #eceaea;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  margin: auto;
+}
 
-    #countdown {
-      position: absolute;
-      top: 15px;
-      left: 20px;
-      font-family: "Book Antiqua", Palatino, serif;
-      font-size: 22px;
-      font-weight: bold;
-      color: rgb(83, 83, 83);
-    }
+#countdown {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  font-family: "Book Antiqua", Palatino, serif;
+  font-size: 22px;
+  font-weight: bold;
+  color: rgb(83, 83, 83);
+}
 
-    .zone {
-      border: 2px solid #365c5c;
-      border-radius: 12px;
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
+.zone {
+  border: 2px solid #365c5c;
+  border-radius: 12px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
 
-    .center-top {
-        width: 300px;
-        height: 280px;
-    }
+.center-top {
+  width: 340px;
+  height: 320px;
+}
 
-    .center-middle {
-        width: 200px;
-        height: 220px;
-    }
+.center-middle {
+  width: 340px;
+  height: 250px;
+}
 
-    .rectangle {
-      width: 150px;
-      height: 50px;
-      background: rgb(221, 233, 255);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: "Book Antiqua", Palatino, serif;
-      font-weight: bold;
-      letter-spacing: 1px;
-    }
+.rectangle {
+  width: 150px;
+  height: 50px;
+  background: rgb(221, 233, 255);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Book Antiqua", Palatino, serif;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
 
-    .basket {
-      width: 200px;
-      height: 100px;
-      aspect-ratio: 1 / 1;
-      background-image: url("../static/plate.png");
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      position: relative;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-      gap: 4px;
-      padding: 10px;
-    }
+.basket {
+  width: 250px;
+  height: 150px;
+  aspect-ratio: 1 / 1;
+  background-image: url("../static/plate.png");
+  background-size: contain;
+  /* background-repeat: no-repeat; */
+  background-position: center;
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding: 10px;
+}
 
-    .coin-pile {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: center;
-    }
+.coin-pile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
 
-    .coin {
-      width: 25px;
-      aspect-ratio: 1 / 1;
-      background-image: url("../static/coin.png");
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      cursor: grab;
-    }
+.coin {
+  width: 25px;
+  aspect-ratio: 1 / 1;
+  background-image: url("../static/coin.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: grab;
+}
 
-    .avatar {
-      width: 80px;
-      height: 80px;
-      background-image: url("../static/generic.png");
-      background-size: cover;
-      background-position: center;
-      border-radius: 50%;
-      position: relative;
-      cursor: grab;
-      user-select: none;
-      color: white;
-      font-weight: bold;
-    }
+.avatar {
+  width: 80px;
+  height: 80px;
+  background-image: url("../static/generic.png");
+  background-size: cover;
+  background-position: center;
+  border-radius: 50%;
+  position: relative;
+  cursor: grab;
+  user-select: none;
+  color: white;
+  font-weight: bold;
+}
 
-    .avatar.partner {
-      background-image: url("../static/generic.png");
-    }
+.avatar.partner {
+  background-image: url("../static/generic.png");
+}
 
-    .avatar.dragging {
-      opacity: 0.5;
-    }
+.avatar.dragging {
+  opacity: 0.5;
+}
 
-    .avatar-label {
-      position: absolute;
-      bottom: 4px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 14px;
-      background: rgba(168, 168, 168, 0.5);
-      padding: 2px 6px;
-      border-radius: 6px;
-    }
+.avatar-label {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  background: rgba(168, 168, 168, 0.5);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
 
-    .avatarzone {
-      min-height: 90px;
-      width: 30%;
-      border: 0px dashed rgb(55, 0, 255);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      text-align: center;
-    }
+.avatarzone {
+  min-height: 90px;
+  width: 30%;
+  border: 0px dashed rgb(55, 0, 255);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  text-align: center;
+}
 
-    .dropzone .avatar {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-    }
+.dropzone .avatar {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
 
-    .card {
-        border: 1px solid #ddd;
-        border-radius: 12px;
-        padding: 16px;
-        margin-top: 30px;
-        margin-bottom: 30px;
-    }
-    label { display: grid; gap: 6px; font-size: 14px; }
-    input[type="number"] {
-      width: 160px;
-        padding: 8px 10px;
-        border: 1px solid #ccc;
-        border-radius: 10px;
-    }
+.card {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+label { display: grid; gap: 6px; font-size: 14px; }
+input[type="number"] {
+  width: 160px;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
 
-    .slider-row { display: grid; gap: 10px; margin-top: 8px; }
-    input[type="range"] { width: 100%; }
+.slider-row { display: grid; gap: 10px; margin-top: 8px; }
+input[type="range"] { width: 100%; }
 
-    /* New: min (left), current (center, bigger), max (right) */
-    .min-current-max {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      width: 100%;
-      font-size: 14px;
-      margin-top: 2px;
-    }
-    .min-current-max .min { justify-self: start; }    .final-note {
-        margin-top: 2em;
-        font-weight: bold;
-    }
-    .min-current-max .max { justify-self: end; }
-    .min-current-max .current {
-      justify-self: center;
-      font-size: 18px; /* a bit larger */
-      font-weight: 700;
-      padding: 2px 10px;
-      border-radius: 999px;
-      background: #f4f4f6;
-    }
+/* New: min (left), current (center, bigger), max (right) */
+.min-current-max {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+  font-size: 14px;
+  margin-top: 2px;
+}
+.min-current-max .min { justify-self: start; }    .final-note {
+    margin-top: 2em;
+    font-weight: bold;
+}
+.min-current-max .max { justify-self: end; }
+.min-current-max .current {
+  justify-self: center;
+  font-size: 18px; /* a bit larger */
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #f4f4f6;
+}
 
 </style>
 </head>
@@ -220,23 +219,23 @@
 
   <!-- SECOND PLACE (DROP TARGET) -->
   <div class="zone center-middle">
+    <div class="coin-pile" id="coinPile">
+    <div class="coin" draggable="false" id="coin1"></div>
+    <div class="coin" draggable="false" id="coin2"></div>
+    <div class="coin" draggable="false" id="coin3"></div>
+    <div class="coin" draggable="false" id="coin4"></div>
+    <div class="coin" draggable="false" id="coin5"></div>
+    <div class="coin" draggable="false" id="coin6"></div>
+    <div class="coin" draggable="false" id="coin7"></div>
+    <div class="coin" draggable="false" id="coin8"></div>
+    <div class="coin" draggable="false" id="coin9"></div>
+    <div class="coin" draggable="false" id="coin10"></div>
+    </div>
     <div class="rectangle">PROPOSER</div>
     <div class="avatarzone" id="dropzone">
         <div class="avatar" draggable="false" id="me">
-            <span class="avatar-label">Me</span>
+        <span class="avatar-label">Me</span>
         </div>
-    </div>
-    <div class="coin-pile" id="coinPile">
-        <div class="coin" draggable="false" id="coin1"></div>
-        <div class="coin" draggable="false" id="coin2"></div>
-        <div class="coin" draggable="false" id="coin3"></div>
-        <div class="coin" draggable="false" id="coin4"></div>
-        <div class="coin" draggable="false" id="coin5"></div>
-        <div class="coin" draggable="false" id="coin6"></div>
-        <div class="coin" draggable="false" id="coin7"></div>
-        <div class="coin" draggable="false" id="coin8"></div>
-        <div class="coin" draggable="false" id="coin9"></div>
-        <div class="coin" draggable="false" id="coin10"></div>
     </div>
   </div>
 

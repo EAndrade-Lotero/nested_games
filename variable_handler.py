@@ -157,7 +157,3 @@ class VariableHandler:
 # """,
 #     time_estimate=5,
 # ),
-# GroupBarrier(
-#     id_="final_stock_taking",
-#     group_type="chain",
-# ),
