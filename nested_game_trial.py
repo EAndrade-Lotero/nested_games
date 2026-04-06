@@ -11,7 +11,6 @@ from psynet.modular_page import (
 from psynet.timeline import (
     join,
     conditional,
-    Event,
 )
 from psynet.trial.chain import (
     ChainTrial,

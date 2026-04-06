@@ -1,105 +1,89 @@
 {% macro likert(config) %}
 
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<div class="likert-control">
+  <style>
+    .likert-control {
+      font-family: inherit;
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: 0.25rem 0 1rem;
+    }
 
-<style>
-body {
-  font-family: Arial, sans-serif;
-  background: #eceaea;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
+    .likert-control .likert-scale-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 0.5rem 0.25rem;
+      margin-top: 1rem;
+    }
 
-.container {
-  background: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
-  text-align: center;
-  width: 600px;
-}
+    .likert-control .likert-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+    }
 
-.scale {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 25px;
-}
+    .likert-control .likert-option input[type="radio"] {
+      margin: 0;
+      cursor: pointer;
+    }
 
-.option {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+    .likert-control .likert-option label {
+      margin: 0;
+      cursor: pointer;
+      user-select: none;
+      font-weight: 500;
+    }
 
-.labels {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-  font-size: 14px;
-  color: #555;
-}
+    .likert-control .likert-end-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.75rem;
+      font-size: 0.875rem;
+      color: #555;
+      gap: 1rem;
+    }
+  </style>
 
-button {
-  margin-top: 30px;
-  padding: 12px 30px;
-  border: none;
-  border-radius: 8px;
-  background: #4CAF50;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-}
+  <div class="likert-scale-row" id="likert-scale"></div>
 
-button:hover {
-  background: #45a049;
-}
-</style>
-</head>
+  <div class="likert-end-labels">
+    <span id="min-label"></span>
+    <span id="max-label"></span>
+  </div>
 
-<body>
-
-<div class="scale" id="likert-scale"></div>
-
-<div class="labels">
-  <span id="min-label"></span>
-  <span id="max-label"></span>
-</div>
-
-
-<script>
-
+  <script>
     /************* CUSTOMIZE HERE *************/
 
     const scalePoints = {{ config.n_steps }};
-    const minLabel = "{{ config.lowest_value }}";
-    const maxLabel = "{{ config.highest_value }}";
+    const minLabel = {{ config.lowest_value | tojson }};
+    const maxLabel = {{ config.highest_value | tojson }};
 
     /*****************************************/
 
-
     let selectedValue = null;
 
-
     function createLikertScale() {
-
       const container = document.getElementById("likert-scale");
 
       for (let i = 1; i <= scalePoints; i++) {
-
         const option = document.createElement("div");
-        option.className = "option";
+        option.className = "likert-option";
 
         const radio = document.createElement("input");
         radio.type = "radio";
         radio.name = "likert";
         radio.value = String(i);
+        radio.id = "likert-radio-" + i;
 
-        radio.onclick = () => selectedValue = i
+        radio.onclick = () => {
+          selectedValue = i;
+        };
 
         const label = document.createElement("label");
+        label.htmlFor = radio.id;
         label.innerText = String(i);
 
         option.appendChild(radio);
@@ -117,13 +101,10 @@ button:hover {
     /////////////////////////////////////////////////////
     // Function to stage the response for PsyNet
     /////////////////////////////////////////////////////
-    psynet.stageResponse = function() {
-
-        console.log("Value selected:", selectedValue);
-
-        psynet.response.staged.rawAnswer = selectedValue;
-    }
-
-</script>
+    psynet.stageResponse = function () {
+      psynet.response.staged.rawAnswer = selectedValue;
+    };
+  </script>
+</div>
 
 {% endmacro %}

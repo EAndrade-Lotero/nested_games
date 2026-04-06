@@ -18,6 +18,7 @@ from .game_paramters import (
     RNG,
     NUM_BIG_FIVE_QUESTIONS,
 )
+from .custom_front_end import CustomLikertControl
 
 
 logger = get_logger()
@@ -90,14 +91,10 @@ class PersonalityTrial(StaticTrial):
         return ModularPage(
             label=page_label,
             prompt=Markup(text),
-            control=PushButtonControl(
-                [
-                    "Very inaccurate",
-                    "Moderately inaccurate",
-                    "Neither accurate nor inaccurate",
-                    "Moderately accurate",
-                    "Very accurate"
-                ],
+            control=CustomLikertControl(
+                lowest_value="Very inaccurate",
+                highest_value="Very accurate",
+                n_steps=5,
             ),
             time_estimate=time_estimate,
             save_answer=page_label
@@ -122,14 +119,10 @@ class WaitingTrial(StaticTrial):
         return ModularPage(
             label="waiting_trial",
             prompt=Markup(text),
-            control=PushButtonControl(
-                [
-                    "Very inaccurate",
-                    "Moderately inaccurate",
-                    "Neither accurate nor inaccurate",
-                    "Moderately accurate",
-                    "Very accurate"
-                ],
+            control=CustomLikertControl(
+                lowest_value="Very inaccurate",
+                highest_value="Very accurate",
+                n_steps=5,
             ),
             time_estimate=self.time_estimate
         )

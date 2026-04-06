@@ -103,10 +103,10 @@ class Exp(psynet.experiment.Experiment):
     }
 
     timeline = Timeline(
-        consent_cococo_science_of_learning(
-            DURATION=15,
-            PAYMENT=2.30,
-        ),
+        # consent_cococo_science_of_learning(
+        #     DURATION=15,
+        #     PAYMENT=2.30,
+        # ),
         personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(

@@ -172,12 +172,12 @@ class CustomLikertControl(Control):
 
     def __init__(
         self,
-        lower_value: str,
+        lowest_value: str,
         highest_value: str,
         n_steps: int,
     ) -> None:
         super().__init__()
-        self.lower_value = lower_value
+        self.lowest_value = lowest_value
         self.highest_value = highest_value
         self.n_steps = n_steps
 
