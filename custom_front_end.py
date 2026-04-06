@@ -165,6 +165,21 @@ class InnerControl(CustomControl):
         self.value = value
 
 
+class CustomLikertControl(Control):
+    macro = "likert"
+    external_template = "likert.html"
+
+    def __init__(
+        self,
+        lower_value: str,
+        highest_value: str,
+        n_steps: int,
+    ) -> None:
+        super().__init__()
+        self.lower_value = lower_value
+        self.highest_value = highest_value
+        self.n_steps = n_steps
+
 
 class CustomSliderControl(Control):
     macro = "slider_values"
