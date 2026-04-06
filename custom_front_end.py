@@ -9,7 +9,8 @@ from typing import Dict, Optional
 from psynet.modular_page import (
     Control, Prompt,
 )
-from psynet.utils import get_logger
+from psynet.timeline import FailedValidation
+from psynet.utils import get_logger, get_translator
 
 from .game_paramters import ENDOWMENT
 
@@ -179,6 +180,28 @@ class CustomLikertControl(Control):
         self.lower_value = lower_value
         self.highest_value = highest_value
         self.n_steps = n_steps
+
+    def format_answer(self, raw_answer, **kwargs):
+        if raw_answer is None or raw_answer == "":
+            return None
+        try:
+            value = int(raw_answer)
+        except (TypeError, ValueError):
+            return None
+        if not (1 <= value <= self.n_steps):
+            return None
+        return value
+
+    def validate(self, response, **kwargs):
+        _p = get_translator(context=True)
+        if response.answer is None:
+            return FailedValidation(
+                _p(
+                    "validation",
+                    "Please select a value on the scale before continuing.",
+                )
+            )
+        return None
 
 
 class CustomSliderControl(Control):
