@@ -7,6 +7,7 @@ from psynet.timeline import Page
 from .game_paramters import (
     WAIT_PAGE_TIME,
     MAX_WAITING_FOR_OTHER,
+    MAX_WAITING_BETWEEN_BARRIERS,
 )
 
 
@@ -43,8 +44,8 @@ class CustomBarrier(GroupBarrier):
             waiting_logic=wait_page,
             max_wait_time=MAX_WAITING_FOR_OTHER,
             waiting_logic_expected_repetitions=10,
-            # participant_timeout=MAX_WAITING_SEEING_INFO,
-            # participant_timeout_action="fail",
+            participant_timeout=MAX_WAITING_BETWEEN_BARRIERS,
+            participant_timeout_action="fail",
         )
 
 
