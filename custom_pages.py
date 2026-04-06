@@ -1,3 +1,4 @@
+import json
 from markupsafe import Markup
 from typing import Optional, Dict
 
@@ -55,7 +56,10 @@ class OuterProposalPage(ModularPage):
             events={
                 "done": Event(
                     is_triggered_by="done",
-                    js=f"psynet.response.disable(); psynet.submit.disable(); psynet.nextPage({RNG.choice(['self', 'other'])});",
+                    js=(
+                        "psynet.response.disable(); psynet.submit.disable(); "
+                        f"psynet.nextPage({json.dumps(RNG.choice(['self', 'other']))});"
+                    ),
                     delay=0.0,
                 ),
             },
@@ -133,7 +137,10 @@ class OuterAcceptancePage(ModularPage):
             events={
                 "done": Event(
                     is_triggered_by="done",
-                    js=f"psynet.response.disable(); psynet.submit.disable(); psynet.nextPage({RNG.choice([True, False])});",
+                    js=(
+                        "psynet.response.disable(); psynet.submit.disable(); "
+                        f"psynet.nextPage({json.dumps(RNG.choice([True, False]))});"
+                    ),
                     delay=0.0,
                 ),
             },
@@ -169,7 +176,10 @@ class InnerProposalPage(ModularPage):
             events={
                 "done": Event(
                     is_triggered_by="done",
-                    js=f"psynet.response.disable(); psynet.submit.disable(); psynet.nextPage({0});",
+                    js=(
+                        "psynet.response.disable(); psynet.submit.disable(); "
+                        f"psynet.nextPage({json.dumps(0)});"
+                    ),
                     delay=0.0,
                 ),
             },
@@ -203,7 +213,10 @@ class InnerAcceptancePage(ModularPage):
             events={
                 "done": Event(
                     is_triggered_by="done",
-                    js=f"psynet.response.disable(); psynet.submit.disable(); psynet.nextPage({RNG.choice([True, False])});",
+                    js=(
+                        "psynet.response.disable(); psynet.submit.disable(); "
+                        f"psynet.nextPage({json.dumps(RNG.choice([True, False]))});"
+                    ),
                     delay=0.0,
                 ),
             },
@@ -249,7 +262,10 @@ class ScorePage(ModularPage):
             events={
                 "done": Event(
                     is_triggered_by="done",
-                    js=f"psynet.response.disable(); psynet.submit.disable(); psynet.nextPage({score});",
+                    js=(
+                        "psynet.response.disable(); psynet.submit.disable(); "
+                        f"psynet.nextPage({json.dumps(score)});"
+                    ),
                     delay=0.0,
                 ),
             },
