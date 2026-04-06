@@ -12,8 +12,6 @@ from psynet.timeline import (
     join,
     conditional,
     Event,
-    ProgressDisplay,
-    ProgressStage,
 )
 from psynet.trial.chain import (
     ChainTrial,
@@ -25,8 +23,6 @@ from .variable_handler import VariableHandler
 from .game_paramters import (
     REWARD_SCALING_FACTOR,
     MAX_BONUS_REWARD,
-    MAX_WAITING_SEEING_INFO,
-    MAX_WAIT_TIME,
     RNG,
 )
 from .instructions import (
