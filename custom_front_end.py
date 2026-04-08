@@ -166,7 +166,7 @@ class InnerControl(CustomControl):
         self.value = value
 
 
-LikertTimeoutAnswer = Union[Literal["random"], Literal["None"], int]
+LikertTimeoutAnswer = Union[Literal["random"], None, int]
 
 
 class CustomLikertControl(Control):
@@ -204,7 +204,7 @@ class CustomLikertControl(Control):
         elif timeout_answer == "random":
             self.timeout_answer_mode = "random"
             self.timeout_answer_fixed = 0
-        elif timeout_answer == "None":
+        elif timeout_answer is None:
             self.timeout_answer_mode = "none"
             self.timeout_answer_fixed = 0
         else:

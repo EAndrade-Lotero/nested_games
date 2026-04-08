@@ -17,9 +17,9 @@ from psynet.utils import get_logger
 
 from .game_paramters import (
     ENDOWMENT,
-    MAX_WAITING_PROPOSALS,
+    TIMEOUT_PROPOSALS,
     WAIT_PAGE_TIME,
-    MAX_WAITING_SEEING_INFO,
+    TIMEOUT_SEEING_INFO,
 )
 from .custom_front_end import (
     CustomControl,
@@ -76,18 +76,18 @@ class OuterProposalPage(ModularPage):
             f"<br>"
             f"<p>Choose who will take on the role of PROPOSER: </p>"
             f"<p>When you are ready, press the 'Next' button (scroll down the page if necessary). </p>"
-            f"<p>(If you don't press the 'Next' button within {MAX_WAITING_PROPOSALS} seconds, a random choice will be made for you). </p>"
+            f"<p>(If you don't press the 'Next' button within {TIMEOUT_PROPOSALS} seconds, a random choice will be made for you). </p>"
         ))
         control = CustomControl(
             context=context,
-            time_estimate=MAX_WAITING_PROPOSALS,
+            time_estimate=TIMEOUT_PROPOSALS,
             external_template="outer_proposal.html",
         )
         super().__init__(
             label="outer_proposal",
             prompt=prompt,
             control=control,
-            time_estimate=MAX_WAITING_PROPOSALS,
+            time_estimate=TIMEOUT_PROPOSALS,
             save_answer="outer_proposal",
         )
 
@@ -113,7 +113,7 @@ class CustomWaitingPage(Page):
             template = file.read()
         super().__init__(
             label="wait",
-            time_estimate=MAX_WAITING_PROPOSALS,
+            time_estimate=TIMEOUT_PROPOSALS,
             template_str=template,
             template_arg={
                 "content": self.content,
@@ -145,11 +145,11 @@ class OuterAcceptancePage(ModularPage):
             text=(
                 f"<p>Do you accept your partner's proposal of you to be the {proposal}? </p>"
                 f"<p>When you are ready, press the 'Next' button (scroll down the page if necessary). </p>"
-                f"<p>(If you don't press the 'Next' button within {MAX_WAITING_PROPOSALS} seconds, a random choice will be made for you). </p>"
+                f"<p>(If you don't press the 'Next' button within {TIMEOUT_PROPOSALS} seconds, a random choice will be made for you). </p>"
             ),
             proposal=proposal,
             context=context,
-            time_estimate=MAX_WAITING_PROPOSALS,
+            time_estimate=TIMEOUT_PROPOSALS,
             external_template="outer_acceptance.html",
         )
         control = PushButtonControl(
@@ -180,14 +180,14 @@ class InnerProposalPage(ModularPage):
 
         text += f"<p>Use the slider below to decide how many of the {ENDOWMENT} coins you will give to your partner: <p/>"
         text += f"<p>(Scroll down the page if necessary.)</p>"
-        text += f"<p>(If you don't press the 'Next' button within {MAX_WAITING_PROPOSALS} seconds, a random choice will be made for you). </p>"
+        text += f"<p>(If you don't press the 'Next' button within {TIMEOUT_PROPOSALS} seconds, a random choice will be made for you). </p>"
         text += f"<br>"
 
         prompt = Markup(text)
         control = InnerProposalControl(
             endowment=ENDOWMENT,
             context=context,
-            time_estimate=MAX_WAITING_PROPOSALS,
+            time_estimate=TIMEOUT_PROPOSALS,
         )
         super().__init__(
             label="inner_proposal",
@@ -205,12 +205,12 @@ class InnerAcceptancePage(ModularPage):
         prompt = InnerPrompt(
             text=(
                 f"<p>Do you accept your partner's proposal of {proposal} coins? </p>"
-                f"<p>(If you don't press the 'Next' button within {MAX_WAITING_PROPOSALS} seconds, a random choice will be made for you.)</p>"
+                f"<p>(If you don't press the 'Next' button within {TIMEOUT_PROPOSALS} seconds, a random choice will be made for you.)</p>"
             ),
             proposal=proposal,
             endowment=ENDOWMENT,
             context=context,
-            time_estimate=MAX_WAITING_PROPOSALS,
+            time_estimate=TIMEOUT_PROPOSALS,
             external_template="inner_acceptance.html",
         )
         control = PushButtonControl(
@@ -251,7 +251,7 @@ class ScorePage(ModularPage):
             remainder_=remainder_,
             accumulated_score=accumulated_score,
             partners_accumulated_score=partners_accumulated_score,
-            time_estimate=MAX_WAITING_SEEING_INFO,
+            time_estimate=TIMEOUT_SEEING_INFO,
             accepted=accepted,
         )
 

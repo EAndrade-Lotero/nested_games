@@ -17,7 +17,7 @@ from psynet.utils import get_logger
 from .game_paramters import (
     RNG,
     NUM_BIG_FIVE_QUESTIONS,
-    MAX_WAITING_BIG_FIVE_QUESTIONS,
+    TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
 )
 from .custom_front_end import CustomLikertControl
 
@@ -96,7 +96,7 @@ class PersonalityTrial(StaticTrial):
                 lowest_value="Very inaccurate",
                 highest_value="Very accurate",
                 n_steps=5,
-                timeout=MAX_WAITING_BIG_FIVE_QUESTIONS,
+                timeout=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
                 timeout_answer=1,
             ),
             time_estimate=time_estimate,
@@ -126,8 +126,8 @@ class WaitingTrial(StaticTrial):
                 lowest_value="Very inaccurate",
                 highest_value="Very accurate",
                 n_steps=5,
-                timeout=MAX_WAITING_BIG_FIVE_QUESTIONS,
-                timeout_answer=1,
+                timeout=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
+                timeout_answer=None,
             ),
             time_estimate=self.time_estimate
         )

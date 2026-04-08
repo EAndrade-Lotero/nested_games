@@ -12,7 +12,9 @@ from .nested_game_trial import (
     NestedGameTrialMaker,
 )
 from .game_paramters import (
-    MAX_WAITING_BIG_FIVE_QUESTIONS,
+    NUM_BIG_FIVE_QUESTIONS,
+    MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
+    TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
     NUMBER_OF_REPEATED_GAMES,
     RNG,
 )
@@ -62,7 +64,7 @@ waiting_trial_maker = PersonalityTrialMaker(
     trial_class=WaitingTrial,
     nodes=waiting_nodes,
     expected_trials_per_participant=3,
-    max_trials_per_participant=MAX_WAITING_BIG_FIVE_QUESTIONS,
+    max_trials_per_participant=MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
     allow_repeated_nodes=True,  # allow participants to cycle or a bug will occur
 )
 
@@ -71,7 +73,7 @@ personality_trial_maker = PersonalityTrialMaker(
     trial_class=PersonalityTrial,
     nodes=personality_nodes,
     expected_trials_per_participant=1,
-    max_trials_per_participant=1,
+    max_trials_per_participant=NUM_BIG_FIVE_QUESTIONS,
     allow_repeated_nodes=False,
 )
 
@@ -107,7 +109,7 @@ class Exp(psynet.experiment.Experiment):
         #     DURATION=15,
         #     PAYMENT=2.30,
         # ),
-        # personality_trial_maker,
+        personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(
                 group_type="chain",
@@ -116,8 +118,8 @@ class Exp(psynet.experiment.Experiment):
                 min_group_size=2,
                 join_existing_groups=False,
                 waiting_logic=waiting_logic,
-                waiting_logic_expected_repetitions=MAX_WAITING_BIG_FIVE_QUESTIONS,
-                max_wait_time=120,
+                waiting_logic_expected_repetitions=MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
+                max_wait_time=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS * (MAX_NUM_WAITING_BIG_FIVE_QUESTIONS - 1),
             ),
         ),
         CustomBarrier(
