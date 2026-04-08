@@ -1,79 +1,37 @@
-from .game_paramters import ENDOWMENT, ASSETS_PATHS
+from markupsafe import Markup
 
+from psynet.timeline import join
+from psynet.graphics import Prompt
+from psynet.modular_page import (
+    ModularPage,
+    PushButtonControl,
+)
 
-STYLE = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Welcome to the coordinator and foragers game!</title>
-    <style>
-        body {
-            font-family: "Book Antiqua", "Palatino Linotype", Palatino, serif;
-            font-size: 14pt;
-            line-height: 1.5;
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 0 20px;
-            background-color: #f5ecd9;
-            background-image:
-                radial-gradient(circle at top left, rgba(0,0,0,0.06), transparent 60%),
-                radial-gradient(circle at bottom right, rgba(0,0,0,0.06), transparent 60%);
-        }
-
-        h1 {
-            text-align: center;
-            font-size: 2em;
-            margin-bottom: 0.2em;
-        }
-
-        h2 {
-            margin-top: 1.8em;
-            margin-bottom: 0.4em;
-            font-size: 1.3em;
-        }
-
-        p {
-            margin: 0.4em 0;
-            text-align: justify;
-        }
-
-        ul {
-            margin: 0.4em 0 0.4em 1.5em;
-        }
-
-        li {
-            margin: 0.2em 0;
-        }
-
-        .formula-block {
-            margin: 0.6em 0 0.8em 1.5em;
-            font-family: "Courier New", Courier, monospace;
-        }
-
-        .final-note {
-            margin-top: 2em;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-
-"""
+from .game_paramters import (
+    ENDOWMENT,
+    TIMEOUT_SEEING_INFO,
+    NUMBER_OF_REPEATED_GAMES,
+)
+from .custom_pages import CustomInfoPage
 
 OBJECTIVE = f"""
-    {STYLE}
     <h2>Instructions</h2>
     <br>
-    <p>Welcome to the Nested Games experiment!</p>
+    <p>Welcome to the <strong>"Who is the proposer?"</strong> experiment!</p>
     <br>
-    <p>You will be paired with another participant. Each round consists of two phases:
-    the preparation phase and the proposal phase. In the preparation phase, 
-    participants will decided which one of them receives an endowment of {ENDOWMENT} coins. 
-    In the proposal phase, the proposer will decide how to split the endowment between the 
-    two players.</p>
+    <p>You will be paired with another participant to play {NUMBER_OF_REPEATED_GAMES} rounds.</p>
     <br>
-    <p><em>Goal:</em> Your goal is to accumulate as many coins as possible across all rounds.</p>
+    <p>Each round consists of two phases:</p>
+    <ul>
+        <li>
+            <strong>Preparation phase:</strong> Both participants decide which one of them will receive an endowment of {ENDOWMENT} coins.
+        </li>
+        <li>
+            <strong>Proposal phase:</strong> The selected proposer decides how to split the endowment between the two players.
+        </li>
+    </ul>
+    <br>
+    <p><em>Goal:</em> Your objective is to accumulate as many coins as possible across all rounds.</p>
     <br>
 """
 
@@ -92,7 +50,7 @@ OUTER_ULTIMATUM_INSTRUCTION = f"""
     <p>One participant will be asked to propose which of the two players
     will act as the <strong>PROPOSER</strong>. </p>
     <img src='static/drag_and_drop.gif' alt="Drag and dop avatar" width=400px/>
-    <p>The other participant will then decide whether to accept or reject this proposal. 
+    <p>The other participant will decide whether to accept or reject this proposal. 
     If the proposal is accepted, the game continues. If it is rejected, the round ends.</p>
     <br>
 """
@@ -112,7 +70,7 @@ RANDOM_ROLE_INSTRUCTION = f"""
 INNER_ULTIMATUM_INSTRUCTIONS = f"""
     <h2>Proposal phase</h2>
     <br>
-    <p>The <strong>PROPOSER</strong> offers some of their coins to the
+    <p>The <strong>PROPOSER</strong> will offer some of their coins to the
     <strong>RESPONDER</strong>.</p>
     <img src='static/slider.gif' alt="Drag and dop avatar" width=400px/>
     <p>The RESPONDER may either accept or reject the
@@ -124,8 +82,8 @@ INNER_ULTIMATUM_INSTRUCTIONS = f"""
 INNER_DICTATOR_INSTRUCTIONS = f"""
     <h2>Proposal phase</h2>
     <br>
-    <p>The <strong>PROPOSER</strong> decides how many coins to give to the
-    <strong>RESPONDER</strong> and keeps the remaining coins.</p>
+    <p>The <strong>PROPOSER</strong> will decide how many coins to give to the
+    <strong>RESPONDER</strong> and will keep the remaining coins.</p>
     <br>
 """
 
@@ -160,3 +118,67 @@ EXAMPLE_CONSTANT = f"""
     <br>
     <p>Every round, the same player gets to propose who will be the PROPOSER.</p>
 """
+
+def get_instructions(
+        outer_game: str,
+        inner_game: str,
+        transition: str,
+        outer_role: str,
+    ):
+
+    example_text = EXAMPLE_PREPARATION_PHASE
+    if outer_game == "dictator":
+        preparation_phase = OUTER_DICTATOR_INSTRUCTION
+    elif outer_game == "ultimatum":
+        preparation_phase = OUTER_ULTIMATUM_INSTRUCTION
+        example_text += ADD_OUTER_ACCEPTANCE_INSTRUCTION
+    else:
+        raise ValueError("outer_game must be dictator or ultimatum")
+
+    example_text += EXAMPLE_PROPOSAL_PHASE
+    if inner_game == "dictator":
+        proposal_phase = INNER_DICTATOR_INSTRUCTIONS
+    elif inner_game == "ultimatum":
+        proposal_phase = INNER_ULTIMATUM_INSTRUCTIONS
+        example_text += ADD_INNER_ACCEPTANCE_INSTRUCTION
+    else:
+        raise ValueError("outer_game must be dictator or ultimatum")
+
+    if transition == "random":
+        preparation_phase += RANDOM_ROLE_INSTRUCTION
+        example_text += EXAMPLE_RANDOM
+    elif transition == "constant":
+        preparation_phase += SAME_ROLE_INSTRUCTION
+        example_text += EXAMPLE_CONSTANT
+    else:
+        raise ValueError("transition must be 'random' or 'constant'")
+
+    list_of_pages = join(
+        CustomInfoPage(
+            Markup(OBJECTIVE),
+            time_estimate=TIMEOUT_SEEING_INFO,
+        ),
+        CustomInfoPage(
+            Markup(preparation_phase),
+            time_estimate=TIMEOUT_SEEING_INFO,
+        ),
+        CustomInfoPage(
+            Markup(proposal_phase),
+            time_estimate=TIMEOUT_SEEING_INFO,
+        ),
+        CustomInfoPage(
+            Markup(example_text),
+            time_estimate=TIMEOUT_SEEING_INFO,
+        ),
+        # ModularPage(
+        #     label="outer_role",
+        #     prompt=Prompt(Markup(example_text)),
+        #     control=PushButtonControl(
+        #         labels=["Next"],
+        #         choices=[outer_role]
+        #     ),
+        #     time_estimate=TIMEOUT_SEEING_INFO,
+        # ),
+    )
+
+    return list_of_pages
