@@ -1,6 +1,7 @@
 import json
+from pathlib import Path
 from markupsafe import Markup
-from typing import Optional, Dict
+from typing import Optional, Dict, Union
 
 from psynet.graphics import Prompt
 from psynet.modular_page import (
@@ -19,7 +20,6 @@ from .game_paramters import (
     MAX_WAITING_PROPOSALS,
     WAIT_PAGE_TIME,
     MAX_WAITING_SEEING_INFO,
-    RNG,
 )
 from .custom_front_end import (
     CustomControl,
@@ -32,6 +32,41 @@ from .custom_front_end import (
 
 logger = get_logger()
 
+_CUSTOM_INFO_TEMPLATE = Path(__file__).resolve().parent / "templates" / "custom_info_page.html"
+
+
+class CustomInfoPage(Page):
+    """
+    Like ``InfoPage``: shows HTML/text and PsyNet's normal Next control, but also
+    shows a countdown and calls ``psynet.nextPage()`` when it reaches zero.
+    """
+
+    def __init__(
+        self,
+        text: Union[str, Markup],
+        *,
+        time_estimate: int = 30,
+        label: str = "custom_info",
+        **kwargs,
+    ) -> None:
+        body = text if isinstance(text, Markup) else Markup(str(text))
+        self._countdown_seconds = int(time_estimate)
+        with open(_CUSTOM_INFO_TEMPLATE, "r", encoding="utf-8") as f:
+            template_str = f.read()
+        super().__init__(
+            label=label,
+            time_estimate=time_estimate,
+            template_str=template_str,
+            template_arg={
+                "body": body,
+                "timeout": self._countdown_seconds,
+            },
+            **kwargs,
+        )
+
+    def get_bot_response(self, experiment, bot):
+        return None
+
 
 class OuterProposalPage(ModularPage):
 
@@ -41,6 +76,7 @@ class OuterProposalPage(ModularPage):
             f"<br>"
             f"<p>Choose who will take on the role of PROPOSER: </p>"
             f"<p>When you are ready, press the 'Next' button (scroll down the page if necessary). </p>"
+            f"<p>(If you don't press the 'Next' button within {MAX_WAITING_PROPOSALS} seconds, a random choice will be made for you). </p>"
         ))
         control = CustomControl(
             context=context,
@@ -53,16 +89,6 @@ class OuterProposalPage(ModularPage):
             control=control,
             time_estimate=MAX_WAITING_PROPOSALS,
             save_answer="outer_proposal",
-            events={
-                "done": Event(
-                    is_triggered_by="done",
-                    js=(
-                        "psynet.response.disable(); psynet.submit.disable(); "
-                        f"psynet.nextPage({json.dumps(RNG.choice(['self', 'other']))});"
-                    ),
-                    delay=0.0,
-                ),
-            },
         )
 
 
@@ -116,7 +142,11 @@ class OuterAcceptancePage(ModularPage):
         assert proposal in [None, "PROPOSER", "RESPONDER"]
 
         prompt = OuterPrompt(
-            text=f"Do you accept your partner's proposal of you to be the {proposal}? ",
+            text=(
+                f"<p>Do you accept your partner's proposal of you to be the {proposal}? </p>"
+                f"<p>When you are ready, press the 'Next' button (scroll down the page if necessary). </p>"
+                f"<p>(If you don't press the 'Next' button within {MAX_WAITING_PROPOSALS} seconds, a random choice will be made for you). </p>"
+            ),
             proposal=proposal,
             context=context,
             time_estimate=MAX_WAITING_PROPOSALS,
@@ -134,16 +164,6 @@ class OuterAcceptancePage(ModularPage):
             control=control,
             time_estimate=5,
             save_answer="outer_accept_answer",
-            events={
-                "done": Event(
-                    is_triggered_by="done",
-                    js=(
-                        "psynet.response.disable(); psynet.submit.disable(); "
-                        f"psynet.nextPage({json.dumps(RNG.choice(['True', 'False']))});"
-                    ),
-                    delay=0.0,
-                ),
-            },
         )
 
 
@@ -152,13 +172,16 @@ class InnerProposalPage(ModularPage):
     def __init__(self, game:str, context: Dict[str, str]):
         assert game in ["ultimatum", "dictator"], f"Error: {game} is not a valid game type"
 
-        text = f"<h2>Proposal phase</h2>\n"
-        text += f"<br>\n"
+        text = f"<h2>Proposal phase</h2>"
+        text += f"<br>"
+
         if game == "ultimatum":
-            text += "<p>Proposal accepted. You are the PROPOSER. </p>\n"
-        text += f"<p>Use the slider below to decide how many of the {ENDOWMENT} coins you will give to your partner: <p/>\n"
-        text += f"<p>(Scroll down the page if necessary.)</p>\n"
-        text += f"<br>\n"
+            text += f"<p>Proposal accepted. You are the PROPOSER. </p>"
+
+        text += f"<p>Use the slider below to decide how many of the {ENDOWMENT} coins you will give to your partner: <p/>"
+        text += f"<p>(Scroll down the page if necessary.)</p>"
+        text += f"<p>(If you don't press the 'Next' button within {MAX_WAITING_PROPOSALS} seconds, a random choice will be made for you). </p>"
+        text += f"<br>"
 
         prompt = Markup(text)
         control = InnerProposalControl(
@@ -166,23 +189,12 @@ class InnerProposalPage(ModularPage):
             context=context,
             time_estimate=MAX_WAITING_PROPOSALS,
         )
-
         super().__init__(
             label="inner_proposal",
             prompt=prompt,
             control=control,
             time_estimate=5,
             save_answer="inner_proposal",
-            events={
-                "done": Event(
-                    is_triggered_by="done",
-                    js=(
-                        "psynet.response.disable(); psynet.submit.disable(); "
-                        f"psynet.nextPage({json.dumps(0)});"
-                    ),
-                    delay=0.0,
-                ),
-            },
         )
 
 
@@ -191,7 +203,10 @@ class InnerAcceptancePage(ModularPage):
     def __init__(self, context: Dict[str, str], proposal: int) -> None:
 
         prompt = InnerPrompt(
-            text=f"<p>Do you accept your partner's proposal of {proposal} coins? </p>",
+            text=(
+                f"<p>Do you accept your partner's proposal of {proposal} coins? </p>"
+                f"<p>(If you don't press the 'Next' button within {MAX_WAITING_PROPOSALS} seconds, a random choice will be made for you.)</p>"
+            ),
             proposal=proposal,
             endowment=ENDOWMENT,
             context=context,
@@ -210,16 +225,6 @@ class InnerAcceptancePage(ModularPage):
             control=control,
             time_estimate=5,
             save_answer="inner_accept_answer",
-            events={
-                "done": Event(
-                    is_triggered_by="done",
-                    js=(
-                        "psynet.response.disable(); psynet.submit.disable(); "
-                        f"psynet.nextPage({json.dumps(RNG.choice(['True', 'False']))});"
-                    ),
-                    delay=0.0,
-                ),
-            },
         )
 
 

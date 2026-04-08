@@ -107,7 +107,7 @@ class Exp(psynet.experiment.Experiment):
         #     DURATION=15,
         #     PAYMENT=2.30,
         # ),
-        personality_trial_maker,
+        # personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(
                 group_type="chain",
@@ -122,7 +122,7 @@ class Exp(psynet.experiment.Experiment):
         ),
         CustomBarrier(
             id_="assign_roles",
-            content="Please wait while other participants finish completing the personality trait questions...",
+            content="Please wait while your partner completes the personality test...",
             on_release=assign_roles,
         ),
         NestedGameTrialMaker(

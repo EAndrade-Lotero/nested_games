@@ -4,7 +4,7 @@
 # Imports
 ##########################################################################################
 
-from typing import Dict, Optional
+from typing import Dict, Literal, Optional, Union
 
 from psynet.modular_page import (
     Control, Prompt,
@@ -166,6 +166,9 @@ class InnerControl(CustomControl):
         self.value = value
 
 
+LikertTimeoutAnswer = Union[Literal["random"], Literal["None"], int]
+
+
 class CustomLikertControl(Control):
     macro = "likert"
     external_template = "likert.html"
@@ -175,11 +178,39 @@ class CustomLikertControl(Control):
         lowest_value: str,
         highest_value: str,
         n_steps: int,
+        timeout: Optional[int] = None,
+        timeout_answer: LikertTimeoutAnswer = "random",
     ) -> None:
         super().__init__()
         self.lowest_value = lowest_value
         self.highest_value = highest_value
         self.n_steps = n_steps
+        if timeout is not None and int(timeout) > 0:
+            self.timer_enabled = True
+            self.timeout = int(timeout)
+        else:
+            self.timer_enabled = False
+            self.timeout = 0
+
+        if isinstance(timeout_answer, bool):
+            raise ValueError("timeout_answer must not be a boolean")
+        if isinstance(timeout_answer, int):
+            if not (1 <= timeout_answer <= n_steps):
+                raise ValueError(
+                    f"timeout_answer int must be between 1 and n_steps ({n_steps}), got {timeout_answer!r}"
+                )
+            self.timeout_answer_mode = "fixed"
+            self.timeout_answer_fixed = int(timeout_answer)
+        elif timeout_answer == "random":
+            self.timeout_answer_mode = "random"
+            self.timeout_answer_fixed = 0
+        elif timeout_answer == "None":
+            self.timeout_answer_mode = "none"
+            self.timeout_answer_fixed = 0
+        else:
+            raise ValueError(
+                "timeout_answer must be 'random', 'None', or an int from 1 to n_steps"
+            )
 
     def format_answer(self, raw_answer, **kwargs):
         if raw_answer is None or raw_answer == "":
@@ -193,8 +224,10 @@ class CustomLikertControl(Control):
         return value
 
     def validate(self, response, **kwargs):
-        _p = get_translator(context=True)
         if response.answer is None:
+            if self.timeout_answer_mode == "none":
+                return None
+            _p = get_translator(context=True)
             return FailedValidation(
                 _p(
                     "validation",
