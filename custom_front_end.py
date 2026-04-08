@@ -166,7 +166,9 @@ class InnerControl(CustomControl):
         self.value = value
 
 
-LikertTimeoutAnswer = Union[Literal["random"], None, int]
+
+
+LikertTimeoutAnswer = Union[Literal["random"], Literal["No answer"], int]
 
 
 class CustomLikertControl(Control):
@@ -204,7 +206,7 @@ class CustomLikertControl(Control):
         elif timeout_answer == "random":
             self.timeout_answer_mode = "random"
             self.timeout_answer_fixed = 0
-        elif timeout_answer is None:
+        elif timeout_answer == "No answer":
             self.timeout_answer_mode = "none"
             self.timeout_answer_fixed = 0
         else:
@@ -216,17 +218,19 @@ class CustomLikertControl(Control):
         if raw_answer is None or raw_answer == "":
             return None
         try:
-            value = int(raw_answer)
+            if isinstance(raw_answer, str):
+                assert raw_answer == "No answer"
+                value = raw_answer
+            else:
+                value = int(raw_answer)
+                if not (1 <= value <= self.n_steps):
+                    return None
         except (TypeError, ValueError):
-            return None
-        if not (1 <= value <= self.n_steps):
             return None
         return value
 
     def validate(self, response, **kwargs):
         if response.answer is None:
-            if self.timeout_answer_mode == "none":
-                return None
             _p = get_translator(context=True)
             return FailedValidation(
                 _p(

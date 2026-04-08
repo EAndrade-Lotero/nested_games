@@ -97,7 +97,7 @@ class PersonalityTrial(StaticTrial):
                 highest_value="Very accurate",
                 n_steps=5,
                 timeout=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
-                timeout_answer=None,
+                timeout_answer="No answer",
             ),
             time_estimate=time_estimate,
             save_answer=page_label
@@ -127,7 +127,7 @@ class WaitingTrial(StaticTrial):
                 highest_value="Very accurate",
                 n_steps=5,
                 timeout=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
-                timeout_answer=None,
+                timeout_answer="No answer",
             ),
             time_estimate=self.time_estimate
         )
