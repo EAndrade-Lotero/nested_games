@@ -1,0 +1,90 @@
+{% extends "timeline-page.html" %}
+
+{% block stylesheets %}
+  {{ super() }}
+  <style>
+    .custom-info-root {
+      position: relative;
+      font-family: inherit;
+      max-width: 48rem;
+      margin: 0 auto;
+      padding: 2.25rem 0 1rem;
+      box-sizing: border-box;
+    }
+
+    .custom-info-root .custom-info-countdown {
+      position: absolute;
+      top: 0;
+      left: 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #535353;
+      line-height: 1.2;
+    }
+
+    .custom-info-root .custom-info-body {
+      line-height: 1.5;
+    }
+
+    .custom-info-root .custom-info-next-row {
+      margin-top: 1.5rem;
+    }
+  </style>
+{% endblock %}
+
+{% block main_body %}
+  <div class="custom-info-root">
+    <div class="custom-info-countdown" id="custom-info-countdown" aria-live="polite">00:00</div>
+    <div class="custom-info-body">{{ body }}</div>
+    <div class="custom-info-next-row">
+      <button type="button" class="btn btn-primary" id="custom-info-next">
+        Next
+      </button>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    (function () {
+      let timeRemaining = {{ timeout }};
+      let advanced = false;
+      let timer = null;
+
+      function finishPage() {
+        if (advanced) return;
+        advanced = true;
+        if (timer !== null) {
+          clearInterval(timer);
+          timer = null;
+        }
+        psynet.nextPage();
+      }
+
+      const countdownEl = document.getElementById("custom-info-countdown");
+
+      function tick() {
+        if (!countdownEl) return;
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        countdownEl.textContent =
+          String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
+
+        if (timeRemaining > 0) {
+          timeRemaining -= 1;
+        } else {
+          finishPage();
+        }
+      }
+
+      tick();
+      timer = setInterval(tick, 1000);
+
+      const nextBtn = document.getElementById("custom-info-next");
+      if (nextBtn) {
+        nextBtn.addEventListener("click", finishPage);
+      }
+    })();
+  </script>
+{% endblock %}

@@ -139,7 +139,7 @@ class OuterAcceptancePage(ModularPage):
                     is_triggered_by="done",
                     js=(
                         "psynet.response.disable(); psynet.submit.disable(); "
-                        f"psynet.nextPage({json.dumps(RNG.choice([True, False]))});"
+                        f"psynet.nextPage({json.dumps(RNG.choice(['True', 'False']))});"
                     ),
                     delay=0.0,
                 ),
@@ -215,7 +215,7 @@ class InnerAcceptancePage(ModularPage):
                     is_triggered_by="done",
                     js=(
                         "psynet.response.disable(); psynet.submit.disable(); "
-                        f"psynet.nextPage({json.dumps(RNG.choice([True, False]))});"
+                        f"psynet.nextPage({json.dumps(RNG.choice(['True', 'False']))});"
                     ),
                     delay=0.0,
                 ),
