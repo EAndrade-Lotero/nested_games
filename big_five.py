@@ -66,7 +66,7 @@ personality_nodes = [
 
 
 class PersonalityTrial(StaticTrial):
-    time_estimate = 3
+    time_estimate = 5
 
     def show_trial(self, experiment, participant):
         return join([
@@ -97,7 +97,7 @@ class PersonalityTrial(StaticTrial):
                 highest_value="Very accurate",
                 n_steps=5,
                 timeout=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
-                timeout_answer=1,
+                timeout_answer=None,
             ),
             time_estimate=time_estimate,
             save_answer=page_label

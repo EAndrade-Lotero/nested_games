@@ -19,6 +19,7 @@ class CustomBarrier(GroupBarrier):
         content:Optional[str|None]=None,
         active_participant:Optional[bool | None]=None,
         expected_repetitions:Optional[int]=1,
+        timeout_between_barriers:int=TIMEOUT_BETWEEN_BARRIERS,
         wait_page:Optional[Page|None]=None,
         on_release:Optional[Callable]=None,
     ) -> None:
@@ -45,7 +46,7 @@ class CustomBarrier(GroupBarrier):
             waiting_logic=wait_page,
             max_wait_time=TIMEOUT_WAITING_FOR_OTHER * expected_repetitions,
             waiting_logic_expected_repetitions=expected_repetitions,
-            participant_timeout=TIMEOUT_BETWEEN_BARRIERS,
+            participant_timeout=timeout_between_barriers,
             participant_timeout_action="fail",
         )
 

@@ -15,6 +15,7 @@ from .game_paramters import (
     NUM_BIG_FIVE_QUESTIONS,
     MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
     TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
+    TIMEOUT_PERSONALITY_TEST,
     NUMBER_OF_REPEATED_GAMES,
     RNG,
 )
@@ -126,6 +127,7 @@ class Exp(psynet.experiment.Experiment):
             id_="assign_roles",
             content="Please wait while your partner completes the personality test...",
             on_release=assign_roles,
+            timeout_between_barriers=TIMEOUT_PERSONALITY_TEST,
         ),
         NestedGameTrialMaker(
             id_="nested_games_trial_maker",
