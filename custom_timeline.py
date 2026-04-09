@@ -6,49 +6,62 @@ from psynet.modular_page import ModularPage
 logger = get_logger()
 
 
+class EndRoundPage(ModularPage):
+    label = "end_round"
+
+    def __init__(self, prompt, control, save_answer, time_estimate, **kwargs):
+        super().__init__(
+            label=self.label, 
+            prompt=prompt, 
+            control=control, 
+            save_answer=save_answer, 
+            time_estimate=time_estimate, 
+        )
+
+
 class CustomTimeline(Timeline):
 
     can_fail_rounds = True
 
     def __init__(self, *args):
         super().__init__(*args)
-        self.end_of_round_page_idx = self.determine_end_of_round_page_idx()
 
-    def determine_end_of_round_page_idx(self) -> int:
-        # Determine end_round page
-        end_of_round_page_idx = None
+    @log_time_taken
+    def advance_page(self, experiment, participant):
 
-        page_labels = []
-        for elt in self.elts['main']:
-            page_labels.append(str(type(elt)))
+        round_failed = CustomTimeline.get_round_failed(participant)
+        current_elt_id = participant.elt_id[-1]
+        logger.info(f"Current elt id is {current_elt_id}")
 
-        if self.can_fail_rounds:
+        if round_failed:
 
+            finished = False
 
-            for i, elt in enumerate(self.elts['main']):
-                if isinstance(elt, ModularPage):
-                    if hasattr(elt, "label"):
-                        if elt.label == "end_of_round_page":
-                            end_of_round_page_idx = i - 1
-                            break
+            while not finished:
+                new_elt = self.increase_one_page(experiment, participant)
+                if new_elt is not None:
+                    new_elt.consume(experiment, participant)
 
-            if end_of_round_page_idx is None:
+                if isinstance(new_elt, EndRoundPage):
+                    finished = True
+                    break
 
-                error_message = "Error: can_fail_rounds = True but end_of_round_page_idx is None.\n"
-                error_message += "A ModularPage with label = 'end_of_round_page' is required in the timeline."
-                error_message += f"\n{page_labels}"
-                raise Exception(error_message)
+                if participant.elt_id[-1] == participant.elt_id_max[-1]:
+                    raise Exception("End of timeline reached. No end round page found.")
 
-        logger.info(f"CustomTimeLine: end round idx is set to {end_of_round_page_idx}")
+            participant.var.round_failed = False
 
-        return end_of_round_page_idx
-
-    @staticmethod
-    def get_round_failed(participant):
-        if participant.var.has("round_failed"):
-            return getattr(participant.var, "round_failed")
         else:
-            return False
+
+            finished = False
+            while not finished:
+                new_elt = self.increase_one_page(experiment, participant)
+                if new_elt is not None:
+                    new_elt.consume(experiment, participant)
+
+                if isinstance(new_elt, Page):
+                    finished = True
+
 
     def increase_one_page(self, experiment, participant):
         participant.elt_id[-1] += 1
@@ -66,28 +79,9 @@ class CustomTimeline(Timeline):
 
         return new_elt
 
-    @log_time_taken
-    def advance_page(self, experiment, participant):
-
-        round_failed = CustomTimeline.get_round_failed(participant)
-        current_elt_id = participant.elt_id[-1]
-
-        if round_failed and current_elt_id < self.end_of_round_page_idx:
-
-            while participant.elt_id[-1] <= self.end_of_round_page_idx:
-                new_elt = self.increase_one_page(experiment, participant)
-                if new_elt is not None:
-                    new_elt.consume(experiment, participant)
-
-            participant.var.round_failed = False
-
+    @staticmethod
+    def get_round_failed(participant):
+        if participant.var.has("round_failed"):
+            return getattr(participant.var, "round_failed")
         else:
-
-            finished = False
-            while not finished:
-                new_elt = self.increase_one_page(experiment, participant)
-                if new_elt is not None:
-                    new_elt.consume(experiment, participant)
-
-                if isinstance(new_elt, Page):
-                    finished = True
+            return False
