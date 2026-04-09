@@ -19,7 +19,7 @@ from .game_paramters import (
     ENDOWMENT,
     TIMEOUT_PROPOSALS,
     WAIT_PAGE_TIME,
-    TIMEOUT_SEEING_INFO,
+    TIMEOUT_WAITING_FOR_OTHER,
 )
 from .custom_front_end import (
     CustomControl,
@@ -251,7 +251,7 @@ class ScorePage(ModularPage):
             remainder_=remainder_,
             accumulated_score=accumulated_score,
             partners_accumulated_score=partners_accumulated_score,
-            time_estimate=TIMEOUT_SEEING_INFO,
+            time_estimate=TIMEOUT_WAITING_FOR_OTHER,
             accepted=accepted,
         )
 
