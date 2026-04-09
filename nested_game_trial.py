@@ -22,7 +22,8 @@ from .variable_handler import VariableHandler
 from .game_paramters import (
     REWARD_SCALING_FACTOR,
     MAX_BONUS_REWARD,
-    TIMEOUT_SEEING_INFO,
+    TIMEOUT_WAITING_FOR_OTHER,
+    WAIT_PAGE_TIME,
     RNG,
 )
 from .instructions import get_instructions
@@ -47,6 +48,9 @@ class NestedGameTrial(ChainTrial):
     def show_trial(self, experiment, participant):
 
         instructions_stage = self.instructions_stage()
+        n_pages = len(instructions_stage)
+        timeout_at_barrier = TIMEOUT_WAITING_FOR_OTHER * len(instructions_stage)
+        expected_repetitions = timeout_at_barrier // WAIT_PAGE_TIME
 
         return join(
             #########################################
@@ -65,7 +69,7 @@ class NestedGameTrial(ChainTrial):
                 id_="choose_outer_roles",
                 content="Please wait for your partner...",
                 on_release = self.choose_new_outer_role,
-                timeout_at_barrier=TIMEOUT_SEEING_INFO * len(instructions_stage)
+                timeout_at_barrier=timeout_at_barrier,
             ),
             #########################################
             # OUTER GAME
