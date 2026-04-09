@@ -31,6 +31,17 @@
         gap: 20px;
     }
 
+    #phase-label {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-family: "Book Antiqua", Palatino, serif;
+        font-size: 22px;
+        font-weight: bold;
+        color: rgb(83, 83, 83);
+        text-align: right;
+    }
+
     #countdown {
         position: absolute;
         top: 15px;
@@ -176,7 +187,14 @@
 
 <div class="tabletop">
 
-  <div id="countdown">02:00</div>
+    <div id="countdown">
+        00:30
+    </div>
+
+    <div id="phase-label">
+        Round {{ config.round }} / {{ config.num_rounds }}
+    </div>
+
 
   <!-- TOP PLACE -->
   <div class="zone center-top">

@@ -71,7 +71,7 @@ class CustomInfoPage(Page):
 
 class OuterProposalPage(ModularPage):
 
-    def __init__(self, context: Dict[str, str]) -> None:
+    def __init__(self, context: Dict[str, str], round_: int) -> None:
         prompt = Prompt(Markup(
             f"<h2>Preparation phase</h2>"
             f"<br>"
@@ -83,6 +83,7 @@ class OuterProposalPage(ModularPage):
             context=context,
             time_estimate=TIMEOUT_PROPOSALS,
             external_template="outer_proposal.html",
+            round_=round_
         )
         super().__init__(
             label="outer_proposal",

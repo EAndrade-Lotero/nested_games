@@ -12,8 +12,10 @@ from psynet.modular_page import (
 from psynet.timeline import FailedValidation
 from psynet.utils import get_logger, get_translator
 
-from .game_paramters import ENDOWMENT
-
+from .game_paramters import (
+    ENDOWMENT,
+    NUMBER_OF_REPEATED_GAMES,
+)
 
 logger = get_logger()
 
@@ -113,6 +115,7 @@ class CustomControl(Control):
         context:Dict[str, str],
         time_estimate:int,
         external_template:str,
+        round_:int,
     ) -> None:
         super().__init__()
         self.coin_url = context["coin_url"]
@@ -121,6 +124,8 @@ class CustomControl(Control):
         self.timeout = time_estimate
         self.macro = external_template.split(".")[0]
         self.external_template = external_template
+        self.round = round_
+        self.num_rounds = NUMBER_OF_REPEATED_GAMES
 
 
 class InnerProposalControl(Control):
