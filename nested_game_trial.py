@@ -28,6 +28,7 @@ from .game_paramters import (
 )
 from .instructions import get_instructions
 from .custom_barriers import CustomBarrier
+from .custom_timeline import EndRoundPage
 from .custom_pages import (
     OuterProposalPage,
     CustomWaitingPage,
@@ -479,8 +480,7 @@ class NestedGameTrial(ChainTrial):
                 partners_accumulated_score=partners_accumulated_score,
             )
         else:
-            return ModularPage(
-                label="reward",
+            return EndRoundPage(
                 prompt="OK",
                 control=PushButtonControl(
                     labels=["Next"],

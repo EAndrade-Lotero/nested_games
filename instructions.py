@@ -154,18 +154,18 @@ def get_instructions(
         raise ValueError("transition must be 'random' or 'constant'")
 
     list_of_pages = join(
-        CustomInfoPage(
-            Markup(OBJECTIVE),
-            time_estimate=TIMEOUT_PROPOSALS,
-        ),
-        CustomInfoPage(
-            Markup(preparation_phase),
-            time_estimate=TIMEOUT_PROPOSALS,
-        ),
-        CustomInfoPage(
-            Markup(proposal_phase),
-            time_estimate=TIMEOUT_PROPOSALS,
-        ),
+        # CustomInfoPage(
+        #     Markup(OBJECTIVE),
+        #     time_estimate=TIMEOUT_PROPOSALS,
+        # ),
+        # CustomInfoPage(
+        #     Markup(preparation_phase),
+        #     time_estimate=TIMEOUT_PROPOSALS,
+        # ),
+        # CustomInfoPage(
+        #     Markup(proposal_phase),
+        #     time_estimate=TIMEOUT_PROPOSALS,
+        # ),
         CustomInfoPage(
             Markup(example_text),
             time_estimate=TIMEOUT_PROPOSALS,

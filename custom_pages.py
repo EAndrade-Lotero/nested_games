@@ -28,6 +28,7 @@ from .custom_front_end import (
     InnerPrompt,
     ScorePrompt,
 )
+from .custom_timeline import EndRoundPage
 
 
 logger = get_logger()
@@ -228,7 +229,7 @@ class InnerAcceptancePage(ModularPage):
         )
 
 
-class ScorePage(ModularPage):
+class ScorePage(EndRoundPage):
 
     def __init__(
         self,
@@ -256,7 +257,6 @@ class ScorePage(ModularPage):
         )
 
         super().__init__(
-            label="reward",
             prompt=prompt,
             control=PushButtonControl(
                 labels=["Next"],

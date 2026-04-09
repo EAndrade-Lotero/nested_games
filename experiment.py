@@ -27,6 +27,7 @@ from .big_five import (
     waiting_nodes,
 )
 from .custom_barriers import CustomBarrier
+from .custom_timeline import CustomTimeline
 from .consent_science_of_learning import consent_cococo_science_of_learning
 
 logger = get_logger()
@@ -105,7 +106,7 @@ class Exp(psynet.experiment.Experiment):
         "show_progress_bar": True,
     }
 
-    timeline = Timeline(
+    timeline = CustomTimeline(
         # consent_cococo_science_of_learning(
         #     DURATION=15,
         #     PAYMENT=2.30,
