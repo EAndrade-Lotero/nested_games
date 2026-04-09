@@ -18,8 +18,7 @@ class CustomBarrier(GroupBarrier):
         id_:str,
         content:Optional[str|None]=None,
         active_participant:Optional[bool | None]=None,
-        expected_repetitions:Optional[int]=1,
-        timeout_at_barrier:Optional[int|None]=None,
+        timeout_at_barrier:Optional[int]=TIMEOUT_WAITING_FOR_OTHER,
         timeout_between_barriers:Optional[int]=TIMEOUT_BETWEEN_BARRIERS,
         wait_page:Optional[Page|None]=None,
         on_release:Optional[Callable]=None,
@@ -40,8 +39,8 @@ class CustomBarrier(GroupBarrier):
                 content=content,
             ),
 
-        if timeout_at_barrier is None:
-            timeout_at_barrier = TIMEOUT_WAITING_FOR_OTHER * expected_repetitions
+        expected_repetitions = timeout_at_barrier // WAIT_PAGE_TIME
+        timeout_between_barriers += timeout_at_barrier
 
         super().__init__(
             id_=id_,
