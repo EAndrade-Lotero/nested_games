@@ -1,15 +1,18 @@
-from typing import Optional, Callable
+from typing import Optional, Callable, List
 
 from psynet.page import WaitPage
 from psynet.sync import GroupBarrier
 from psynet.timeline import Page
+from psynet.participant import Participant
 
 from .game_paramters import (
     WAIT_PAGE_TIME,
     TIMEOUT_WAITING_FOR_OTHER,
     TIMEOUT_BETWEEN_BARRIERS,
 )
+from psynet.utils import get_logger
 
+logger = get_logger()
 
 class CustomBarrier(GroupBarrier):
 
@@ -53,4 +56,23 @@ class CustomBarrier(GroupBarrier):
             participant_timeout_action="fail",
         )
 
+    def choose_who_to_release(self, waiting_participants: List[Participant]) -> List[Participant]:
+
+        participants = super().choose_who_to_release(waiting_participants)
+
+        # round_failed = False
+        # for participant in participants:
+        #     if participant.var.has("round_fail"):
+        #         round_failed = True
+        #         break
+        #
+        # logger.info("-" * 60)
+        # logger.info(f"Did round fail?{round_failed} ")
+        # logger.info("-" * 60)
+        #
+        # if round_failed:
+        #     for participant in waiting_participants:
+        #         participant.var.set("round_fail", True)
+
+        return participants
 

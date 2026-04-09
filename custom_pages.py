@@ -81,7 +81,8 @@ class OuterProposalPage(ModularPage):
         ))
         control = CustomControl(
             context=context,
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=5,
+            # time_estimate=TIMEOUT_PROPOSALS,
             external_template="outer_proposal.html",
             round_=round_
         )
@@ -91,7 +92,21 @@ class OuterProposalPage(ModularPage):
             control=control,
             time_estimate=TIMEOUT_PROPOSALS,
             save_answer="outer_proposal",
+            events={
+                "done": Event(
+                    is_triggered_by="done",
+                ),
+            },
         )
+
+    def format_answer(self, raw_answer, **kwargs):
+        metadata = kwargs.get("metadata") or {}
+        participant = kwargs.get("participant")
+        if participant is not None:
+            event_log = metadata.get("event_log") or []
+            if any(entry.get("eventType") == "done" for entry in event_log):
+                participant.var.set("round_fail", True)
+        return super().format_answer(raw_answer, **kwargs)
 
 
 class CustomWaitingPage(Page):
@@ -258,6 +273,7 @@ class ScorePage(EndRoundPage):
         )
 
         super().__init__(
+            label="reward",
             prompt=prompt,
             control=PushButtonControl(
                 labels=["Next"],

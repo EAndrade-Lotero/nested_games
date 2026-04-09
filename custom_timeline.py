@@ -7,11 +7,10 @@ logger = get_logger()
 
 
 class EndRoundPage(ModularPage):
-    label = "end_round"
 
-    def __init__(self, prompt, control, save_answer, time_estimate, **kwargs):
+    def __init__(self, label, prompt, control, save_answer, time_estimate, **kwargs):
         super().__init__(
-            label=self.label, 
+            label=label,
             prompt=prompt, 
             control=control, 
             save_answer=save_answer, 
@@ -30,8 +29,7 @@ class CustomTimeline(Timeline):
     def advance_page(self, experiment, participant):
 
         round_failed = CustomTimeline.get_round_failed(participant)
-        current_elt_id = participant.elt_id[-1]
-        logger.info(f"Current elt id is {current_elt_id}")
+        logger.info(f"Do I see round failed? {round_failed}")
 
         if round_failed:
 

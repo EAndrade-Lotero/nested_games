@@ -11,6 +11,7 @@ from psynet.modular_page import (
 from psynet.timeline import (
     join,
     conditional,
+    CodeBlock,
 )
 from psynet.trial.chain import (
     ChainTrial,
@@ -136,7 +137,28 @@ class NestedGameTrial(ChainTrial):
                     content="Waiting for the leader...",
                 )
             ),
+            CodeBlock(
+                lambda participant: self.check_round_failed(participant),
+            ),
         )
+
+    def check_round_failed(self, participant):
+
+        participants = self.participant.sync_group.participants
+
+        round_failed = False
+        for participant in participants:
+            if participant.var.has("round_fail"):
+                round_failed = True
+                break
+
+        logger.info("-" * 60)
+        logger.info(f"Did round fail? {round_failed} ")
+        logger.info("-" * 60)
+
+        if round_failed:
+            for participant in participants:
+                participant.var.set("round_fail", True)
 
     def outer_ultimatum_stage(self):
         return join(
@@ -240,7 +262,7 @@ class NestedGameTrial(ChainTrial):
         participants = self.participant.sync_group.participants
         assert len(participants) == 2
 
-        ids = [participant.id for participant in self.participant.sync_group.participants]
+        ids = [participant.id for participant in participants]
         assert self.participant_id in ids
 
         # Determine proposal
@@ -255,7 +277,7 @@ class NestedGameTrial(ChainTrial):
                         inner_proposer_id = participant.id
                     else:
                         inner_proposer_id = other_id
-                    break
+                break
 
         return inner_proposer_id
 
@@ -484,6 +506,7 @@ class NestedGameTrial(ChainTrial):
             )
         else:
             return EndRoundPage(
+                label="reward",
                 prompt="OK",
                 control=PushButtonControl(
                     labels=["Next"],
