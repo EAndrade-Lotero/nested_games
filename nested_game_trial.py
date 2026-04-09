@@ -22,6 +22,7 @@ from .variable_handler import VariableHandler
 from .game_paramters import (
     REWARD_SCALING_FACTOR,
     MAX_BONUS_REWARD,
+    TIMEOUT_SEEING_INFO,
     RNG,
 )
 from .instructions import get_instructions
@@ -45,6 +46,8 @@ class NestedGameTrial(ChainTrial):
 
     def show_trial(self, experiment, participant):
 
+        instructions_stage = self.instructions_stage()
+
         return join(
             #########################################
             # INSTRUCTIONS
@@ -52,7 +55,7 @@ class NestedGameTrial(ChainTrial):
             conditional(
                 label="only_first_round",
                 condition=lambda participant: self.position == 0,
-                logic_if_true=self.instructions_stage(),
+                logic_if_true=instructions_stage,
                 logic_if_false=None
             ),
             #############################################
@@ -62,6 +65,7 @@ class NestedGameTrial(ChainTrial):
                 id_="choose_outer_roles",
                 content="Please wait for your partner...",
                 on_release = self.choose_new_outer_role,
+                timeout_at_barrier=TIMEOUT_SEEING_INFO * len(instructions_stage)
             ),
             #########################################
             # OUTER GAME

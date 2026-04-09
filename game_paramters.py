@@ -14,7 +14,7 @@ NUMBER_OF_REPEATED_GAMES = 1
 assert MAX_NUM_WAITING_BIG_FIVE_QUESTIONS > 1
 
 # Waiting times
-WAIT_PAGE_TIME = .5  # Refresh interval at barrier
+WAIT_PAGE_TIME = 1.5  # Refresh interval at barrier
 TIMEOUT_PROPOSALS = 5 # Max wait at a barrier
 TIMEOUT_WAITING_FOR_OTHER = 1.5 * TIMEOUT_PROPOSALS
 TIMEOUT_BETWEEN_BARRIERS = 20
