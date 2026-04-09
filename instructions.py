@@ -9,7 +9,7 @@ from psynet.modular_page import (
 
 from .game_paramters import (
     ENDOWMENT,
-    TIMEOUT_SEEING_INFO,
+    TIMEOUT_PROPOSALS,
     NUMBER_OF_REPEATED_GAMES,
 )
 from .custom_pages import CustomInfoPage
@@ -156,29 +156,20 @@ def get_instructions(
     list_of_pages = join(
         CustomInfoPage(
             Markup(OBJECTIVE),
-            time_estimate=TIMEOUT_SEEING_INFO,
+            time_estimate=TIMEOUT_PROPOSALS,
         ),
         CustomInfoPage(
             Markup(preparation_phase),
-            time_estimate=TIMEOUT_SEEING_INFO,
+            time_estimate=TIMEOUT_PROPOSALS,
         ),
         CustomInfoPage(
             Markup(proposal_phase),
-            time_estimate=TIMEOUT_SEEING_INFO,
+            time_estimate=TIMEOUT_PROPOSALS,
         ),
         CustomInfoPage(
             Markup(example_text),
-            time_estimate=TIMEOUT_SEEING_INFO,
+            time_estimate=TIMEOUT_PROPOSALS,
         ),
-        # ModularPage(
-        #     label="outer_role",
-        #     prompt=Prompt(Markup(example_text)),
-        #     control=PushButtonControl(
-        #         labels=["Next"],
-        #         choices=[outer_role]
-        #     ),
-        #     time_estimate=TIMEOUT_SEEING_INFO,
-        # ),
     )
 
     return list_of_pages
