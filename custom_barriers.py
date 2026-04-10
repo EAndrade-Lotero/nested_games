@@ -14,6 +14,7 @@ from psynet.utils import get_logger
 
 logger = get_logger()
 
+
 class CustomBarrier(GroupBarrier):
 
     def __init__(
@@ -58,10 +59,11 @@ class CustomBarrier(GroupBarrier):
 
     def can_participant_exit(self, participant: Participant) -> bool:
         super_condition = super().can_participant_exit(participant)
-        round_failed = self.get_round_failed(participant)
+        round_failed = CustomBarrier.get_round_failed(participant)
         return super_condition or round_failed
 
-    def get_round_failed(self, participant: Participant) -> bool:
+    @staticmethod
+    def get_round_failed(participant: Participant) -> bool:
 
         participants = participant.sync_group.participants
 
