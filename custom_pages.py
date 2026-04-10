@@ -105,7 +105,7 @@ class OuterProposalPage(ModularPage):
         if participant is not None:
             event_log = metadata.get("event_log") or []
             if any(entry.get("eventType") == "done" for entry in event_log):
-                participant.var.set("round_fail", True)
+                participant.var.set("fail_me", True)
         return super().format_answer(raw_answer, **kwargs)
 
 

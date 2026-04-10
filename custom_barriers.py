@@ -56,23 +56,20 @@ class CustomBarrier(GroupBarrier):
             participant_timeout_action="fail",
         )
 
-    def choose_who_to_release(self, waiting_participants: List[Participant]) -> List[Participant]:
+    def can_participant_exit(self, participant: Participant) -> bool:
+        super_condition = super().can_participant_exit(participant)
+        round_failed = self.get_round_failed(participant)
+        return super_condition or round_failed
 
-        participants = super().choose_who_to_release(waiting_participants)
+    def get_round_failed(self, participant: Participant) -> bool:
 
-        # round_failed = False
-        # for participant in participants:
-        #     if participant.var.has("round_fail"):
-        #         round_failed = True
-        #         break
-        #
-        # logger.info("-" * 60)
-        # logger.info(f"Did round fail?{round_failed} ")
-        # logger.info("-" * 60)
-        #
-        # if round_failed:
-        #     for participant in waiting_participants:
-        #         participant.var.set("round_fail", True)
+        participants = participant.sync_group.participants
 
-        return participants
+        if len(participants) < 2:
+            return True
 
+        for p in participants:
+            if p.var.has("round_failed"):
+                return getattr(p.var, "round_failed")
+
+        return False

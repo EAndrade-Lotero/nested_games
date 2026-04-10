@@ -50,9 +50,7 @@ class NestedGameTrial(ChainTrial):
     def show_trial(self, experiment, participant):
 
         instructions_stage = self.instructions_stage()
-        n_pages = len(instructions_stage)
         timeout_at_barrier = TIMEOUT_WAITING_FOR_OTHER * len(instructions_stage)
-        expected_repetitions = timeout_at_barrier // WAIT_PAGE_TIME
 
         return join(
             #########################################
@@ -137,28 +135,7 @@ class NestedGameTrial(ChainTrial):
                     content="Waiting for the leader...",
                 )
             ),
-            CodeBlock(
-                lambda participant: self.check_round_failed(participant),
-            ),
         )
-
-    def check_round_failed(self, participant):
-
-        participants = self.participant.sync_group.participants
-
-        round_failed = False
-        for participant in participants:
-            if participant.var.has("round_fail"):
-                round_failed = True
-                break
-
-        logger.info("-" * 60)
-        logger.info(f"Did round fail? {round_failed} ")
-        logger.info("-" * 60)
-
-        if round_failed:
-            for participant in participants:
-                participant.var.set("round_fail", True)
 
     def outer_ultimatum_stage(self):
         return join(
@@ -202,6 +179,9 @@ class NestedGameTrial(ChainTrial):
 
         roles = None
         if proposer_id is not None:
+            # Check round failure
+            self.check_round_failed()
+
             # logger.info(f"The proposer is participant {proposer_id}")
             if proposer_id == self.participant.id:
                 roles = ["proposer", "responder"]
@@ -516,6 +496,20 @@ class NestedGameTrial(ChainTrial):
                 time_estimate=5,
             )
 
+    def check_round_failed(self):
+        participants = self.participant.sync_group.participants
+        assert len(participants) == 2
+        round_failed = False
+        for participant in participants:
+            if participant.var.has("fail_me"):
+                if participant.var.fail_me:
+                    round_failed = True
+                    participant.var.fail_me = False
+
+        if round_failed:
+            for participant in participants:
+                participant.var.round_failed = True
+
     def choose_new_outer_role(self):
         transition = self.participant.current_trial.definition['transition']
         participants = self.participant.sync_group.participants
@@ -532,6 +526,7 @@ class NestedGameTrial(ChainTrial):
             raise NotImplementedError
         for participant, role in zip(ordered, outer_roles):
             participant.var.outer_role = role
+            participant.var.round_failed = False
 
     def bid(self):
         max_value = variable_handler.get_value(

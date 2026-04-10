@@ -37,12 +37,15 @@ class CustomTimeline(Timeline):
 
             while not finished:
                 new_elt = self.increase_one_page(experiment, participant)
-                if new_elt is not None:
-                    new_elt.consume(experiment, participant)
 
                 if isinstance(new_elt, EndRoundPage):
                     finished = True
                     break
+
+                try:
+                    elt_id_max = participant.elt_id_max[-1]
+                except IndexError:
+                    raise Exception("End of timeline reached. No end round page found.")
 
                 if participant.elt_id[-1] == participant.elt_id_max[-1]:
                     raise Exception("End of timeline reached. No end round page found.")
@@ -80,6 +83,8 @@ class CustomTimeline(Timeline):
     @staticmethod
     def get_round_failed(participant):
         if participant.var.has("round_failed"):
-            return getattr(participant.var, "round_failed")
+            # round_failed = participant.var.round_failed
+            round_failed = getattr(participant.var, "round_failed")
+            return round_failed
         else:
             return False
