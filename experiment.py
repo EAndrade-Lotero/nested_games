@@ -65,7 +65,7 @@ waiting_trial_maker = PersonalityTrialMaker(
     id_="waiting",
     trial_class=WaitingTrial,
     nodes=waiting_nodes,
-    expected_trials_per_participant=3,
+    expected_trials_per_participant=max(1, MAX_NUM_WAITING_BIG_FIVE_QUESTIONS // 4),
     max_trials_per_participant=MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
     allow_repeated_nodes=True,  # allow participants to cycle or a bug will occur
 )
@@ -74,7 +74,7 @@ personality_trial_maker = PersonalityTrialMaker(
     id_="personality",
     trial_class=PersonalityTrial,
     nodes=personality_nodes,
-    expected_trials_per_participant=1,
+    expected_trials_per_participant=NUM_BIG_FIVE_QUESTIONS,
     max_trials_per_participant=NUM_BIG_FIVE_QUESTIONS,
     allow_repeated_nodes=False,
 )

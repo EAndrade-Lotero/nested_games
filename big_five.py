@@ -47,7 +47,7 @@ def format_text(text: str) -> str:
     return text
 
 
-full_items = pd.read_csv("static/big_five.csv").to_dict(orient="records")
+full_items = pd.read_csv("static/big_five_modified.csv").to_dict(orient="records")
 
 waiting_nodes = [
     StaticNode(
@@ -94,7 +94,10 @@ class PersonalityTrial(StaticTrial):
 
         return ModularPage(
             label=page_label,
-            prompt=Markup(text),
+            prompt=TimeoutPrompt(
+                text=Markup(text),
+                timeout=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
+            ),
             control=CustomLikertControl(
                 lowest_value="Very inaccurate",
                 highest_value="Very accurate",
