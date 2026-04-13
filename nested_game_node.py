@@ -27,7 +27,11 @@ class NestedGameNode(ChainNode):
 
         filtered_answers = [trial.answer for trial in filtered_trials]
         assert np.all([
-            answer is not None for answer in filtered_answers
+            (
+                answer is not None
+                and answer != "null"
+            )
+            for answer in filtered_answers
         ]), f"{[answer for answer in filtered_answers]}"
 
         ###################################
@@ -56,28 +60,32 @@ class NestedGameNode(ChainNode):
         assert outer_proposer is not None
         assert outer_responder is not None
 
+        round_failed = NestedGameNode.get_round_failed(trials)
+
         outer_proposal, outer_acceptance = self.get_outer_proposal(
-            outer_proposer, filtered_trials
+            outer_proposer, filtered_trials, round_failed
         )
         assert outer_proposal is not None
-        if outer_game == "ultimatum":
-            assert outer_acceptance is not None
+        if outer_game == "ultimatum" and not round_failed:
+            assert outer_acceptance is not None, f"====> Round failed: {[vars(trial) for trial in filtered_trials]}"
 
         inner_game = self.definition["inner_game"]
         inner_proposer, inner_responder = NestedGameNode.get_inner_proposer(
             outer_proposer, outer_proposal, filtered_trials
         )
-        assert inner_proposer is not None
-        assert inner_responder is not None
+        if not round_failed:
+            assert inner_proposer is not None
+            assert inner_responder is not None
 
         inner_proposal, inner_acceptance = self.get_inner_proposal(
             outer_game,
             outer_acceptance,
             inner_proposer,
             filtered_trials,
+            round_failed,
         )
 
-        if outer_acceptance != "Reject":
+        if outer_acceptance != "Reject" and not round_failed:
             assert inner_proposal is not None
             if inner_game == "ultimatum":
                 assert inner_acceptance is not None
@@ -95,10 +103,21 @@ class NestedGameNode(ChainNode):
             "inner_proposal": inner_proposal,
             "inner_acceptance": inner_acceptance,
             "accumulated_rewards": rewards,
+            "round_failed": round_failed,
         }
         self.definition["summary"] = summary
 
         return self.definition
+
+    @staticmethod
+    def get_round_failed(trials):
+        answers = [trial.answer for trial in trials]
+        values =[]
+        for answer in answers:
+            if len(answer) > 0:
+                values.extend(list(answer.values()))
+
+        return any([v == "No answer" for v in values])
 
     @staticmethod
     def get_outer_proposer(trials):
@@ -119,22 +138,30 @@ class NestedGameNode(ChainNode):
         else:
             return participant_ids[::-1]
 
-    def get_outer_proposal(self, outer_proposer, trials):
+    def get_outer_proposal(self, outer_proposer, trials, round_failed:bool):
         outer_proposal = None
         outer_acceptance = None
+
         for idx, trial in enumerate(trials):
+
             if trial.participant_id == outer_proposer:
                 outer_proposal = NestedGameNode.get_from_trial(
                     trial=trial,
                     variable="outer_proposal"
                 )
                 outer_game = self.definition["outer_game"]
+
                 if outer_game == "ultimatum":
-                    outer_acceptance = NestedGameNode.get_from_trial(
-                        trial=trials[1 - idx],
-                        variable="outer_accept_answer"
-                    )
+                    if round_failed:
+                        outer_acceptance = None
+                    else:
+                        outer_acceptance = NestedGameNode.get_from_trial(
+                            trial=trials[1 - idx],
+                            variable="outer_accept_answer"
+                        )
+
                 break
+
         return outer_proposal, outer_acceptance
 
     @staticmethod
@@ -154,7 +181,14 @@ class NestedGameNode(ChainNode):
             inner_responder = outer_proposer
         return inner_proposer, inner_responder
 
-    def get_inner_proposal(self, outer_game, outer_acceptance, inner_proposer, trials):
+    def get_inner_proposal(
+        self,
+        outer_game,
+        outer_acceptance,
+        inner_proposer,
+        trials,
+        round_failed:bool
+    ):
 
         if outer_game == "ultimatum":
             if outer_acceptance == "Reject":
@@ -163,21 +197,22 @@ class NestedGameNode(ChainNode):
         inner_proposal = None
         inner_acceptance = None
 
-        for idx, trial in enumerate(trials):
+        if not round_failed:
+            for idx, trial in enumerate(trials):
 
-            if trial.participant_id == inner_proposer:
-                inner_proposal = NestedGameNode.get_from_trial(
-                    trial=trial,
-                    variable="inner_proposal"
-                )
-                inner_game = self.definition["inner_game"]
-
-                if inner_game == "ultimatum":
-                    inner_acceptance = NestedGameNode.get_from_trial(
-                        trial=trials[1 - idx],
-                        variable="inner_accept_answer"
+                if trial.participant_id == inner_proposer:
+                    inner_proposal = NestedGameNode.get_from_trial(
+                        trial=trial,
+                        variable="inner_proposal"
                     )
-                break
+                    inner_game = self.definition["inner_game"]
+
+                    if inner_game == "ultimatum":
+                        inner_acceptance = NestedGameNode.get_from_trial(
+                            trial=trials[1 - idx],
+                            variable="inner_accept_answer"
+                        )
+                    break
 
         return inner_proposal, inner_acceptance
 
@@ -195,9 +230,12 @@ class NestedGameNode(ChainNode):
                 and value != 'INVALID_RESPONSE'
             )
         ]
-        err_msg = f"Error while finding a value for {variable}\n"
-        err_msg += f"The observed trial answer was {trial.answer}\n"
-        err_msg += f"The initial values observed were {initial_values}\n"
-        err_msg += f"The non-empty values found were {values}"
-        assert len(values) == 1, err_msg
-        return values[0]
+        if len(values) == 1:
+            return values[0]
+        else:
+            err_msg = f"Warning while finding a value for {variable}\n"
+            err_msg += f"The observed trial answer was {trial.answer}\n"
+            err_msg += f"The initial values observed were {initial_values}\n"
+            err_msg += f"The non-empty values found were {values}"
+            logger.info(err_msg)
+            return None

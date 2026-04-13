@@ -24,7 +24,7 @@ from .game_paramters import (
     REWARD_SCALING_FACTOR,
     MAX_BONUS_REWARD,
     TIMEOUT_WAITING_FOR_OTHER,
-    WAIT_PAGE_TIME,
+    MAX_TIMEOUT_ROUNDS,
     RNG,
 )
 from .instructions import get_instructions
@@ -463,6 +463,9 @@ class NestedGameTrial(ChainTrial):
         # logger.info(f"{proposal} --- {remainder} --- {accept_answer}")
 
         if proposal is not None:
+
+            if self.participant.var.num_rounds_failed == MAX_TIMEOUT_ROUNDS:
+                self.fail("Timeout reached")
 
             if accept_answer == "Reject":
                 score = 0

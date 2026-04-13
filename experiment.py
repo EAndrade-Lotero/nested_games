@@ -42,6 +42,7 @@ def assign_roles(group, participants):
         participant.var.outer_role = role
         participant.var.accumulated_reward = 0
         participant.var.round_failed = False
+        participant.var.num_rounds_failed = 0
 
 
 def get_start_nodes():
