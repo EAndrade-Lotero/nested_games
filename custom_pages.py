@@ -76,8 +76,6 @@ class OuterProposalPage(ModularPage):
             f"<h2>Preparation phase</h2>"
             f"<br>"
             f"<p>Choose who will take on the role of PROPOSER: </p>"
-            f"<p>When you are ready, press the 'Next' button (scroll down the page if necessary). </p>"
-            f"<p>(If you don't press the 'Next' button within {TIMEOUT_PROPOSALS} seconds, a random choice will be made for you). </p>"
         ))
         control = CustomControl(
             context=context,

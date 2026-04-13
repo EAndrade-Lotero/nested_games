@@ -503,15 +503,14 @@ class NestedGameTrial(ChainTrial):
         assert len(participants) == 2
         round_failed = False
         for participant in participants:
-            if participant.var.has("round_failed"):
-                if participant.var.round_failed:
+            if participant.var.has("fail_me"):
+                if participant.var.fail_me:
                     round_failed = True
         return round_failed
 
     def check_round_failed(self):
         round_failed = self.did_round_fail()
         if round_failed:
-            logger.info(f"Round {self.position} failed!!!!")
             participants = self.participant.sync_group.participants
             for participant in participants:
                 participant.var.round_failed = True
@@ -533,6 +532,7 @@ class NestedGameTrial(ChainTrial):
         for participant, role in zip(ordered, outer_roles):
             participant.var.outer_role = role
             participant.var.round_failed = False
+            participant.var.fail_me = False
 
     def bid(self):
         max_value = variable_handler.get_value(
