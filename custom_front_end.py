@@ -76,6 +76,7 @@ class OuterPrompt(Prompt):
         context:Dict[str, str],
         time_estimate:int,
         external_template:str,
+        round_:int,
     ) -> None:
         super().__init__()
         self.text = text
@@ -86,6 +87,8 @@ class OuterPrompt(Prompt):
         self.timeout = time_estimate
         self.macro = external_template.split(".")[0]
         self.external_template = external_template
+        self.round = round_
+        self.num_rounds = NUMBER_OF_REPEATED_GAMES
 
 
 class InnerPrompt(OuterPrompt):
@@ -98,6 +101,7 @@ class InnerPrompt(OuterPrompt):
         context:Dict[str, str],
         time_estimate:int,
         external_template:str,
+        round_:int,
     ) -> None:
         super().__init__(
             text=text,
@@ -105,6 +109,7 @@ class InnerPrompt(OuterPrompt):
             context=context,
             time_estimate=time_estimate,
             external_template=external_template,
+            round_=round_,
         )
         self.endowment = endowment
 
@@ -167,6 +172,7 @@ class InnerProposalControl(Control):
         endowment:int,
         context: Dict[str, str],
         time_estimate: int,
+        round_:int,
     ) -> None:
         super().__init__()
 
@@ -182,6 +188,8 @@ class InnerProposalControl(Control):
         self.generic_url = context["generic_url"]
         self.plate_url = context["plate_url"]
         self.timeout = time_estimate
+        self.round = round_
+        self.num_rounds = NUMBER_OF_REPEATED_GAMES
 
 
 class InnerControl(CustomControl):

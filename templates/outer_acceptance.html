@@ -31,6 +31,17 @@
         gap: 20px;
     }
 
+    #phase-label {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-family: "Book Antiqua", Palatino, serif;
+        font-size: 22px;
+        font-weight: bold;
+        color: rgb(83, 83, 83);
+        text-align: right;
+    }
+
     #countdown {
       position: absolute;
       top: 15px;
@@ -160,6 +171,10 @@
 
   <div id="countdown">02:00</div>
 
+  <div id="phase-label">
+    Round {{ config.round }} / {{ config.num_rounds }}
+  </div>
+
   <!-- TOP PLACE -->
   <div class="zone center-top">
     <div class="rectangle">RESPONDER</div>
@@ -216,6 +231,8 @@
             "done",
             {info: "timeout"}
           );
+        const timeoutProposer = "No answer";
+        psynet.nextPage(timeoutProposer);
       }
     }
 

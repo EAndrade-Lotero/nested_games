@@ -146,6 +146,7 @@ class NestedGameTrial(ChainTrial):
                 logic_if_false=OuterAcceptancePage(
                     context=self.context,
                     proposal=self.get_outer_proposal(),
+                    round_=self.position + 1,
                 ),
                 logic_if_true=None,
             ),
@@ -292,8 +293,16 @@ class NestedGameTrial(ChainTrial):
                 logic_if_true=conditional(
                     label="feedback_depending_on_outer_game",
                     condition=lambda participant: participant.current_trial.definition['outer_game'] == "dictator",
-                    logic_if_true=InnerProposalPage("dictator", self.context),
-                    logic_if_false=InnerProposalPage("ultimatum", self.context),
+                    logic_if_true=InnerProposalPage(
+                        game="dictator",
+                        context=self.context,
+                        round_=self.position + 1,
+                    ),
+                    logic_if_false=InnerProposalPage(
+                        game="ultimatum",
+                        context=self.context,
+                        round_=self.position + 1,
+                    ),
                 ),
             ),
             CustomBarrier(
@@ -319,6 +328,7 @@ class NestedGameTrial(ChainTrial):
                 logic_if_false=InnerAcceptancePage(
                     context=self.context,
                     proposal=self.get_inner_proposal(),
+                    round_=self.position + 1,
                 ),
                 logic_if_true=None,
             ),
@@ -370,7 +380,7 @@ class NestedGameTrial(ChainTrial):
             return inner_role == 'proposer'
         return None
 
-    def get_inner_proposal(self) -> Union[int, None]:
+    def get_inner_proposal(self) -> Union[int, str, None]:
         participants = self.participant.sync_group.participants
         assert len(participants) == 2
 
@@ -380,7 +390,8 @@ class NestedGameTrial(ChainTrial):
             if self.is_the_inner_leader(participant):
                 proposal = variable_handler.get_value(participant, 'inner_proposal')
                 if proposal is not None:
-                    proposal = int(proposal)
+                    if proposal != "No answer":
+                        proposal = int(proposal)
                 break
 
         return proposal
@@ -404,8 +415,9 @@ class NestedGameTrial(ChainTrial):
                     # )
                     proposal = variable_handler.get_value(participant, 'inner_proposal')
                     if proposal is not None:
-                        proposal = int(proposal)
-                        remainder = 10 - int(proposal)
+                        if proposal != "No answer":
+                            proposal = int(proposal)
+                            remainder = 10 - int(proposal)
                 else:
                     # proposal = VariableHandler.get_from_answer(
                     #     answer=participant.current_trial.answer,

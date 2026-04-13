@@ -1,37 +1,56 @@
 {% macro inner_proposal(config) %}
 
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-
-<style>
-    body {
+<div class="inner-proposal-root">
+  <style>
+    .inner-proposal-root {
       font-family: Arial, sans-serif;
+      box-sizing: border-box;
+      max-width: 100%;
+      padding: 0.25rem 0 1rem;
+    }
+
+    .inner-proposal-root *,
+    .inner-proposal-root *::before,
+    .inner-proposal-root *::after {
+      box-sizing: inherit;
+    }
+
+    .inner-proposal-root .inner-proposal-text {
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      margin-bottom: 0.75rem;
+    }
+
+    .inner-proposal-root .inner-proposal-tabletop {
+      width: 700px;
+      max-width: 100%;
+      min-height: 400px;
       background: #eceaea;
-      display: block;
-      justify-content: center;
-      align-items: flex-start; /* ← change this */
-      min-height: 100vh;
-      margin: 0;
-      overflow-y: auto;
-      padding-top: 20px; /* optional spacing from top */
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      margin-left: auto;
+      margin-right: auto;
+      gap: 20px;
     }
 
-    .tabletop {
-        width: 700px;
-        min-height: 400px;
-        background: #eceaea;
-        border-radius: 20px;
-        padding: 20px;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
-        margin: auto;
-        gap: 20px;
+    .inner-proposal-root .inner-proposal-phase-label {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-family: "Book Antiqua", Palatino, serif;
+        font-size: 22px;
+        font-weight: bold;
+        color: rgb(83, 83, 83);
+        text-align: right;
     }
 
-    #countdown {
+    .inner-proposal-root .inner-proposal-countdown {
       position: absolute;
       top: 15px;
       left: 20px;
@@ -41,7 +60,7 @@
       color: rgb(83, 83, 83);
     }
 
-    .zone {
+    .inner-proposal-root .inner-proposal-zone {
       border: 2px solid #365c5c;
       border-radius: 12px;
       padding: 15px;
@@ -51,17 +70,19 @@
       gap: 10px;
     }
 
-    .center-top {
-        width: 300px;
-        height: 280px;
+    .inner-proposal-root .inner-proposal-center-top {
+      width: 300px;
+      max-width: 100%;
+      height: 280px;
     }
 
-    .center-middle {
-        width: 200px;
-        height: 220px;
+    .inner-proposal-root .inner-proposal-center-middle {
+      width: 200px;
+      max-width: 100%;
+      height: 220px;
     }
 
-    .rectangle {
+    .inner-proposal-root .inner-proposal-rectangle {
       width: 150px;
       height: 50px;
       background: rgb(221, 233, 255);
@@ -73,8 +94,9 @@
       letter-spacing: 1px;
     }
 
-    .basket {
+    .inner-proposal-root .inner-proposal-basket {
       width: 200px;
+      max-width: 100%;
       height: 100px;
       aspect-ratio: 1 / 1;
       background-image: url("../static/plate.png");
@@ -90,24 +112,24 @@
       padding: 10px;
     }
 
-    .coin-pile {
+    .inner-proposal-root .inner-proposal-coin-pile {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
       justify-content: center;
     }
 
-    .coin {
+    .inner-proposal-root .inner-proposal-coin {
       width: 25px;
       aspect-ratio: 1 / 1;
       background-image: url("../static/coin.png");
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
-      cursor: grab;
+      cursor: default;
     }
 
-    .avatar {
+    .inner-proposal-root .inner-proposal-avatar {
       width: 80px;
       height: 80px;
       background-image: url("../static/generic.png");
@@ -115,21 +137,16 @@
       background-position: center;
       border-radius: 50%;
       position: relative;
-      cursor: grab;
       user-select: none;
       color: white;
       font-weight: bold;
     }
 
-    .avatar.partner {
+    .inner-proposal-root .inner-proposal-avatar.partner {
       background-image: url("../static/generic.png");
     }
 
-    .avatar.dragging {
-      opacity: 0.5;
-    }
-
-    .avatar-label {
+    .inner-proposal-root .inner-proposal-avatar-label {
       position: absolute;
       bottom: 4px;
       left: 50%;
@@ -140,10 +157,11 @@
       border-radius: 6px;
     }
 
-    .avatarzone {
+    .inner-proposal-root .inner-proposal-avatarzone {
       min-height: 90px;
       width: 30%;
-      border: 0px dashed rgb(55, 0, 255);
+      min-width: 80px;
+      border: 0 dashed rgb(55, 0, 255);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -151,33 +169,28 @@
       text-align: center;
     }
 
-    .dropzone .avatar {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
+    .inner-proposal-root .inner-proposal-card {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
-    .card {
-        border: 1px solid #ddd;
-        border-radius: 12px;
-        padding: 16px;
-        margin-top: 30px;
-        margin-bottom: 30px;
-    }
-    label { display: grid; gap: 6px; font-size: 14px; }
-    input[type="number"] {
-      width: 160px;
-        padding: 8px 10px;
-        border: 1px solid #ccc;
-        border-radius: 10px;
+    .inner-proposal-root .inner-proposal-slider-row {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
     }
 
-    .slider-row { display: grid; gap: 10px; margin-top: 8px; }
-    input[type="range"] { width: 100%; }
+    .inner-proposal-root .inner-proposal-slider-row input[type="range"] {
+      width: 100%;
+    }
 
-    /* New: min (left), current (center, bigger), max (right) */
-    .min-current-max {
+    .inner-proposal-root .inner-proposal-min-current-max {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
@@ -185,214 +198,225 @@
       font-size: 14px;
       margin-top: 2px;
     }
-    .min-current-max .min { justify-self: start; }    .final-note {
-        margin-top: 2em;
-        font-weight: bold;
+
+    .inner-proposal-root .inner-proposal-min-current-max .inner-proposal-min {
+      justify-self: start;
     }
-    .min-current-max .max { justify-self: end; }
-    .min-current-max .current {
+
+    .inner-proposal-root .inner-proposal-min-current-max .inner-proposal-max {
+      justify-self: end;
+    }
+
+    .inner-proposal-root .inner-proposal-min-current-max .inner-proposal-current {
       justify-self: center;
-      font-size: 18px; /* a bit larger */
+      font-size: 18px;
       font-weight: 700;
       padding: 2px 10px;
       border-radius: 999px;
       background: #f4f4f6;
     }
+  </style>
 
-</style>
-</head>
+  <div class="inner-proposal-text">{{ config.text }}</div>
 
-<div>{{ config.text }}</div>
-<div class="tabletop">
+  <div class="inner-proposal-tabletop">
 
-  <div id="countdown">02:00</div>
+    <div class="inner-proposal-countdown" id="inner-proposal-countdown">00:00</div>
 
-  <!-- TOP PLACE -->
-  <div class="zone center-top">
-    <div class="rectangle">RESPONDER</div>
-    <div class="avatarzone">
-        <div class="avatar partner" draggable="false" id="partner">
-            <span class="avatar-label">Partner</span>
+    <div class="inner-proposal-phase-label">
+        Round {{ config.round }} / {{ config.num_rounds }}
+    </div>
+
+    <div class="inner-proposal-zone inner-proposal-center-top">
+      <div class="inner-proposal-rectangle">RESPONDER</div>
+      <div class="inner-proposal-avatarzone">
+        <div class="inner-proposal-avatar partner" draggable="false" id="partner">
+          <span class="inner-proposal-avatar-label">Partner</span>
         </div>
+      </div>
+      <div class="inner-proposal-basket" id="inner-proposal-basket"></div>
     </div>
-    <div class="basket" id="basket"></div>
-  </div>
 
-  <!-- SECOND PLACE (DROP TARGET) -->
-  <div class="zone center-middle">
-    <div class="rectangle">PROPOSER</div>
-    <div class="avatarzone" id="dropzone">
-        <div class="avatar" draggable="false" id="me">
-            <span class="avatar-label">Me</span>
+    <div class="inner-proposal-zone inner-proposal-center-middle">
+      <div class="inner-proposal-rectangle">PROPOSER</div>
+      <div class="inner-proposal-avatarzone">
+        <div class="inner-proposal-avatar" draggable="false" id="me">
+          <span class="inner-proposal-avatar-label">Me</span>
         </div>
+      </div>
+      <div class="inner-proposal-coin-pile" id="inner-proposal-coin-pile">
+        {% for i in range(1, 11) %}
+        <div
+          class="inner-proposal-coin"
+          draggable="false"
+          id="inner-proposal-coin-{{ i }}"
+        ></div>
+        {% endfor %}
+      </div>
     </div>
-    <div class="coin-pile" id="coinPile">
-        <div class="coin" draggable="false" id="coin1"></div>
-        <div class="coin" draggable="false" id="coin2"></div>
-        <div class="coin" draggable="false" id="coin3"></div>
-        <div class="coin" draggable="false" id="coin4"></div>
-        <div class="coin" draggable="false" id="coin5"></div>
-        <div class="coin" draggable="false" id="coin6"></div>
-        <div class="coin" draggable="false" id="coin7"></div>
-        <div class="coin" draggable="false" id="coin8"></div>
-        <div class="coin" draggable="false" id="coin9"></div>
-        <div class="coin" draggable="false" id="coin10"></div>
+
+  </div>
+
+  <div class="inner-proposal-card">
+    <div class="inner-proposal-slider-row">
+      <input id="inner-proposal-slider" type="range" />
+
+      <div class="inner-proposal-min-current-max">
+        <div class="inner-proposal-min">
+          Min: <strong id="inner-proposal-min-label"></strong>
+        </div>
+        <div class="inner-proposal-current">
+          <span id="inner-proposal-current-label"></span> coins
+        </div>
+        <div class="inner-proposal-max">
+          Max: <strong id="inner-proposal-max-label"></strong>
+        </div>
+      </div>
     </div>
   </div>
 
-  </div>
-<div class="card">
-<div class="slider-row">
-  <input id="slider" type="range" />
+  <script>
+    (function () {
+      const root = document.currentScript.closest(".inner-proposal-root");
+      if (!root) return;
 
-  <div class="min-current-max">
-    <div class="min">Min: <strong id="minLabel"></strong></div>
-    <div class="current"><span id="currentLabel"></span> coins</div>
-    <div class="max">Max: <strong id="maxLabel"></strong></div>
-  </div>
-</div>
-</div>
+      const basket = root.querySelector("#inner-proposal-basket");
+      const coinPile = root.querySelector("#inner-proposal-coin-pile");
+      const TOTAL_COINS = {{ config.endowment }};
 
-<script>
-    const basket = document.getElementById("basket");
-    const coinPile = document.getElementById("coinPile");
-    const TOTAL_COINS = {{ config.endowment }}; // adjust if needed
+      function updateCoins(value) {
+        basket.innerHTML = "";
+        coinPile.innerHTML = "";
 
-    function updateCoins(value) {
-      basket.innerHTML = "";
-      coinPile.innerHTML = "";
+        const basketCoins = Math.round(value);
+        const pileCoins = TOTAL_COINS - basketCoins;
 
-      const basketCoins = Math.round(value);
-      const pileCoins = TOTAL_COINS - basketCoins;
+        for (let i = 0; i < basketCoins; i++) {
+          const coin = document.createElement("div");
+          coin.classList.add("inner-proposal-coin");
+          basket.appendChild(coin);
+        }
 
-      // Fill basket
-      for (let i = 0; i < basketCoins; i++) {
-        const coin = document.createElement("div");
-        coin.classList.add("coin");
-        basket.appendChild(coin);
+        for (let i = 0; i < pileCoins; i++) {
+          const coin = document.createElement("div");
+          coin.classList.add("inner-proposal-coin");
+          coinPile.appendChild(coin);
+        }
       }
 
-      // Fill remaining pile
-      for (let i = 0; i < pileCoins; i++) {
-        const coin = document.createElement("div");
-        coin.classList.add("coin");
-        coinPile.appendChild(coin);
+      let timeRemaining = {{ config.timeout }};
+
+      function updateClock() {
+        const countdownEl = root.querySelector("#inner-proposal-countdown");
+        if (!countdownEl) return;
+
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        countdownEl.textContent =
+          `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+        if (timeRemaining > 0) {
+          timeRemaining--;
+        } else {
+          clearInterval(timer);
+            document.dispatchEvent(new Event("done"));
+            psynet.trial.registerEvent(
+                "done",
+                {info: "timeout"}
+              );
+            const timeoutProposer = "No answer";
+            psynet.nextPage(timeoutProposer);
+        }
       }
-    }
 
-    let timeRemaining = {{ config.timeout }};
+      updateClock();
+      const timer = setInterval(updateClock, 1000);
 
-    function updateClock() {
-      const minutes = Math.floor(timeRemaining / 60);
-      const seconds = timeRemaining % 60;
+      const slider = root.querySelector("#inner-proposal-slider");
+      const minLabel = root.querySelector("#inner-proposal-min-label");
+      const maxLabel = root.querySelector("#inner-proposal-max-label");
+      const currentLabel = root.querySelector("#inner-proposal-current-label");
 
-      document.getElementById("countdown").textContent =
-        `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+      const use_percentage = {{ config.use_percentage | tojson }};
+      const integer_rule_true = {{ (config.integer_rule == True) | tojson }};
 
-      if (timeRemaining > 0) {
-        timeRemaining--;
-      } else {
-        clearInterval(timer);
-        console.log(`${timeRemaining} seconds`);
-        document.dispatchEvent(new Event("done"));
-        psynet.trial.registerEvent(
-            "done",
-            {info: "timeout"}
-          );
+      function clamp(x, lo, hi) {
+        return Math.min(hi, Math.max(lo, x));
       }
-    }
 
-    updateClock();
-
-    const timer = setInterval(updateClock, 1000);
-
-    const slider = document.getElementById("slider");
-    const minLabel = document.getElementById("minLabel");
-    const maxLabel = document.getElementById("maxLabel");
-    const currentLabel = document.getElementById("currentLabel");
-
-    const use_percentage = "{{ config.use_percentage }}";
-
-    function clamp(x, lo, hi) {
-      return Math.min(hi, Math.max(lo, x));
-    }
-
-    function computeStep(min, max, steps) {
-      if ("{{ config.integer_rule }}" === "True") {
+      function computeStep(min, max, steps) {
+        if (integer_rule_true) {
           return (max + 1 - min) / steps;
-      }  else {
-          return (max - min) / steps;
+        }
+        return (max - min) / steps;
       }
-    }
 
-    function formatNumber(x) {
-      if (Number.isInteger(x)) return String(x);
-      return x.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
-    }
+      function formatNumber(x) {
+        if (Number.isInteger(x)) return String(x);
+        return x.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+      }
 
-    function snapToStep(value, min, step) {
-      const k = Math.round((value - min) / step);
-      return min + k * step;
-    }
+      function snapToStep(value, min, step) {
+        const k = Math.round((value - min) / step);
+        return min + k * step;
+      }
 
-    function updateSliderConfig(keepCurrent = true) {
-      let min = {{ config.min_value }};
-      let max = {{ config.max_value }};
-      let steps = {{ config.n_steps }};
+      function updateSliderConfig() {
+        let min = {{ config.min_value }};
+        let max = {{ config.max_value }};
+        let steps = {{ config.n_steps }};
 
-      const step = computeStep(min, max, steps);
+        const step = computeStep(min, max, steps);
 
-      slider.min = String(min);
-      slider.max = String(max);
-      slider.step = String(step);
+        slider.min = String(min);
+        slider.max = String(max);
+        slider.step = String(step);
 
-      let current = Number({{ config.start_value }});
+        let current = Number({{ config.start_value }});
 
-      current = clamp(current, min, max);
-      current = snapToStep(current, min, step);
-      slider.value = String(current);
+        current = clamp(current, min, max);
+        current = snapToStep(current, min, step);
+        slider.value = String(current);
 
-      if (use_percentage  === "True") {
+        if (use_percentage) {
           minLabel.textContent = String(0);
           maxLabel.textContent = String(100);
           currentLabel.textContent = formatNumber(current * 100);
-      } else {
+        } else {
           minLabel.textContent = formatNumber(min);
           maxLabel.textContent = formatNumber(max);
           currentLabel.textContent = formatNumber(current);
-      }
-    }
-
-    function onSliderInput() {
-      const min = Number(slider.min);
-      const max = Number(slider.max);
-      const step = Number(slider.step);
-
-      let v = Number(slider.value);
-      v = clamp(v, min, max);
-      v = snapToStep(v, min, step);
-      slider.value = String(v);
-
-      if (use_percentage  === "True") {
-        currentLabel.textContent = formatNumber(v * 100);
-      } else {
-        currentLabel.textContent = formatNumber(v);
+        }
       }
 
-      updateCoins(v);
-    }
+      function onSliderInput() {
+        const min = Number(slider.min);
+        const max = Number(slider.max);
+        const step = Number(slider.step);
 
-    slider.addEventListener("input", onSliderInput);
+        let v = Number(slider.value);
+        v = clamp(v, min, max);
+        v = snapToStep(v, min, step);
+        slider.value = String(v);
 
-    updateSliderConfig(false);
+        if (use_percentage) {
+          currentLabel.textContent = formatNumber(v * 100);
+        } else {
+          currentLabel.textContent = formatNumber(v);
+        }
 
+        updateCoins(v);
+      }
 
-    /////////////////////////////////////////////////////
-    // Function to stage the response for PsyNet
-    /////////////////////////////////////////////////////
-    psynet.stageResponse = function() {
-          psynet.response.staged.rawAnswer = slider.value;
-    }
+      slider.addEventListener("input", onSliderInput);
 
-</script>
+      updateSliderConfig();
+
+      psynet.stageResponse = function () {
+        psynet.response.staged.rawAnswer = slider.value;
+      };
+    })();
+  </script>
+</div>
+
 {% endmacro %}

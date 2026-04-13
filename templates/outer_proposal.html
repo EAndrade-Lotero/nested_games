@@ -1,8 +1,5 @@
 {% macro outer_proposal(config) %}
 
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -182,8 +179,6 @@
         transform: translate(-50%, -50%);
     }
 </style>
-</head>
-
 
 <div class="tabletop">
 
@@ -292,7 +287,6 @@
             timeRemaining--;
         } else {
             clearInterval(timer);
-            console.log(`${timeRemaining} seconds`);
             document.dispatchEvent(new Event("done"));
             psynet.trial.registerEvent(
                 "done",

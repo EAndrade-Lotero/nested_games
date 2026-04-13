@@ -79,8 +79,7 @@ class OuterProposalPage(ModularPage):
         ))
         control = CustomControl(
             context=context,
-            time_estimate=5,
-            # time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=TIMEOUT_PROPOSALS,
             external_template="outer_proposal.html",
             round_=round_
         )
@@ -154,19 +153,23 @@ class CustomWaitingPage(Page):
 
 class OuterAcceptancePage(ModularPage):
 
-    def __init__(self, context: Dict[str, str], proposal: str) -> None:
+    def __init__(
+        self,
+        context: Dict[str, str],
+        proposal: str,
+        round_: int,
+    ) -> None:
         assert proposal in [None, "PROPOSER", "RESPONDER"]
 
         prompt = OuterPrompt(
             text=(
                 f"<p>Do you accept your partner's proposal of you to be the {proposal}? </p>"
-                f"<p>When you are ready, press the 'Next' button (scroll down the page if necessary). </p>"
-                f"<p>(If you don't press the 'Next' button within {TIMEOUT_PROPOSALS} seconds, a random choice will be made for you). </p>"
             ),
             proposal=proposal,
             context=context,
             time_estimate=TIMEOUT_PROPOSALS,
             external_template="outer_acceptance.html",
+            round_=round_,
         )
         control = PushButtonControl(
             choices=["Accept", "Reject"],
@@ -178,14 +181,29 @@ class OuterAcceptancePage(ModularPage):
             label="outer_accept_answer",
             prompt=prompt,
             control=control,
-            time_estimate=5,
+            time_estimate=TIMEOUT_PROPOSALS,
             save_answer="outer_accept_answer",
         )
+
+    def format_answer(self, raw_answer, **kwargs):
+        metadata = kwargs.get("metadata") or {}
+        participant = kwargs.get("participant")
+        if participant is not None:
+            event_log = metadata.get("event_log") or []
+            if any(entry.get("eventType") == "done" for entry in event_log):
+                participant.var.fail_me = True
+                participant.var.num_rounds_failed += 1
+        return super().format_answer(raw_answer, **kwargs)
 
 
 class InnerProposalPage(ModularPage):
 
-    def __init__(self, game:str, context: Dict[str, str]):
+    def __init__(
+        self,
+        game:str,
+        context: Dict[str, str],
+        round_: int,
+    ) -> None:
         assert game in ["ultimatum", "dictator"], f"Error: {game} is not a valid game type"
 
         text = f"<h2>Proposal phase</h2>"
@@ -195,8 +213,8 @@ class InnerProposalPage(ModularPage):
             text += f"<p>Proposal accepted. You are the PROPOSER. </p>"
 
         text += f"<p>Use the slider below to decide how many of the {ENDOWMENT} coins you will give to your partner: <p/>"
+        text += f"<p>Press the 'Next' button when you are ready.</p>"
         text += f"<p>(Scroll down the page if necessary.)</p>"
-        text += f"<p>(If you don't press the 'Next' button within {TIMEOUT_PROPOSALS} seconds, a random choice will be made for you). </p>"
         text += f"<br>"
 
         prompt = Markup(text)
@@ -204,6 +222,7 @@ class InnerProposalPage(ModularPage):
             endowment=ENDOWMENT,
             context=context,
             time_estimate=TIMEOUT_PROPOSALS,
+            round_=round_,
         )
         super().__init__(
             label="inner_proposal",
@@ -213,10 +232,25 @@ class InnerProposalPage(ModularPage):
             save_answer="inner_proposal",
         )
 
+    def format_answer(self, raw_answer, **kwargs):
+        metadata = kwargs.get("metadata") or {}
+        participant = kwargs.get("participant")
+        if participant is not None:
+            event_log = metadata.get("event_log") or []
+            if any(entry.get("eventType") == "done" for entry in event_log):
+                participant.var.fail_me = True
+                participant.var.num_rounds_failed += 1
+        return super().format_answer(raw_answer, **kwargs)
+
 
 class InnerAcceptancePage(ModularPage):
 
-    def __init__(self, context: Dict[str, str], proposal: int) -> None:
+    def __init__(
+        self,
+        context: Dict[str, str],
+        proposal: int,
+        round_: int,
+    ) -> None:
 
         prompt = InnerPrompt(
             text=(
@@ -228,6 +262,7 @@ class InnerAcceptancePage(ModularPage):
             context=context,
             time_estimate=TIMEOUT_PROPOSALS,
             external_template="inner_acceptance.html",
+            round_=round_,
         )
         control = PushButtonControl(
             choices=["Accept", "Reject"],
@@ -239,7 +274,7 @@ class InnerAcceptancePage(ModularPage):
             label="inner_accept_answer",
             prompt=prompt,
             control=control,
-            time_estimate=5,
+            time_estimate=TIMEOUT_PROPOSALS,
             save_answer="inner_accept_answer",
         )
 
