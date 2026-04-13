@@ -41,6 +41,7 @@ def assign_roles(group, participants):
     for participant, role in zip(ordered, outer_roles):
         participant.var.outer_role = role
         participant.var.accumulated_reward = 0
+        participant.var.round_failed = False
 
 
 def get_start_nodes():

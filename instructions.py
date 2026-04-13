@@ -5,6 +5,7 @@ from psynet.graphics import Prompt
 from psynet.modular_page import (
     ModularPage,
     PushButtonControl,
+    NullControl,
 )
 
 from .game_paramters import (
@@ -12,6 +13,7 @@ from .game_paramters import (
     TIMEOUT_PROPOSALS,
     NUMBER_OF_REPEATED_GAMES,
 )
+from .custom_front_end import TimeoutPrompt
 from .custom_pages import CustomInfoPage
 
 OBJECTIVE = f"""
@@ -166,8 +168,13 @@ def get_instructions(
         #     Markup(proposal_phase),
         #     time_estimate=TIMEOUT_PROPOSALS,
         # ),
-        CustomInfoPage(
-            Markup(example_text),
+        ModularPage(
+            label="Instructions",
+            prompt=TimeoutPrompt(
+                text=Markup(example_text),
+                timeout=TIMEOUT_PROPOSALS,
+            ),
+            control=NullControl(),
             time_estimate=TIMEOUT_PROPOSALS,
         ),
     )

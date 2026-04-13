@@ -255,12 +255,14 @@ class ScorePage(EndRoundPage):
         accumulated_score: int,
         partners_accumulated_score: int,
         accepted: Optional[bool] = True,
+        round_failed: Optional[bool] = False,
     ) -> None:
 
         if proposer:
             score = remainder_
         else:
             score = proposal
+        self.score = score
 
         prompt = ScorePrompt(
             proposer=proposer,
@@ -268,8 +270,9 @@ class ScorePage(EndRoundPage):
             remainder_=remainder_,
             accumulated_score=accumulated_score,
             partners_accumulated_score=partners_accumulated_score,
-            time_estimate=TIMEOUT_WAITING_FOR_OTHER,
+            timeout=TIMEOUT_WAITING_FOR_OTHER,
             accepted=accepted,
+            round_failed=round_failed,
         )
 
         super().__init__(
@@ -281,17 +284,11 @@ class ScorePage(EndRoundPage):
             ),
             time_estimate=5,
             save_answer="reward",
-            events={
-                "done": Event(
-                    is_triggered_by="done",
-                    js=(
-                        "psynet.response.disable(); psynet.submit.disable(); "
-                        f"psynet.nextPage({json.dumps(score)});"
-                    ),
-                    delay=0.0,
-                ),
-            },
         )
+
+    def format_answer(self, raw_answer, **kwargs):
+        return int(self.score)
+
 
 
 

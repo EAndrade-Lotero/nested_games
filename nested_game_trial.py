@@ -453,6 +453,7 @@ class NestedGameTrial(ChainTrial):
                 accumulated_score=my_accumulated_score,
                 partners_accumulated_score=partners_accumulated_score,
                 accepted=False,
+                round_failed=self.did_round_fail(),
             )
 
         dict_result = self.get_inner_result()
@@ -483,6 +484,7 @@ class NestedGameTrial(ChainTrial):
                 remainder_=remainder_,
                 accumulated_score=my_accumulated_score,
                 partners_accumulated_score=partners_accumulated_score,
+                round_failed=self.did_round_fail(),
             )
         else:
             return EndRoundPage(
@@ -496,17 +498,21 @@ class NestedGameTrial(ChainTrial):
                 time_estimate=5,
             )
 
-    def check_round_failed(self):
+    def did_round_fail(self):
         participants = self.participant.sync_group.participants
         assert len(participants) == 2
         round_failed = False
         for participant in participants:
-            if participant.var.has("fail_me"):
-                if participant.var.fail_me:
+            if participant.var.has("round_failed"):
+                if participant.var.round_failed:
                     round_failed = True
-                    participant.var.fail_me = False
+        return round_failed
 
+    def check_round_failed(self):
+        round_failed = self.did_round_fail()
         if round_failed:
+            logger.info(f"Round {self.position} failed!!!!")
+            participants = self.participant.sync_group.participants
             for participant in participants:
                 participant.var.round_failed = True
 

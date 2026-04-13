@@ -34,28 +34,35 @@ class ScorePrompt(Prompt):
         remainder_: int,
         accumulated_score: int,
         partners_accumulated_score: int,
-        time_estimate: int,
+        timeout: int,
         accepted: Optional[bool]=True,
+        round_failed: Optional[bool]=False,
     ):
         super().__init__()
-        self.timeout = time_estimate
+        self.timeoutSeconds = timeout
+        self.timeoutAnswer = "No answer"
         self.my_score = int(accumulated_score)
         self.partner_score = int(partners_accumulated_score)
 
-        if accepted:
-            if proposer:
-                self.text = f"""
-                    <p>You have given {proposal} coins to your partner. </p>
-                    <p>You keep the remainder of {remainder_} coins. </p>
-                """
+        if round_failed:
+            self.text = f"""
+                <p>Round failed! One of the participants timed out. Round finished with score 0 coins. </p>
+            """
+        else:
+            if accepted:
+                if proposer:
+                    self.text = f"""
+                        <p>You have given {proposal} coins to your partner. </p>
+                        <p>You keep the remainder of {remainder_} coins. </p>
+                    """
+                else:
+                    self.text = f"""
+                        <p>Your partner has given you {proposal} coins. </p>
+                    """
             else:
                 self.text = f"""
-                    <p>Your partner has given you {proposal} coins. </p>
+                    <p>Proposal was not accepted. Round finished with score 0 coins. </p>
                 """
-        else:
-            self.text = f"""
-                <p>Proposal was not accepted. Round finished with score 0 coins. </p>
-            """
 
 
 class OuterPrompt(Prompt):

@@ -10,34 +10,26 @@
         position: relative;
     }
 
-    /* countdown clock */
-
-    #countdown {
-        position: absolute;
-        top: 15px;
-        left: 20px;
-        font-family: "Book Antiqua", Palatino, serif;
-        font-size: 22px;
+    .timer-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        font-size: 18px;
         font-weight: bold;
-        color: rgb(83, 83, 83);
     }
 
-    /* statements */
-
     .statement {
-        font-size: 22px;
         margin-bottom: 10px;
     }
 
-    /* score title */
-
     .mid_title {
-        font-size: 26px;
         font-weight: bold;
         margin: 30px 0 15px 0;
     }
-
-    /* score layout */
 
     .score-row {
         display: flex;
@@ -46,11 +38,10 @@
     }
 
     .label {
-        font-size: 22px;
+
     }
 
     .score {
-        font-size: 26px;
         margin-top: 10px;
     }
 
@@ -59,7 +50,7 @@
 <div class="rectangle">
 
     <!-- CLOCK -->
-    <div id="countdown">00:00</div>
+    <div class="timer-container" id="timer">00:00</div>
 
     <!-- TEXT -->
 
@@ -91,37 +82,35 @@
 
 
 <script>
+    let timeRemaining = {{ config.timeoutSeconds }};
 
-let timeRemaining = {{ config.timeout }};
+    psynet.trial.onEvent("trialFinished", function() {
+        if (loop) {
+            psynet.trial.restart();
+        }
+    });
 
-function updateClock() {
+    function updateTimer() {
+        let minutes = Math.floor(timeRemaining / 60);
+        let seconds = timeRemaining % 60;
 
-    const minutes = Math.floor(timeRemaining / 60);
-    const seconds = timeRemaining % 60;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
 
-    document.getElementById("countdown").textContent =
-        `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+        document.getElementById("timer").textContent =
+            "Time left: " + minutes + ":" + seconds;
 
-    if (timeRemaining > 0) {
-        timeRemaining--;
-    } else {
-        clearInterval(timer);
-
-        // optional PsyNet integration
-        if (typeof psynet !== "undefined") {
-            document.dispatchEvent(new Event("done"));
-
-            psynet.trial.registerEvent(
-                "done",
-                {info: "timeout"}
-            );
+        if (timeRemaining > 0) {
+            timeRemaining--;
+        } else {
+            clearInterval(timerInterval);
+            document.getElementById("timer").textContent = "Time's up!";
+            const timeoutAnswer = "{{ config.timeoutAnswer }}";
+            psynet.nextPage(timeoutAnswer);
         }
     }
-}
 
-updateClock();
-
-const timer = setInterval(updateClock, 1000);
+    updateTimer();
+    let timerInterval = setInterval(updateTimer, 1000);
 
 </script>
 {% endmacro %}
