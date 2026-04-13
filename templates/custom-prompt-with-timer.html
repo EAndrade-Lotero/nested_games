@@ -1,0 +1,64 @@
+{% macro timeout(params) %}
+
+<style>
+    .timer-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        font-size: 22px;
+        font-weight: bold;
+    }
+    #prompt-text {
+        text-align: {{ params.text_align }}
+    }
+</style>
+
+<div>
+    <div class="timer-container" id="timer">
+        Time left: 05:00
+    </div>
+
+    <div id="prompt-text">
+        {{ params.text_html }}
+    </div>
+</div>
+
+<script>
+    let loop = {{ params.loop | tojson }};
+    let timeRemaining = {{ params.timeoutSeconds }};
+
+    psynet.trial.onEvent("trialFinished", function() {
+        if (loop) {
+            psynet.trial.restart();
+        }
+    });
+
+    function updateTimer() {
+        let minutes = Math.floor(timeRemaining / 60);
+        let seconds = timeRemaining % 60;
+
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+        document.getElementById("timer").textContent =
+            "Time left: " + minutes + ":" + seconds;
+
+        if (timeRemaining > 0) {
+            timeRemaining--;
+        } else {
+            clearInterval(timerInterval);
+            document.getElementById("timer").textContent = "Time's up!";
+            const timeoutAnswer = "{{ params.timeoutAnswer }}";
+            psynet.nextPage(timeoutAnswer);
+        }
+    }
+
+    updateTimer();
+    let timerInterval = setInterval(updateTimer, 1000);
+
+</script>
+
+{% endmacro %}

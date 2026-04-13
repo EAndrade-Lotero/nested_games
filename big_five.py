@@ -19,7 +19,10 @@ from .game_paramters import (
     NUM_BIG_FIVE_QUESTIONS,
     TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
 )
-from .custom_front_end import CustomLikertControl
+from .custom_front_end import (
+    CustomLikertControl,
+    TimeoutPrompt,
+)
 
 
 logger = get_logger()
@@ -96,8 +99,6 @@ class PersonalityTrial(StaticTrial):
                 lowest_value="Very inaccurate",
                 highest_value="Very accurate",
                 n_steps=5,
-                timeout=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
-                timeout_answer="No answer",
             ),
             time_estimate=time_estimate,
             save_answer=page_label
@@ -121,13 +122,14 @@ class WaitingTrial(StaticTrial):
 
         return ModularPage(
             label="waiting_trial",
-            prompt=Markup(text),
+            prompt=TimeoutPrompt(
+                text=Markup(text),
+                timeout=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
+            ),
             control=CustomLikertControl(
                 lowest_value="Very inaccurate",
                 highest_value="Very accurate",
                 n_steps=5,
-                timeout=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
-                timeout_answer="No answer",
             ),
             time_estimate=self.time_estimate
         )

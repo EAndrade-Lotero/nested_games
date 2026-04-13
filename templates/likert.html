@@ -1,6 +1,5 @@
 {% macro likert(config) %}
 
-<div class="likert-control{% if config.timer_enabled %} likert-has-timer{% endif %}">
   <style>
     .likert-control {
       position: relative;
@@ -63,16 +62,16 @@
     }
   </style>
 
-  {% if config.timer_enabled %}
-  <div class="likert-countdown" id="likert-countdown" aria-live="polite">00:00</div>
-  {% endif %}
+    <div class="likert-control">
 
-  <div class="likert-scale-row" id="likert-scale"></div>
+      <div class="likert-scale-row" id="likert-scale"></div>
 
-  <div class="likert-end-labels">
-    <span id="min-label"></span>
-    <span id="max-label"></span>
-  </div>
+      <div class="likert-end-labels">
+        <span id="min-label"></span>
+        <span id="max-label"></span>
+      </div>
+
+    </div>
 
   <script>
     /************* CUSTOMIZE HERE *************/
@@ -118,51 +117,6 @@
 
     createLikertScale();
 
-    const likertTimerEnabled = {{ config.timer_enabled | tojson }};
-    const timeoutAnswerMode = {{ config.timeout_answer_mode | tojson }};
-    const timeoutAnswerFixed = {{ config.timeout_answer_fixed }};
-    let timeRemaining = {{ config.timeout }};
-    let likertCountdownTimer = null;
-
-    function resolveTimeoutSubmission() {
-      if (selectedValue !== null) {
-        return selectedValue;
-      }
-      if (timeoutAnswerMode === "random") {
-        return 1 + Math.floor(Math.random() * scalePoints);
-      }
-      if (timeoutAnswerMode === "none") {
-        return null;
-      }
-      return timeoutAnswerFixed;
-    }
-
-    function updateCountdown() {
-      const el = document.getElementById("likert-countdown");
-      if (!el) return;
-
-      const minutes = Math.floor(timeRemaining / 60);
-      const seconds = timeRemaining % 60;
-      el.textContent =
-        String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
-
-      if (timeRemaining > 0) {
-        timeRemaining -= 1;
-      } else {
-        clearInterval(likertCountdownTimer);
-        likertCountdownTimer = null;
-        const timeoutAnswer = resolveTimeoutSubmission();
-        psynet.response.disable();
-        psynet.submit.disable();
-        psynet.nextPage(timeoutAnswer);
-      }
-    }
-
-    if (likertTimerEnabled) {
-      updateCountdown();
-      likertCountdownTimer = setInterval(updateCountdown, 1000);
-    }
-
     /////////////////////////////////////////////////////
     // Function to stage the response for PsyNet
     /////////////////////////////////////////////////////
@@ -170,6 +124,5 @@
       psynet.response.staged.rawAnswer = selectedValue;
     };
   </script>
-</div>
 
 {% endmacro %}
