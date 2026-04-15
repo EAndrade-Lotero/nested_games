@@ -255,7 +255,6 @@ class InnerAcceptancePage(ModularPage):
         prompt = InnerPrompt(
             text=(
                 f"<p>Do you accept your partner's proposal of {proposal} coins? </p>"
-                f"<p>(If you don't press the 'Next' button within {TIMEOUT_PROPOSALS} seconds, a random choice will be made for you.)</p>"
             ),
             proposal=proposal,
             endowment=ENDOWMENT,
