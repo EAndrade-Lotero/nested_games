@@ -29,6 +29,7 @@ from .big_five import (
 from .custom_barriers import CustomBarrier
 from .custom_timeline import CustomTimeline
 from .consent_science_of_learning import consent_cococo_science_of_learning
+from .final_survey import get_final_survey
 
 logger = get_logger()
 
@@ -109,10 +110,10 @@ class Exp(psynet.experiment.Experiment):
     }
 
     timeline = CustomTimeline(
-        # consent_cococo_science_of_learning(
-        #     DURATION=15,
-        #     PAYMENT=2.30,
-        # ),
+        consent_cococo_science_of_learning(
+            DURATION=15,
+            PAYMENT=2.30,
+        ),
         personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(
@@ -149,4 +150,5 @@ class Exp(psynet.experiment.Experiment):
             trials_per_node=1,
             sync_group_type="chain",
         ),
+        get_final_survey(),
     )
