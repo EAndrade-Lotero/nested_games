@@ -1,16 +1,22 @@
 {% macro outer_proposal(config) %}
 
+{# PsyNet injects this macro inside ModularPage (prompt → progress → control → …).
+   Never style `html`/`body` here: it breaks the global layout and the trial progress bar.
+   Keep all rules scoped under .outer-proposal-root. #}
 <style>
-    body {
+    .outer-proposal-root {
         font-family: Arial, sans-serif;
         background: #eceaea;
         display: flex;
         justify-content: center;
-        align-items: flex-start; /* ← change this */
-        min-height: 100vh;
+        align-items: flex-start;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
         margin: 0;
-        overflow-y: auto;
-        padding-top: 20px; /* optional spacing from top */
+        overflow-x: hidden;
+        overflow-y: visible;
+        padding: 20px 0 12px;
     }
 
     .tabletop {
@@ -28,21 +34,25 @@
         gap: 20px;
     }
 
-    #phase-label {
+    /* Overlays: positioned against .tabletop (position: relative), not flex flow */
+    .tabletop #outer-proposal-phase-label {
         position: absolute;
-        top: 15px;
-        right: 20px;
+        top: 12px;
+        right: 16px;
+        z-index: 2;
         font-family: "Book Antiqua", Palatino, serif;
         font-size: 22px;
         font-weight: bold;
         color: rgb(83, 83, 83);
         text-align: right;
+        white-space: nowrap;
     }
 
-    #countdown {
+    .tabletop #outer-proposal-countdown {
         position: absolute;
-        top: 15px;
-        left: 20px;
+        top: 12px;
+        left: 16px;
+        z-index: 2;
         font-family: "Book Antiqua", Palatino, serif;
         font-size: 22px;
         font-weight: bold;
@@ -180,13 +190,15 @@
     }
 </style>
 
+<div class="outer-proposal-root">
+
 <div class="tabletop">
 
-    <div id="countdown">
+    <div id="outer-proposal-countdown">
         00:30
     </div>
 
-    <div id="phase-label">
+    <div id="outer-proposal-phase-label">
         Round {{ config.round }} / {{ config.num_rounds }}
     </div>
 
@@ -202,7 +214,7 @@
   <!-- SECOND PLACE (DROP TARGET) -->
   <div class="zone center-middle">
     <div class="rectangle">PROPOSER</div>
-    <div class="dropzone" id="dropzone">
+    <div class="dropzone" id="outer-proposal-dropzone">
       <span class="dropzone-text">
           Drop avatar here
       </span>
@@ -226,11 +238,17 @@
 
 </div>
 
+</div>
+
 
 <script>
-    const avatars = document.querySelectorAll('.avatar');
-    const dropzone = document.getElementById('dropzone');
-    const bottomZone = document.querySelector('.center-bottom');
+    const root = document.querySelector('.outer-proposal-root');
+    if (!root) {
+        console.error('outer_proposal: .outer-proposal-root not found');
+    }
+    const avatars = root ? root.querySelectorAll('.avatar') : [];
+    const dropzone = root ? root.querySelector('#outer-proposal-dropzone') : null;
+    const bottomZone = root ? root.querySelector('.center-bottom') : null;
 
     avatars.forEach(avatar => {
         avatar.addEventListener('dragstart', e => {
@@ -243,36 +261,40 @@
         });
     });
 
-    dropzone.addEventListener('dragover', e => {
-        e.preventDefault();
-    });
+    if (dropzone) {
+        dropzone.addEventListener('dragover', e => {
+            e.preventDefault();
+        });
 
-    dropzone.addEventListener('drop', e => {
-        e.preventDefault();
+        dropzone.addEventListener('drop', e => {
+            e.preventDefault();
 
-        // allow only ONE avatar inside dropzone
-        if (dropzone.querySelector('.avatar')) {
-            return;
-        }
+            // allow only ONE avatar inside dropzone
+            if (dropzone.querySelector('.avatar')) {
+                return;
+            }
 
-        const id = e.dataTransfer.getData('text/plain');
-        const avatar = document.getElementById(id);
+            const id = e.dataTransfer.getData('text/plain');
+            const avatar = document.getElementById(id);
 
-        dropzone.appendChild(avatar);
-    });
+            dropzone.appendChild(avatar);
+        });
+    }
 
-    bottomZone.addEventListener('dragover', e => {
-        e.preventDefault();
-    });
+    if (bottomZone) {
+        bottomZone.addEventListener('dragover', e => {
+            e.preventDefault();
+        });
 
-    bottomZone.addEventListener('drop', e => {
-        e.preventDefault();
+        bottomZone.addEventListener('drop', e => {
+            e.preventDefault();
 
-        const id = e.dataTransfer.getData('text/plain');
-        const avatar = document.getElementById(id);
+            const id = e.dataTransfer.getData('text/plain');
+            const avatar = document.getElementById(id);
 
-        bottomZone.appendChild(avatar);
-    });
+            bottomZone.appendChild(avatar);
+        });
+    }
 
     let timeRemaining = {{ config.timeout }};
 
@@ -280,8 +302,11 @@
         const minutes = Math.floor(timeRemaining / 60);
         const seconds = timeRemaining % 60;
 
-        document.getElementById("countdown").textContent =
-            `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+        const clock = document.getElementById("outer-proposal-countdown");
+        if (clock) {
+            clock.textContent =
+                `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+        }
 
         if (timeRemaining > 0) {
             timeRemaining--;
@@ -306,7 +331,7 @@
     /////////////////////////////////////////////////////
     psynet.stageResponse = function() {
 
-        const proposerAvatar = dropzone.querySelector('.avatar');
+        const proposerAvatar = dropzone ? dropzone.querySelector('.avatar') : null;
 
         console.log("Staging response. Proposer avatar:", proposerAvatar);
 

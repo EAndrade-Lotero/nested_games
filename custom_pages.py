@@ -79,8 +79,7 @@ class OuterProposalPage(ModularPage):
         ))
         control = CustomControl(
             context=context,
-            time_estimate=3,
-            # time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=TIMEOUT_PROPOSALS,
             external_template="outer_proposal.html",
             round_=round_
         )
