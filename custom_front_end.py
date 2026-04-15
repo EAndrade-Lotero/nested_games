@@ -3,8 +3,8 @@
 ##########################################################################################
 # Imports
 ##########################################################################################
-
-from typing import Dict, Literal, Optional, Union
+from markupsafe import Markup
+from typing import Dict, List, Optional, Union
 
 from psynet.modular_page import (
     Control, Prompt,
@@ -29,13 +29,16 @@ class ScorePrompt(Prompt):
 
     def __init__(
         self,
+        outer_game_type: str,
+        inner_game_type: str,
         proposer: bool,
         proposal: int,
         remainder_: int,
         accumulated_score: int,
         partners_accumulated_score: int,
         timeout: int,
-        accepted: Optional[bool]=True,
+        outer_accepted: Optional[bool]=True,
+        inner_accepted: Optional[bool]=True,
         round_failed: Optional[bool]=False,
     ):
         super().__init__()
@@ -49,20 +52,35 @@ class ScorePrompt(Prompt):
                 <p>Round failed! One of the participants timed out. Round finished with score 0 coins. </p>
             """
         else:
-            if accepted:
-                if proposer:
+            if outer_game_type == "ultimatum" and not outer_accepted:
+                self.text = f"""
+                    <p>Proposal was not accepted. Round finished with score 0 coins. </p>
+                """
+            else:
+                if inner_game_type == "dictator":
                     self.text = f"""
                         <p>You have given {proposal} coins to your partner. </p>
                         <p>You keep the remainder of {remainder_} coins. </p>
                     """
+                elif inner_game_type == "ultimatum":
+                    if inner_accepted:
+                        if proposer:
+                            self.text = f"""
+                                <p>You have proposed {proposal} coins to your partner. </p>
+                                <p>Your proposal was accepted. </p>
+                                <p>You keep the remainder of {remainder_} coins. </p>
+                            """
+                        else:
+                            self.text = f"""
+                                <p>Your partner has proposed to give you {proposal} coins. </p>
+                                <p>You accepted this proposal. You keep these {proposal} coins. </p>
+                            """
+                    else:
+                        self.text = f"""
+                            <p>Proposal was not accepted. Round finished with score 0 coins. </p>
+                        """
                 else:
-                    self.text = f"""
-                        <p>Your partner has given you {proposal} coins. </p>
-                    """
-            else:
-                self.text = f"""
-                    <p>Proposal was not accepted. Round finished with score 0 coins. </p>
-                """
+                    raise ValueError(f"{inner_game_type} is not a valid inner game type.")
 
 
 class OuterPrompt(Prompt):

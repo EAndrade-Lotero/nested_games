@@ -459,12 +459,15 @@ class NestedGameTrial(ChainTrial):
         if not inner_game_on:
 
             return ScorePage(
+                outer_game_type=self.participant.current_trial.definition["outer_game"],
+                inner_game_type=self.participant.current_trial.definition["inner_game"],
                 proposer=True,
                 proposal=0,
                 remainder_=0,
                 accumulated_score=my_accumulated_score,
                 partners_accumulated_score=partners_accumulated_score,
-                accepted=False,
+                outer_accepted=False,
+                inner_accepted=False,
                 round_failed=self.did_round_fail(),
             )
 
@@ -490,15 +493,18 @@ class NestedGameTrial(ChainTrial):
                     score = proposal
                     partners_score = remainder_
 
-            # logger.info(f"{proposal} --- {remainder} --- {accept_answer} --- {score}")
+            # logger.info(f"{proposal} --- {remainder_} --- {accept_answer} --- {score}")
             my_accumulated_score += int(score)
             partners_accumulated_score += int(partners_score)
             return ScorePage(
+                outer_game_type=self.participant.current_trial.definition["outer_game"],
+                inner_game_type=self.participant.current_trial.definition["inner_game"],
                 proposer=self.am_i_the_inner_leader(),
                 proposal=proposal,
                 remainder_=remainder_,
                 accumulated_score=my_accumulated_score,
                 partners_accumulated_score=partners_accumulated_score,
+                inner_accepted=accept_answer == "Accept",
                 round_failed=self.did_round_fail(),
             )
         else:

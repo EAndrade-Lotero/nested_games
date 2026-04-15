@@ -283,12 +283,15 @@ class ScorePage(EndRoundPage):
 
     def __init__(
         self,
+        outer_game_type: str,
+        inner_game_type: str,
         proposer: bool,
         proposal: int,
         remainder_: int,
         accumulated_score: int,
         partners_accumulated_score: int,
-        accepted: Optional[bool] = True,
+        outer_accepted: Optional[bool] = True,
+        inner_accepted: Optional[bool] = True,
         round_failed: Optional[bool] = False,
     ) -> None:
 
@@ -299,13 +302,16 @@ class ScorePage(EndRoundPage):
         self.score = score
 
         prompt = ScorePrompt(
+            outer_game_type=outer_game_type,
+            inner_game_type=inner_game_type,
             proposer=proposer,
             proposal=proposal,
             remainder_=remainder_,
             accumulated_score=accumulated_score,
             partners_accumulated_score=partners_accumulated_score,
             timeout=TIMEOUT_WAITING_FOR_OTHER,
-            accepted=accepted,
+            outer_accepted=outer_accepted,
+            inner_accepted=inner_accepted,
             round_failed=round_failed,
         )
 
