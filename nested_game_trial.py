@@ -1,8 +1,5 @@
-from markupsafe import Markup
 from typing import Union
 
-from psynet.page import InfoPage
-from psynet.graphics import Prompt
 from psynet.modular_page import (
     ModularPage,
     PushButtonControl,
@@ -296,20 +293,10 @@ class NestedGameTrial(ChainTrial):
             conditional(
                 label="inner_leader",
                 condition=lambda participant: self.is_the_inner_leader(participant),
-                logic_if_false=None,
-                logic_if_true=conditional(
-                    label="feedback_depending_on_outer_game",
-                    condition=lambda participant: participant.current_trial.definition['outer_game'] == "dictator",
-                    logic_if_true=InnerProposalPage(
-                        game="dictator",
-                        context=self.context,
-                        round_=self.position + 1,
-                    ),
-                    logic_if_false=InnerProposalPage(
-                        game="ultimatum",
-                        context=self.context,
-                        round_=self.position + 1,
-                    ),
+                logic_if_true=InnerProposalPage(
+                    outer_game=self.participant.current_trial.definition['outer_game'],
+                    context=self.context,
+                    round_=self.position + 1,
                 ),
             ),
             CustomBarrier(
@@ -361,6 +348,9 @@ class NestedGameTrial(ChainTrial):
                         participant, "inner_proposal"
                     )
                     break
+
+            # Check round failure
+            self.check_round_failed()
 
         logger.info(f"Assigning inner proposal to {inner_proposal}")
 
@@ -416,20 +406,12 @@ class NestedGameTrial(ChainTrial):
             inner_role = NestedGameTrial.get_inner_role(participant)
             if inner_role is not None:
                 if inner_role == 'proposer':
-                    # proposal = VariableHandler.get_from_answer(
-                    #     answer=participant.current_trial.answer,
-                    #     variable="inner_proposal",
-                    # )
                     proposal = variable_handler.get_value(participant, 'inner_proposal')
                     if proposal is not None:
                         if proposal != "No answer":
                             proposal = int(proposal)
                             remainder = 10 - int(proposal)
                 else:
-                    # proposal = VariableHandler.get_from_answer(
-                    #     answer=participant.current_trial.answer,
-                    #     variable="inner_accept_answer",
-                    # )
                     accept_answer = variable_handler.get_value(participant, "inner_accept_answer")
 
         return {
@@ -445,7 +427,6 @@ class NestedGameTrial(ChainTrial):
     #     pass
 
     def show_trial_feedback(self):
-        page = None
 
         if "summary" in self.participant.current_trial.definition.keys():
             participants = self.participant.sync_group.participants
@@ -500,12 +481,16 @@ class NestedGameTrial(ChainTrial):
                     score = 0
                     partners_score = 0
                 else:
-                    if self.am_i_the_inner_leader():
-                        score = remainder_
-                        partners_score = proposal
+                    if proposal != "No answer":
+                        if self.am_i_the_inner_leader():
+                            score = remainder_
+                            partners_score = proposal
+                        else:
+                            score = proposal
+                            partners_score = remainder_
                     else:
-                        score = proposal
-                        partners_score = remainder_
+                        score = 0
+                        partners_score = 0
 
                 # logger.info(f"{proposal} --- {remainder_} --- {accept_answer} --- {score}")
                 my_accumulated_score += int(score)

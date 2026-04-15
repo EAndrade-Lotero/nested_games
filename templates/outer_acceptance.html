@@ -1,8 +1,5 @@
 {% macro outer_acceptance(config) %}
 
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-
 <style>
     body {
       font-family: Arial, sans-serif;
@@ -130,10 +127,6 @@
       background-image: url("../static/generic.png");
     }
 
-    .avatar.dragging {
-      opacity: 0.5;
-    }
-
     .avatar-label {
       position: absolute;
       bottom: 4px;
@@ -148,7 +141,7 @@
     .avatarzone {
         min-height: 90px;
         width: 30%;
-        border: 0px dashed rgb(55, 0, 255);
+        border: 0 dashed rgb(55, 0, 255);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -164,7 +157,6 @@
     }
 
 </style>
-</head>
 
 <div>{{ config.text }}</div>
 <div class="tabletop">

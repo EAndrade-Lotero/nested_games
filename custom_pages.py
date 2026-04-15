@@ -200,16 +200,16 @@ class InnerProposalPage(ModularPage):
 
     def __init__(
         self,
-        game:str,
+        outer_game:str,
         context: Dict[str, str],
         round_: int,
     ) -> None:
-        assert game in ["ultimatum", "dictator"], f"Error: {game} is not a valid game type"
+        assert outer_game in ["ultimatum", "dictator"], f"Error: {outer_game} is not a valid game type"
 
         text = f"<h2>Proposal phase</h2>"
         text += f"<br>"
 
-        if game == "ultimatum":
+        if outer_game == "ultimatum":
             text += f"<p>Proposal accepted. You are the PROPOSER. </p>"
 
         text += f"<p>Use the slider below to decide how many of the {ENDOWMENT} coins you will give to your partner: <p/>"
@@ -328,6 +328,8 @@ class ScorePage(EndRoundPage):
         )
 
     def format_answer(self, raw_answer, **kwargs):
+        if self.score == "No answer" or self.score is None:
+            return 0
         return int(self.score)
 
 

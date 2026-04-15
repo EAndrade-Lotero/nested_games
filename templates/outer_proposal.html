@@ -242,6 +242,7 @@
 
 
 <script>
+
     const root = document.querySelector('.outer-proposal-root');
     if (!root) {
         console.error('outer_proposal: .outer-proposal-root not found');
@@ -249,6 +250,21 @@
     const avatars = root ? root.querySelectorAll('.avatar') : [];
     const dropzone = root ? root.querySelector('#outer-proposal-dropzone') : null;
     const bottomZone = root ? root.querySelector('.center-bottom') : null;
+
+    function syncNextFromDropzone() {
+        if (!dropzone) {
+            return;
+        }
+        const hasAvatar = !!dropzone.querySelector('.avatar');
+        if (hasAvatar) {
+            psynet.submit.enable();
+        } else {
+            psynet.submit.disable();
+        }
+    }
+
+    /* PsyNet enables Next on submitEnable; run after that (lower priority) so empty dropzone stays disabled */
+    psynet.trial.onEvent('submitEnable', syncNextFromDropzone, { priority: -1 });
 
     avatars.forEach(avatar => {
         avatar.addEventListener('dragstart', e => {
@@ -278,6 +294,7 @@
             const avatar = document.getElementById(id);
 
             dropzone.appendChild(avatar);
+            syncNextFromDropzone();
         });
     }
 
@@ -293,8 +310,11 @@
             const avatar = document.getElementById(id);
 
             bottomZone.appendChild(avatar);
+            syncNextFromDropzone();
         });
     }
+
+    setTimeout(syncNextFromDropzone, 0);
 
     let timeRemaining = {{ config.timeout }};
 
