@@ -131,6 +131,7 @@ class Exp(psynet.experiment.Experiment):
             content="Please wait while your partner completes the personality test...",
             on_release=assign_roles,
             timeout_between_barriers=TIMEOUT_PERSONALITY_TEST,
+            participant_timeout_action="kick",
         ),
         NestedGameTrialMaker(
             id_="nested_games_trial_maker",

@@ -1,4 +1,4 @@
-from typing import Optional, Callable, List
+from typing import Optional, Callable, Literal
 
 from psynet.page import WaitPage
 from psynet.sync import GroupBarrier
@@ -26,6 +26,7 @@ class CustomBarrier(GroupBarrier):
         timeout_between_barriers:Optional[int]=TIMEOUT_BETWEEN_BARRIERS,
         wait_page:Optional[Page|None]=None,
         on_release:Optional[Callable]=None,
+        participant_timeout_action: Literal["kick", "fail"]="fail",
     ) -> None:
 
         if active_participant is not None:
@@ -54,7 +55,7 @@ class CustomBarrier(GroupBarrier):
             max_wait_time=timeout_at_barrier,
             waiting_logic_expected_repetitions=expected_repetitions,
             participant_timeout=timeout_between_barriers,
-            participant_timeout_action="fail",
+            participant_timeout_action=participant_timeout_action,
         )
 
     def can_participant_exit(self, participant: Participant) -> bool:
@@ -64,6 +65,9 @@ class CustomBarrier(GroupBarrier):
 
     @staticmethod
     def get_round_failed(participant: Participant) -> bool:
+
+        if participant.sync_group is None:
+            return True
 
         participants = participant.sync_group.participants
 
