@@ -79,7 +79,8 @@ class OuterProposalPage(ModularPage):
         ))
         control = CustomControl(
             context=context,
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=3,
+            # time_estimate=TIMEOUT_PROPOSALS,
             external_template="outer_proposal.html",
             round_=round_
         )
@@ -292,6 +293,7 @@ class ScorePage(EndRoundPage):
         outer_accepted: Optional[bool] = True,
         inner_accepted: Optional[bool] = True,
         round_failed: Optional[bool] = False,
+        num_rounds_failed:Optional[int] = 0,
     ) -> None:
 
         if proposer:
@@ -312,6 +314,7 @@ class ScorePage(EndRoundPage):
             outer_accepted=outer_accepted,
             inner_accepted=inner_accepted,
             round_failed=round_failed,
+            num_rounds_failed=num_rounds_failed,
         )
 
         super().__init__(

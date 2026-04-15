@@ -16,7 +16,7 @@ from .game_paramters import (
     MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
     TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
     TIMEOUT_PERSONALITY_TEST,
-    NUMBER_OF_REPEATED_GAMES,
+    NUMBER_OF_ROUNDS,
     RNG,
 )
 from .big_five import (
@@ -144,7 +144,7 @@ class Exp(psynet.experiment.Experiment):
             # allow_repeated_nodes=True,
             target_n_participants=60,
             wait_for_networks=True,
-            max_nodes_per_chain=NUMBER_OF_REPEATED_GAMES,
+            max_nodes_per_chain=NUMBER_OF_ROUNDS,
             trials_per_node=1,
             sync_group_type="chain",
         ),

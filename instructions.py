@@ -11,7 +11,7 @@ from psynet.modular_page import (
 from .game_paramters import (
     ENDOWMENT,
     TIMEOUT_PROPOSALS,
-    NUMBER_OF_REPEATED_GAMES,
+    NUMBER_OF_ROUNDS,
 )
 from .custom_front_end import TimeoutPrompt
 from .custom_pages import CustomInfoPage
@@ -21,7 +21,7 @@ OBJECTIVE = f"""
     <br>
     <p>Welcome to the <strong>"Who is the proposer?"</strong> experiment!</p>
     <br>
-    <p>You will be paired with another participant to play {NUMBER_OF_REPEATED_GAMES} rounds.</p>
+    <p>You will be paired with another participant to play {NUMBER_OF_ROUNDS} rounds.</p>
     <br>
     <p>Each round consists of two phases:</p>
     <ul>

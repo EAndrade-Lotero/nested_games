@@ -99,6 +99,13 @@ class NestedGameTrial(ChainTrial):
             ),
             CustomBarrier("taking_stock"),
             self.show_trial_feedback(),
+            conditional(
+                label="check_max_timeout",
+                condition=lambda participant: self.check_max_timeout(),
+                logic_if_true=CodeBlock(
+                    lambda experiment, participant: experiment.timeline.redirect_to_branch(experiment, participant, "unsuccessful_end")
+                ),
+            )
         )  # end main join
 
     ######################################################
@@ -438,6 +445,8 @@ class NestedGameTrial(ChainTrial):
     #     pass
 
     def show_trial_feedback(self):
+        page = None
+
         if "summary" in self.participant.current_trial.definition.keys():
             participants = self.participant.sync_group.participants
             assert len(participants) == 2
@@ -451,14 +460,19 @@ class NestedGameTrial(ChainTrial):
             my_accumulated_score = float(accumulated_scores[str(self.participant_id)])
             partners_accumulated_score = float(accumulated_scores[str(other_id)])
 
+            num_rounds_failed = self.participant.current_trial.definition["summary"]["num_rounds_failed"]
         else:
             my_accumulated_score = 0
             partners_accumulated_score = 0
+            num_rounds_failed = 0
+
+        if self.did_round_fail():
+            num_rounds_failed += 1
 
         inner_game_on = self.continue_to_inner_game()
         if not inner_game_on:
 
-            return ScorePage(
+            page = ScorePage(
                 outer_game_type=self.participant.current_trial.definition["outer_game"],
                 inner_game_type=self.participant.current_trial.definition["inner_game"],
                 proposer=True,
@@ -469,55 +483,58 @@ class NestedGameTrial(ChainTrial):
                 outer_accepted=False,
                 inner_accepted=False,
                 round_failed=self.did_round_fail(),
+                num_rounds_failed=num_rounds_failed,
             )
 
-        dict_result = self.get_inner_result()
-        proposal = dict_result["proposal"]
-        remainder_ = dict_result["remainder"]
-        accept_answer = dict_result["accept_answer"]
-        # logger.info(f"{proposal} --- {remainder} --- {accept_answer}")
-
-        if proposal is not None:
-
-            if self.participant.var.num_rounds_failed == MAX_TIMEOUT_ROUNDS:
-                self.fail("Timeout reached")
-
-            if accept_answer == "Reject":
-                score = 0
-                partners_score = 0
-            else:
-                if self.am_i_the_inner_leader():
-                    score = remainder_
-                    partners_score = proposal
-                else:
-                    score = proposal
-                    partners_score = remainder_
-
-            # logger.info(f"{proposal} --- {remainder_} --- {accept_answer} --- {score}")
-            my_accumulated_score += int(score)
-            partners_accumulated_score += int(partners_score)
-            return ScorePage(
-                outer_game_type=self.participant.current_trial.definition["outer_game"],
-                inner_game_type=self.participant.current_trial.definition["inner_game"],
-                proposer=self.am_i_the_inner_leader(),
-                proposal=proposal,
-                remainder_=remainder_,
-                accumulated_score=my_accumulated_score,
-                partners_accumulated_score=partners_accumulated_score,
-                inner_accepted=accept_answer == "Accept",
-                round_failed=self.did_round_fail(),
-            )
         else:
-            return EndRoundPage(
-                label="reward",
-                prompt="OK",
-                control=PushButtonControl(
-                    labels=["Next"],
-                    choices=[0],
-                ),
-                save_answer="reward",
-                time_estimate=5,
-            )
+
+            dict_result = self.get_inner_result()
+            proposal = dict_result["proposal"]
+            remainder_ = dict_result["remainder"]
+            accept_answer = dict_result["accept_answer"]
+            # logger.info(f"{proposal} --- {remainder} --- {accept_answer}")
+
+            if proposal is not None:
+
+                if accept_answer == "Reject":
+                    score = 0
+                    partners_score = 0
+                else:
+                    if self.am_i_the_inner_leader():
+                        score = remainder_
+                        partners_score = proposal
+                    else:
+                        score = proposal
+                        partners_score = remainder_
+
+                # logger.info(f"{proposal} --- {remainder_} --- {accept_answer} --- {score}")
+                my_accumulated_score += int(score)
+                partners_accumulated_score += int(partners_score)
+                page = ScorePage(
+                    outer_game_type=self.participant.current_trial.definition["outer_game"],
+                    inner_game_type=self.participant.current_trial.definition["inner_game"],
+                    proposer=self.am_i_the_inner_leader(),
+                    proposal=proposal,
+                    remainder_=remainder_,
+                    accumulated_score=my_accumulated_score,
+                    partners_accumulated_score=partners_accumulated_score,
+                    inner_accepted=accept_answer == "Accept",
+                    round_failed=self.did_round_fail(),
+                    num_rounds_failed=num_rounds_failed,
+                )
+            else:
+                page = EndRoundPage(
+                    label="reward",
+                    prompt="OK",
+                    control=PushButtonControl(
+                        labels=["Next"],
+                        choices=[0],
+                    ),
+                    save_answer="reward",
+                    time_estimate=5,
+                )
+
+        return page
 
     def did_round_fail(self):
         participants = self.participant.sync_group.participants
@@ -605,6 +622,17 @@ class NestedGameTrial(ChainTrial):
             score = float(score) * REWARD_SCALING_FACTOR
             return min(max(0.0, score), MAX_BONUS_REWARD)
 
+    def check_max_timeout(self):
+        if "summary" in self.participant.current_trial.definition.keys():
+            num_rounds_failed = self.participant.current_trial.definition["summary"]["num_rounds_failed"]
+
+            if self.did_round_fail():
+                num_rounds_failed += 1
+
+            if num_rounds_failed >= MAX_TIMEOUT_ROUNDS:
+                return True
+
+        return False
 
 class NestedGameTrialMaker(ChainTrialMaker):
     pass

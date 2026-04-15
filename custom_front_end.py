@@ -6,15 +6,14 @@
 from markupsafe import Markup
 from typing import Dict, List, Optional, Union
 
-from psynet.modular_page import (
-    Control, Prompt,
-)
+from psynet.modular_page import Control, Prompt
 from psynet.timeline import FailedValidation
 from psynet.utils import get_logger, get_translator
 
 from .game_paramters import (
     ENDOWMENT,
-    NUMBER_OF_REPEATED_GAMES,
+    NUMBER_OF_ROUNDS,
+    MAX_TIMEOUT_ROUNDS,
 )
 
 logger = get_logger()
@@ -40,6 +39,7 @@ class ScorePrompt(Prompt):
         outer_accepted: Optional[bool]=True,
         inner_accepted: Optional[bool]=True,
         round_failed: Optional[bool]=False,
+        num_rounds_failed: Optional[int] = 0,
     ):
         super().__init__()
         self.timeoutSeconds = timeout
@@ -47,40 +47,46 @@ class ScorePrompt(Prompt):
         self.my_score = int(accumulated_score)
         self.partner_score = int(partners_accumulated_score)
 
-        if round_failed:
+        if num_rounds_failed >= MAX_TIMEOUT_ROUNDS:
             self.text = f"""
-                <p>Round failed! One of the participants timed out. Round finished with score 0 coins. </p>
+                <p>Round finished with score 0 coins. </p>
+                <p>Number of timeouts exceeded! Experiment failed! </p>
             """
         else:
-            if outer_game_type == "ultimatum" and not outer_accepted:
+            if round_failed:
                 self.text = f"""
-                    <p>Proposal was not accepted. Round finished with score 0 coins. </p>
+                    <p>Round failed! One of the participants timed out. Round finished with score 0 coins. </p>
                 """
             else:
-                if inner_game_type == "dictator":
+                if outer_game_type == "ultimatum" and not outer_accepted:
                     self.text = f"""
-                        <p>You have given {proposal} coins to your partner. </p>
-                        <p>You keep the remainder of {remainder_} coins. </p>
+                        <p>Proposal was not accepted. Round finished with score 0 coins. </p>
                     """
-                elif inner_game_type == "ultimatum":
-                    if inner_accepted:
-                        if proposer:
-                            self.text = f"""
-                                <p>You have proposed {proposal} coins to your partner. </p>
-                                <p>Your proposal was accepted. </p>
-                                <p>You keep the remainder of {remainder_} coins. </p>
-                            """
+                else:
+                    if inner_game_type == "dictator":
+                        self.text = f"""
+                            <p>You have given {proposal} coins to your partner. </p>
+                            <p>You keep the remainder of {remainder_} coins. </p>
+                        """
+                    elif inner_game_type == "ultimatum":
+                        if inner_accepted:
+                            if proposer:
+                                self.text = f"""
+                                    <p>You have proposed {proposal} coins to your partner. </p>
+                                    <p>Your proposal was accepted. </p>
+                                    <p>You keep the remainder of {remainder_} coins. </p>
+                                """
+                            else:
+                                self.text = f"""
+                                    <p>Your partner has proposed to give you {proposal} coins. </p>
+                                    <p>You accepted this proposal. You keep these {proposal} coins. </p>
+                                """
                         else:
                             self.text = f"""
-                                <p>Your partner has proposed to give you {proposal} coins. </p>
-                                <p>You accepted this proposal. You keep these {proposal} coins. </p>
+                                <p>Proposal was not accepted. Round finished with score 0 coins. </p>
                             """
                     else:
-                        self.text = f"""
-                            <p>Proposal was not accepted. Round finished with score 0 coins. </p>
-                        """
-                else:
-                    raise ValueError(f"{inner_game_type} is not a valid inner game type.")
+                        raise ValueError(f"{inner_game_type} is not a valid inner game type.")
 
 
 class OuterPrompt(Prompt):
@@ -106,7 +112,7 @@ class OuterPrompt(Prompt):
         self.macro = external_template.split(".")[0]
         self.external_template = external_template
         self.round = round_
-        self.num_rounds = NUMBER_OF_REPEATED_GAMES
+        self.num_rounds = NUMBER_OF_ROUNDS
 
 
 class InnerPrompt(OuterPrompt):
@@ -178,7 +184,7 @@ class CustomControl(Control):
         self.macro = external_template.split(".")[0]
         self.external_template = external_template
         self.round = round_
-        self.num_rounds = NUMBER_OF_REPEATED_GAMES
+        self.num_rounds = NUMBER_OF_ROUNDS
 
 
 class InnerProposalControl(Control):
@@ -207,7 +213,7 @@ class InnerProposalControl(Control):
         self.plate_url = context["plate_url"]
         self.timeout = time_estimate
         self.round = round_
-        self.num_rounds = NUMBER_OF_REPEATED_GAMES
+        self.num_rounds = NUMBER_OF_ROUNDS
 
 
 class InnerControl(CustomControl):

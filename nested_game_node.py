@@ -3,6 +3,7 @@ import numpy as np
 from psynet.utils import get_logger
 from psynet.trial.chain import ChainNode
 
+from .game_paramters import MAX_TIMEOUT_ROUNDS
 from .variable_handler import VariableHandler
 
 logger = get_logger()
@@ -90,6 +91,17 @@ class NestedGameNode(ChainNode):
             if inner_game == "ultimatum":
                 assert inner_acceptance is not None
 
+        ############################
+        # ACCUMULATE ROUNDS FAILED
+        ############################
+        if "summary" in self.definition.keys():
+            num_rounds_failed = self.definition["summary"]["num_rounds_failed"]
+        else:
+            num_rounds_failed = 0
+
+        if round_failed:
+            num_rounds_failed += 1
+
         ###################################
         # CREATE SUMMARY
         ###################################
@@ -104,7 +116,9 @@ class NestedGameNode(ChainNode):
             "inner_acceptance": inner_acceptance,
             "accumulated_rewards": rewards,
             "round_failed": round_failed,
+            "num_rounds_failed": num_rounds_failed,
         }
+
         self.definition["summary"] = summary
 
         return self.definition
