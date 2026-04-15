@@ -12,7 +12,6 @@ from .nested_game_trial import (
     NestedGameTrialMaker,
 )
 from .game_paramters import (
-    NUM_BIG_FIVE_QUESTIONS,
     MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
     TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
     TIMEOUT_PERSONALITY_TEST,
@@ -77,8 +76,8 @@ personality_trial_maker = PersonalityTrialMaker(
     id_="personality",
     trial_class=PersonalityTrial,
     nodes=personality_nodes,
-    expected_trials_per_participant=NUM_BIG_FIVE_QUESTIONS,
-    max_trials_per_participant=NUM_BIG_FIVE_QUESTIONS,
+    expected_trials_per_participant=1,
+    max_trials_per_participant=1,
     allow_repeated_nodes=False,
 )
 
@@ -97,10 +96,8 @@ class Exp(psynet.experiment.Experiment):
         # "recruiter": "prolific",
         "recruiter": "hotair",
         "wage_per_hour": 9,
-        # "currency": "£",
         "currency": "$",
         # **get_prolific_settings(),
-        # "title": "Foraging experiment (Chrome browser, ~15 minutes, £2.3)",
         "title": "Nested games experiment (Chrome browser, ~15 minutes, $2.30)",
         "description": "This experiment is about collective behavior in nested games.",
         'initial_recruitment_size': 2,
