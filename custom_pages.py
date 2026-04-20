@@ -20,6 +20,7 @@ from .game_paramters import (
     TIMEOUT_PROPOSALS,
     WAIT_PAGE_TIME,
     TIMEOUT_WAITING_FOR_OTHER,
+    NUMBER_OF_ROUNDS,
 )
 from .custom_front_end import (
     CustomControl,
@@ -27,6 +28,7 @@ from .custom_front_end import (
     InnerProposalControl,
     InnerPrompt,
     ScorePrompt,
+    TimeoutPrompt
 )
 from .custom_timeline import EndRoundPage
 
@@ -71,17 +73,26 @@ class CustomInfoPage(Page):
 
 class OuterProposalPage(ModularPage):
 
-    def __init__(self, context: Dict[str, str], round_: int) -> None:
-        prompt = Prompt(Markup(
+    def __init__(
+        self,
+        accumulated_score_me: int = 0,
+        accumulated_score_partner: int = 0,
+        round_: int = 1,
+    ) -> None:
+        round_ = int(round_)
+        prompt = TimeoutPrompt(
+            timeout=1000,
+            round_=round_,
+            num_rounds=NUMBER_OF_ROUNDS,
+            text=Markup(
             f"<h2>Preparation phase</h2>"
             f"<br>"
-            f"<p>Choose who will take on the role of PROPOSER: </p>"
+            f"<p>Drag and drop the coins onto one of the players: </p>"
         ))
         control = CustomControl(
-            context=context,
-            time_estimate=TIMEOUT_PROPOSALS,
+            accumulated_score_me=accumulated_score_me,
+            accumulated_score_partner=accumulated_score_partner,
             external_template="outer_proposal.html",
-            round_=round_
         )
         super().__init__(
             label="outer_proposal",
@@ -89,11 +100,7 @@ class OuterProposalPage(ModularPage):
             control=control,
             time_estimate=TIMEOUT_PROPOSALS,
             save_answer="outer_proposal",
-            events={
-                "done": Event(
-                    is_triggered_by="done",
-                ),
-            },
+            show_next_button=False,
         )
 
     def format_answer(self, raw_answer, **kwargs):

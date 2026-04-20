@@ -125,7 +125,8 @@ class NestedGameTrial(ChainTrial):
                 label="outer_leader",
                 condition=lambda participant: self.is_the_outer_leader(participant),
                 logic_if_true=OuterProposalPage(
-                    context=self.context,
+                    accumulated_score_me=self.get_my_accumulated_score(),
+                    accumulated_score_partner=self.get_partner_accumulated_score(),
                     round_=self.position + 1,
                 ),
                 logic_if_false=None,
@@ -579,6 +580,21 @@ class NestedGameTrial(ChainTrial):
             )
         return None
 
+    def get_my_accumulated_score(self):
+        my_accumulated_score = 0
+        if "summary" in self.participant.current_trial.definition.keys():
+            rewards = self.participant.current_trial.definition["summary"]["accumulated_rewards"]
+            my_accumulated_score = rewards[self.participant_id]
+        return my_accumulated_score
+
+    def get_partner_accumulated_score(self):
+        other_id = self.get_other_ide()
+        partner_accumulated_score = 0
+        if "summary" in self.participant.current_trial.definition.keys():
+            rewards = self.participant.current_trial.definition["summary"]["accumulated_rewards"]
+            partner_accumulated_score = rewards[other_id]
+        return partner_accumulated_score
+
     def score_answer(self, answer, definition) -> float:
         """
         Scores the participant's answer.
@@ -618,6 +634,17 @@ class NestedGameTrial(ChainTrial):
                 return True
 
         return False
+
+    def get_other_ide(self):
+        other_id = None
+        if self.participant.sync_group is not None:
+            participants = self.participant.sync_group.participants
+            assert len(participants) == 2
+            ids = [participant.id for participant in participants]
+            assert self.participant_id in ids
+            ids.remove(self.participant_id)
+            other_id = ids[0]
+        return other_id
 
 class NestedGameTrialMaker(ChainTrialMaker):
     pass

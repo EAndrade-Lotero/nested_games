@@ -1,6 +1,13 @@
-{% macro timeout(params) %}
+{% macro timeout(config) %}
 
 <style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #eceaea;
+    }
+
+    /* Timer container (top right) */
     .timer-container {
         position: fixed;
         top: 20px;
@@ -9,56 +16,78 @@
         padding: 12px 20px;
         border-radius: 12px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        font-size: 18px;
+        font-size: 22px;
         font-weight: bold;
+        z-index: 10;
     }
-    #prompt-text {
-        text-align: {{ params.text_align }}
+
+    /* Round / phase label (top left) */
+    .phase-label {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        font-size: 22px;
+        font-weight: bold;
+        white-space: nowrap;
+        z-index: 10;
+    }
+
+    /* Main prompt copy from TimeoutPrompt.text (Markup/HTML) */
+    .timeout-prompt-body {
+        position: relative;
+        z-index: 1;
+        max-width: 48rem;
+        margin: 0 auto 1rem;
+        padding: 5rem 1.25rem 0;
+        line-height: 1.5;
+        color: #222;
+    }
+
+    .timeout-prompt-body h2 {
+        margin-top: 0;
     }
 </style>
 
-<div>
+    <div class="timeout-prompt-body">
+      {{ config.text|safe }}
+    </div>
+
+    <div class="phase-label">
+      Round {{ config.round }} / {{ config.num_rounds }}
+    </div>
+
     <div class="timer-container" id="timer">
-        Time left: 05:00
+      00:18
     </div>
-
-    <div id="prompt-text">
-        {{ params.text_html }}
-    </div>
-</div>
-
 <script>
-    let loop = {{ params.loop | tojson }};
-    let timeRemaining = {{ params.timeoutSeconds }};
+let timeRemaining = {{ config.timeoutSeconds }};
 
-    psynet.trial.onEvent("trialFinished", function() {
-        if (loop) {
-            psynet.trial.restart();
-        }
-    });
+function updateTimer() {
+    let minutes = Math.floor(timeRemaining / 60);
+    let seconds = timeRemaining % 60;
 
-    function updateTimer() {
-        let minutes = Math.floor(timeRemaining / 60);
-        let seconds = timeRemaining % 60;
+    seconds = seconds < 10 ? "0" + seconds : seconds;
 
-        seconds = seconds < 10 ? "0" + seconds : seconds;
+    document.getElementById("timer").textContent =
+        "Time left: " + minutes + ":" + seconds;
 
-        document.getElementById("timer").textContent =
-            "Time left: " + minutes + ":" + seconds;
-
-        if (timeRemaining > 0) {
-            timeRemaining--;
-        } else {
-            clearInterval(timerInterval);
-            document.getElementById("timer").textContent = "Time's up!";
-            const timeoutAnswer = "{{ params.timeoutAnswer }}";
-            psynet.nextPage(timeoutAnswer);
-        }
+    if (timeRemaining > 0) {
+        timeRemaining--;
+    } else {
+        clearInterval(timerInterval);
+        document.getElementById("timer").textContent = "Time's up!";
+        const timeoutAnswer = "{{ config.timeoutAnswer }}";
+        psynet.nextPage(timeoutAnswer);
     }
+}
 
-    updateTimer();
-    let timerInterval = setInterval(updateTimer, 1000);
+updateTimer();
 
+let timerInterval = setInterval(updateTimer, 1000);
 </script>
 
 {% endmacro %}

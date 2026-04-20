@@ -107,11 +107,11 @@ class Exp(psynet.experiment.Experiment):
     }
 
     timeline = CustomTimeline(
-        consent_cococo_science_of_learning(
-            DURATION=15,
-            PAYMENT=2.30,
-        ),
-        personality_trial_maker,
+        # consent_cococo_science_of_learning(
+        #     DURATION=15,
+        #     PAYMENT=2.30,
+        # ),
+        # personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(
                 group_type="chain",
@@ -147,5 +147,5 @@ class Exp(psynet.experiment.Experiment):
             trials_per_node=1,
             sync_group_type="chain",
         ),
-        get_final_survey(),
+        # get_final_survey(),
     )

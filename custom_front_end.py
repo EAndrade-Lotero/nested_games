@@ -151,6 +151,8 @@ class TimeoutPrompt(Prompt):
         text_align: str = "left",
         buttons: Optional[List] = None,
         loop: bool = False,
+        round_:int = 1,
+        num_rounds: int = 1,
     ):
         super().__init__(
             text=text,
@@ -160,6 +162,8 @@ class TimeoutPrompt(Prompt):
         )
         self.timeoutSeconds = timeout
         self.timeoutAnswer = timeout_answer
+        self.round = round_
+        self.num_rounds = num_rounds
 
 ###########################################
 # Custom controls
@@ -171,20 +175,15 @@ class CustomControl(Control):
 
     def __init__(
         self,
-        context:Dict[str, str],
-        time_estimate:int,
-        external_template:str,
-        round_:int,
+        external_template: str,
+        accumulated_score_me: int = 0,
+        accumulated_score_partner: int = 0,
     ) -> None:
         super().__init__()
-        self.coin_url = context["coin_url"]
-        self.generic_url = context["generic_url"]
-        self.plate_url = context["plate_url"]
-        self.timeout = time_estimate
         self.macro = external_template.split(".")[0]
         self.external_template = external_template
-        self.round = round_
-        self.num_rounds = NUMBER_OF_ROUNDS
+        self.accumulated_score_me = int(accumulated_score_me)
+        self.accumulated_score_partner = int(accumulated_score_partner)
 
 
 class InnerProposalControl(Control):
