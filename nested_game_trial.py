@@ -30,9 +30,10 @@ from .custom_barriers import CustomBarrier
 from .custom_timeline import EndRoundPage
 from .custom_pages import (
     OuterProposalPage,
-    CustomWaitingPage,
+    OuterWaitingPage,
     OuterAcceptancePage,
     InnerProposalPage,
+    InnerWaitingPage,
     InnerAcceptancePage,
     ScorePage,
 )
@@ -137,7 +138,7 @@ class NestedGameTrial(ChainTrial):
                 id_="outer_proposal_stage",
                 on_release=self.assign_inner_roles,
                 active_participant=self.am_i_the_outer_leader(),
-                wait_page=CustomWaitingPage(
+                wait_page=OuterWaitingPage(
                     accumulated_score_me=self.get_my_accumulated_score(),
                     accumulated_score_partner=self.get_partner_accumulated_score(),
                     template_path=self.context["waiting_page_path"],
@@ -170,7 +171,7 @@ class NestedGameTrial(ChainTrial):
                 id_="outer_acceptance_stage",
                 on_release=self.assign_outer_acceptance,
                 active_participant=not self.am_i_the_outer_leader(),
-                wait_page=CustomWaitingPage(
+                wait_page=OuterWaitingPage(
                     accumulated_score_me=self.get_my_accumulated_score(),
                     accumulated_score_partner=self.get_partner_accumulated_score(),
                     template_path=self.context["waiting_page_path"],
@@ -318,7 +319,7 @@ class NestedGameTrial(ChainTrial):
                 id_="inner_proposal_stage",
                 on_release=self.assign_inner_proposal,
                 active_participant=self.am_i_the_inner_leader(),
-                wait_page=CustomWaitingPage(
+                wait_page=OuterWaitingPage(
                     accumulated_score_me=self.get_my_accumulated_score(),
                     accumulated_score_partner=self.get_partner_accumulated_score(),
                     template_path=self.context["waiting_page_path"],
@@ -346,7 +347,7 @@ class NestedGameTrial(ChainTrial):
             CustomBarrier(
                 id_="inner_acceptance_stage",
                 active_participant=not self.am_i_the_inner_leader(),
-                wait_page=CustomWaitingPage(
+                wait_page=InnerWaitingPage(
                     accumulated_score_me=self.get_my_accumulated_score(),
                     accumulated_score_partner=self.get_partner_accumulated_score(),
                     template_path=self.context["waiting_page_path"],

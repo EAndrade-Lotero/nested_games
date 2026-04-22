@@ -23,7 +23,7 @@ from .game_paramters import (
     NUMBER_OF_ROUNDS,
 )
 from .custom_front_end import (
-    CustomControl,
+    OuterProposalControl,
     OuterPrompt,
     InnerProposalControl,
     InnerPrompt,
@@ -90,7 +90,7 @@ class OuterProposalPage(ModularPage):
             f"<br>"
             f"<p>Drag and drop the coins onto one of the players: </p>"
         ))
-        control = CustomControl(
+        control = OuterProposalControl(
             accumulated_score_me=accumulated_score_me,
             accumulated_score_partner=accumulated_score_partner,
             external_template="outer_proposal.html",
@@ -116,7 +116,7 @@ class OuterProposalPage(ModularPage):
         return super().format_answer(raw_answer, **kwargs)
 
 
-class CustomWaitingPage(Page):
+class OuterWaitingPage(Page):
 
     def __init__(
         self,
@@ -193,7 +193,7 @@ class OuterAcceptancePage(ModularPage):
             f"<br>"
             f"<p>Do you accept this allocation?</p>"
         ))
-        control = CustomControl(
+        control = OuterProposalControl(
             proposal=proposal,
             accumulated_score_me=accumulated_score_me,
             accumulated_score_partner=accumulated_score_partner,
@@ -271,6 +271,56 @@ class InnerProposalPage(ModularPage):
                 participant.var.fail_me = True
                 participant.var.num_rounds_failed += 1
         return super().format_answer(raw_answer, **kwargs)
+
+
+class InnerWaitingPage(Page):
+
+    def __init__(
+        self,
+        template_path:str,
+        accumulated_score_me:int,
+        accumulated_score_partner:int,
+        round_:Optional[int]=1,
+        content:Optional[str|None] = None,
+        proposer:Optional[bool|None] = None,
+        **kwargs
+    ) -> None:
+        if content is None:
+            content = "Waiting for the other player..."
+        self.content = content
+        self.proposer = proposer
+        self.accumulated_score_me = accumulated_score_me
+        self.accumulated_score_partner = accumulated_score_partner
+        self.round = round_
+        self.num_rounds = NUMBER_OF_ROUNDS
+        self.wait_time = WAIT_PAGE_TIME
+        with open(template_path, "r") as file:
+            template = file.read()
+        super().__init__(
+            label="wait",
+            time_estimate=TIMEOUT_WAITING_FOR_OTHER,
+            template_str=template,
+            template_arg={
+                "accumulated_score_me": int(self.accumulated_score_me),
+                "accumulated_score_partner": int(self.accumulated_score_partner),
+                "round": self.round,
+                "num_rounds": self.num_rounds,
+                "content": self.content,
+                "proposer": self.proposer,
+                "wait_time": self.wait_time,
+            },
+            **kwargs,
+        )
+
+    def metadata(self, **kwargs):
+        return {"wait_time": self.wait_time}
+
+    def get_bot_response(self, experiment, bot):
+        return None
+
+    def on_complete(self, experiment, participant):
+        participant.total_wait_page_time += self.wait_time
+        super().on_complete(experiment, participant)
 
 
 class InnerAcceptancePage(ModularPage):

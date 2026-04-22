@@ -171,7 +171,7 @@ class TimeoutPrompt(Prompt):
 # Custom controls
 ###########################################
 
-class CustomControl(Control):
+class OuterProposalControl(Control):
     macro = ""
     external_template = ""
 
@@ -216,7 +216,7 @@ class InnerProposalControl(Control):
         self.show_next = False
 
 
-class InnerControl(CustomControl):
+class InnerControl(OuterProposalControl):
 
     def __init__(
         self,
