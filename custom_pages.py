@@ -178,9 +178,9 @@ class OuterAcceptancePage(ModularPage):
     ) -> None:
         assert proposal in [None, "PROPOSER", "RESPONDER"]
         if proposal == "PROPOSER":
-            recipient = "You have"
+            recipient = "You have been given"
         elif proposal == "RESPONDER":
-            recipient = "Your partner has"
+            recipient = "Your partner kept"
         else:
             recipient = None
 
