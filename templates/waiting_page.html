@@ -15,7 +15,9 @@
 {%- endmacro %}
 
 {% block stylesheets %}
-    {{ super() }}
+
+  {{ super() }}
+
 <style>
   body {
     font-family: sans-serif;
@@ -25,7 +27,50 @@
     {#align-items: center;#}
     height: 100vh;
   }
+    /* Timer container (top right) */
+    .timer-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        font-size: 22px;
+        font-weight: bold;
+        z-index: 10;
+    }
 
+    /* Round / phase label (top left) */
+    .phase-label {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        font-size: 22px;
+        font-weight: bold;
+        white-space: nowrap;
+        z-index: 10;
+    }
+
+    /* Main prompt copy from TimeoutPrompt.text (Markup/HTML) */
+    .timeout-prompt-body {
+        position: relative;
+        z-index: 1;
+        max-width: 48rem;
+        margin: 0 auto 1rem;
+        padding: 5rem 1.25rem 0;
+        line-height: 1.5;
+        color: #222;
+    }
+
+    .timeout-prompt-body h2 {
+        margin-top: 0;
+    }
+    
   .container {
     position: relative;
     width: 700px;
@@ -217,7 +262,17 @@
 
 {% block main_body %}
 
-<div>{{ content }}</div>
+<div class="timeout-prompt-body">
+  {{ content }}
+</div>
+
+<div class="phase-label">
+  Round {{ round }} / {{ num_rounds }}
+</div>
+
+<div class="timer-container" id="countdown">
+  00:18
+</div>
 
 <div class="container">
 
@@ -294,55 +349,13 @@
         }, 1000 * {{ wait_time }});
 
         /// AVATARS
-        const avatars = document.querySelectorAll('.avatar-label');
-        let p1 = "?";
-        let p2 = "?";
-        const proposer = "{{ proposer }}";
-
-        console.log("Proposer:", proposer);
-
-        if (proposer === "True") {
-            console.log("Me proposer");
-            p1 = "Partner";
-            p2 = "Me";
-        } else if (proposer === "False") {
-            p1 = "Me";
-            p2 = "Partner";
-        }
-
-        avatars[0].textContent = p1; // RESPONDER
-        avatars[1].textContent = p2; // PROPOSER
 
         ///BASKET
-        const basket = document.getElementById("basket");
-        const coinPile = document.getElementById("coinPile");
-        const TOTAL_COINS = {{ endowment }}; // adjust if needed
 
-        function updateCoins(value) {
-          basket.innerHTML = "";
-          coinPile.innerHTML = "";
+        // Fill basket
 
-          const basketCoins = Math.round(value);
-          const pileCoins = TOTAL_COINS - basketCoins;
+        // Fill remaining pile
 
-          // Fill basket
-          for (let i = 0; i < basketCoins; i++) {
-            const coin = document.createElement("div");
-            coin.classList.add("coin");
-            basket.appendChild(coin);
-          }
-
-          // Fill remaining pile
-          for (let i = 0; i < pileCoins; i++) {
-            const coin = document.createElement("div");
-            coin.classList.add("coin");
-            coinPile.appendChild(coin);
-          }
-        }
-
-        let v = {{ n_coins }};
-        updateCoins(v);
-        console.log("Proposal:", v);
 
     </script>
 {% endblock %}

@@ -1,4 +1,5 @@
 from typing import Union
+from markupsafe import Markup
 
 from psynet.modular_page import (
     ModularPage,
@@ -139,7 +140,11 @@ class NestedGameTrial(ChainTrial):
                     accumulated_score_me=self.get_my_accumulated_score(),
                     accumulated_score_partner=self.get_partner_accumulated_score(),
                     template_path=self.context["waiting_page_path"],
-                    content="Waiting for the leader...",
+                    content=Markup(
+                        "<h3>Please wait</h3>"
+                        "<br>"
+                        "<p>Waiting for a proposal...</p>"
+                    ),
                 )
             ),
         )

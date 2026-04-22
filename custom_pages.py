@@ -121,6 +121,7 @@ class CustomWaitingPage(Page):
         template_path:str,
         accumulated_score_me:int,
         accumulated_score_partner:int,
+        round_:Optional[int]=1,
         content:Optional[str|None] = None,
         proposer:Optional[bool|None] = None,
         **kwargs
@@ -131,6 +132,8 @@ class CustomWaitingPage(Page):
         self.proposer = proposer
         self.accumulated_score_me = accumulated_score_me
         self.accumulated_score_partner = accumulated_score_partner
+        self.round = round_
+        self.num_rounds = NUMBER_OF_ROUNDS
         self.wait_time = WAIT_PAGE_TIME
         with open(template_path, "r") as file:
             template = file.read()
@@ -139,6 +142,10 @@ class CustomWaitingPage(Page):
             time_estimate=TIMEOUT_PROPOSALS,
             template_str=template,
             template_arg={
+                "accumulated_score_me": self.accumulated_score_me,
+                "accumulated_score_partner": self.accumulated_score_partner,
+                "round": self.round,
+                "num_rounds": self.num_rounds,
                 "content": self.content,
                 "proposer": self.proposer,
                 "wait_time": self.wait_time,
