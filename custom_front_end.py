@@ -216,6 +216,26 @@ class InnerProposalControl(Control):
         self.show_next = False
 
 
+class InnerAcceptanceControl(Control):
+    macro = "inner_acceptance"
+    external_template = "inner_acceptance.html"
+
+    def __init__(
+        self,
+        proposal: Union[int, None] = None,
+        accumulated_score_me: int = 0,
+        accumulated_score_partner: int = 0,
+    ) -> None:
+        super().__init__()
+
+        # Assign attributes
+        self.proposal = proposal
+        self.endowment = ENDOWMENT
+        self.accumulated_score_me = int(accumulated_score_me)
+        self.accumulated_score_partner = int(accumulated_score_partner)
+        self.show_next = False
+
+
 class InnerControl(OuterProposalControl):
 
     def __init__(

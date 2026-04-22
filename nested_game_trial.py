@@ -338,9 +338,11 @@ class NestedGameTrial(ChainTrial):
                 label="inner_responder",
                 condition=lambda participant: self.is_the_inner_leader(participant),
                 logic_if_false=InnerAcceptancePage(
-                    context=self.context,
                     proposal=self.get_inner_proposal(),
                     round_=self.position + 1,
+                    time_estimate=self.time_estimate,
+                    accumulated_score_me=self.get_my_accumulated_score(),
+                    accumulated_score_partner=self.get_partner_accumulated_score(),
                 ),
                 logic_if_true=None,
             ),

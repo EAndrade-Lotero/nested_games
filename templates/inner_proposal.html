@@ -39,13 +39,6 @@
     transform: translateX(5%);
   }
 
-  .inner-proposal-root .offer-footer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-  }
-
   .offer-footer .btn-make-offer {
     min-width: 11rem;
     padding: 0.5rem 1.25rem;
@@ -217,10 +210,6 @@
     cursor: grabbing;
   }
 
-  .inner-proposal-root .offer-footer .inner-proposal-card {
-    margin-top: 0;
-  }
-
     .inner-proposal-root {
       font-family: Arial, sans-serif;
       box-sizing: border-box;
@@ -234,7 +223,18 @@
       box-sizing: inherit;
     }
 
-    .inner-proposal-root .inner-proposal-text {
+    .inner-proposal-root .offer-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .inner-proposal-root .offer-footer .inner-proposal-card {
+    margin-top: 0;
+  }
+
+  .inner-proposal-root .inner-proposal-text {
       max-width: 700px;
       margin-left: auto;
       margin-right: auto;

@@ -16,7 +16,6 @@ from psynet.timeline import (
 from psynet.utils import get_logger
 
 from .game_paramters import (
-    ENDOWMENT,
     TIMEOUT_PROPOSALS,
     WAIT_PAGE_TIME,
     TIMEOUT_WAITING_FOR_OTHER,
@@ -24,9 +23,8 @@ from .game_paramters import (
 )
 from .custom_front_end import (
     OuterProposalControl,
-    OuterPrompt,
     InnerProposalControl,
-    InnerPrompt,
+    InnerAcceptanceControl,
     ScorePrompt,
     TimeoutPrompt
 )
@@ -327,34 +325,45 @@ class InnerAcceptancePage(ModularPage):
 
     def __init__(
         self,
-        context: Dict[str, str],
         proposal: int,
         round_: int,
+        time_estimate: int,
+        accumulated_score_me: int = 0,
+        accumulated_score_partner: int = 0,
     ) -> None:
+        text = Markup("")
+        if proposal is not None:
+            if proposal == 0:
+                text=Markup(
+                    f"<h3>No coins have been offered to you.</h3>"
+                    f"<p>Do you accept this offer?</p>"
+                )
+            elif proposal > 0:
+                text=Markup(
+                    f"<h3>You have been offered {proposal} coins.</h3>"
+                    f"<p>Do you accept this offer?</p>"
+                )
+            else:
+                text=Markup("")
 
-        prompt = InnerPrompt(
-            text=(
-                f"<p>Do you accept your partner's proposal of {proposal} coins? </p>"
-            ),
-            proposal=proposal,
-            endowment=ENDOWMENT,
-            context=context,
-            time_estimate=TIMEOUT_PROPOSALS,
-            external_template="inner_acceptance.html",
+        prompt = TimeoutPrompt(
+            timeout=3000,
             round_=round_,
+            num_rounds=NUMBER_OF_ROUNDS,
+            text=Markup(text)
         )
-        control = PushButtonControl(
-            choices=["Accept", "Reject"],
-            labels=["Accept", "Reject"],
-            arrange_vertically=False,
+        control = InnerAcceptanceControl(
+            proposal=proposal,
+            accumulated_score_me=accumulated_score_me,
+            accumulated_score_partner=accumulated_score_partner,
         )
-
         super().__init__(
             label="inner_accept_answer",
             prompt=prompt,
             control=control,
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=time_estimate,
             save_answer="inner_accept_answer",
+            show_next_button=control.show_next,
         )
 
 
