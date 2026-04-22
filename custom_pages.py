@@ -194,6 +194,7 @@ class OuterAcceptancePage(ModularPage):
             f"<p>Do you accept this allocation?</p>"
         ))
         control = CustomControl(
+            proposal=proposal,
             accumulated_score_me=accumulated_score_me,
             accumulated_score_partner=accumulated_score_partner,
             external_template="outer_acceptance.html",

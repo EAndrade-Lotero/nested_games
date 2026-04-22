@@ -178,6 +178,7 @@ class CustomControl(Control):
     def __init__(
         self,
         external_template: str,
+        proposal: Union[str, None] = None,
         accumulated_score_me: int = 0,
         accumulated_score_partner: int = 0,
         show_next: bool = True,
@@ -188,6 +189,7 @@ class CustomControl(Control):
         self.accumulated_score_me = int(accumulated_score_me)
         self.accumulated_score_partner = int(accumulated_score_partner)
         self.show_next = show_next
+        self.proposal = proposal
 
 
 class InnerProposalControl(Control):

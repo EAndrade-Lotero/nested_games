@@ -279,22 +279,30 @@
 <script>
 
     const outerAcceptanceProposal = "{{ config.proposal }}";
+    console.log("Proposal:", outerAcceptanceProposal);
 
     function putCoins() {
-        const meZone = document.getElementById('myZone');
-        const partnerZone = document.getElementById('partnerZone');
-        if (!meZone || !partnerZone) {
-            return;
-        }
-        meZone.querySelectorAll('.coin').forEach((el) => el.remove());
-        partnerZone.querySelectorAll('.coin').forEach((el) => el.remove());
+      const meZone = document.getElementById('myZone');
+      const partnerZone = document.getElementById('partnerZone');
+      if (!meZone || !partnerZone) {
+          return;
+      }
+      meZone.querySelectorAll('.coin').forEach((el) => el.remove());
+      partnerZone.querySelectorAll('.coin').forEach((el) => el.remove());
 
-        const target = outerAcceptanceProposal === 'PROPOSER' ? meZone : partnerZone;
-        console.log(target);
-        const coin = document.createElement('div');
-        coin.className = 'coin';
-        coin.setAttribute('aria-hidden', 'true');
-        target.appendChild(coin);
+      let target = null;
+      if (outerAcceptanceProposal === 'PROPOSER') {
+          target = meZone;
+      } else if (outerAcceptanceProposal === 'RESPONDER') {
+          target = partnerZone;
+      }
+      if (!target) {
+          return;
+      }
+      const coin = document.createElement('div');
+      coin.className = 'coin';
+      coin.setAttribute('aria-hidden', 'true');
+      target.appendChild(coin);
     }
 
     putCoins();
