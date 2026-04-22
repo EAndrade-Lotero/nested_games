@@ -600,7 +600,7 @@ class NestedGameTrial(ChainTrial):
         my_accumulated_score = 0
         if "summary" in self.participant.current_trial.definition.keys():
             rewards = self.participant.current_trial.definition["summary"]["accumulated_rewards"]
-            my_accumulated_score = rewards[self.participant_id]
+            my_accumulated_score = rewards[str(self.participant_id)]
         return my_accumulated_score
 
     def get_partner_accumulated_score(self):
@@ -608,7 +608,7 @@ class NestedGameTrial(ChainTrial):
         partner_accumulated_score = 0
         if "summary" in self.participant.current_trial.definition.keys():
             rewards = self.participant.current_trial.definition["summary"]["accumulated_rewards"]
-            partner_accumulated_score = rewards[other_id]
+            partner_accumulated_score = rewards[str(other_id)]
         return partner_accumulated_score
 
     def score_answer(self, answer, definition) -> float:

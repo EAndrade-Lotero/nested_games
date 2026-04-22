@@ -276,35 +276,37 @@
 
 <div class="container">
 
-    <div class="player partner">
-      <div class="player-stack">
-        <div class="player-row">
-          <div class="bowl-stack">
-            <img class="bowl partner" src="{{ bowl_image_src(accumulated_score_partner) }}" alt="" />
-            <div class="bowl-label bowl-label-partner">{{ accumulated_score_partner }} coins</div>
-          </div>
-          <div class="avatar partner"></div>
+  <div class="player partner">
+    <div class="player-stack">
+      <div class="player-row">
+        <div class="bowl-stack">
+          <img class="bowl partner" src="{{ bowl_image_src(config.accumulated_score_partner) }}" alt="" />
+          <div class="bowl-label bowl-label-partner">{{ config.accumulated_score_partner }} coins</div>
         </div>
-        <div class="player-label">Partner</div>
+        <div class="avatar partner"></div>
+        <div class="dropzone partner" id="partnerZone"></div>
       </div>
+      <div class="player-label">Partner</div>
     </div>
+  </div>
 
-    <div class="table"></div>
+  <div class="table"></div>
 
 <div class="player me">
-  <div class="player-stack">
-    <div class="player-row me-row">
-      <div class="bowl-stack">
-        <img class="bowl" src="{{ bowl_image_src(accumulated_score_me) }}" alt="" />
-        <div class="bowl-label bowl-label-me">{{ accumulated_score_me }} coins</div>
-      </div>
-      <div class="avatar"></div>
+<div class="player-stack">
+  <div class="player-row me-row">
+    <div class="bowl-stack">
+      <img class="bowl" src="{{ bowl_image_src(config.accumulated_score_me) }}" alt="" />
+      <div class="bowl-label bowl-label-me">{{ config.accumulated_score_me }} coins</div>
     </div>
-    <div class="player-label">Me</div>
+    <div class="avatar"></div>
+    <div class="dropzone" id="myZone"></div>
   </div>
+  <div class="player-label">Me</div>
+</div>
 </div>
 
-  <div class="coins" id="coinPile"></div>
+<div class="coins" id="coinPile"></div>
 
 </div>
 
@@ -348,13 +350,36 @@
             psynet.nextPage();
         }, 1000 * {{ wait_time }});
 
-        /// AVATARS
-
         ///BASKET
+        const outerAcceptanceProposal = "{{ proposal }}";
 
-        // Fill basket
+        function putCoins() {
+            const meZone = document.getElementById('myZone');
+            const partnerZone = document.getElementById('partnerZone');
+            if (!meZone || !partnerZone) {
+                return;
+            }
+            meZone.querySelectorAll('.coin').forEach((el) => el.remove());
+            partnerZone.querySelectorAll('.coin').forEach((el) => el.remove());
 
-        // Fill remaining pile
+            let target = null;
+            if (outerAcceptanceProposal === 'PROPOSER') {
+                target = meZone;
+            } else if (outerAcceptanceProposal === 'RESPONDER') {
+                target = partnerZone;
+            }
+            if (!target) {
+                return;
+            }
+            const coin = document.createElement('div');
+            coin.className = 'coin';
+            coin.setAttribute('aria-hidden', 'true');
+            target.appendChild(coin);
+        }
+
+        putCoins();
+
+        // Coins
 
 
     </script>

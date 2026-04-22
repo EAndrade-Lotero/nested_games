@@ -129,6 +129,7 @@ class WaitingTrial(StaticTrial):
             prompt=TimeoutPrompt(
                 text=Markup(text),
                 timeout=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
+                show_rounds=False,
             ),
             control=CustomLikertControl(
                 lowest_value="Very inaccurate",
