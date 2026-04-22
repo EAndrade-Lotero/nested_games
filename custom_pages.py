@@ -94,6 +94,7 @@ class OuterProposalPage(ModularPage):
             accumulated_score_me=accumulated_score_me,
             accumulated_score_partner=accumulated_score_partner,
             external_template="outer_proposal.html",
+            show_next=False,
         )
         super().__init__(
             label="outer_proposal",
@@ -196,6 +197,7 @@ class OuterAcceptancePage(ModularPage):
             accumulated_score_me=accumulated_score_me,
             accumulated_score_partner=accumulated_score_partner,
             external_template="outer_acceptance.html",
+            show_next=False,
         )
 
         super().__init__(
@@ -204,6 +206,7 @@ class OuterAcceptancePage(ModularPage):
             control=control,
             time_estimate=time_estimate,
             save_answer="outer_accept_answer",
+            show_next_button=control.show_next,
         )
 
     def format_answer(self, raw_answer, **kwargs):

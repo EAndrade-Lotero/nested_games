@@ -161,6 +161,7 @@ def get_instructions(
             prompt=TimeoutPrompt(
                 text=Markup(OBJECTIVE),
                 timeout=TIMEOUT_PROPOSALS,
+                show_rounds=False,
             ),
             control=NullControl(),
             time_estimate=TIMEOUT_PROPOSALS,

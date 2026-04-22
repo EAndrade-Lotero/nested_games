@@ -224,7 +224,7 @@
   }
 
   .decision-btns .btn-reject:hover:not(:disabled) {
-    background: #f8f9fa;
+    background: #0b5ed7;
   }
 
   .decision-btns button:disabled {
@@ -290,6 +290,7 @@
         partnerZone.querySelectorAll('.coin').forEach((el) => el.remove());
 
         const target = outerAcceptanceProposal === 'PROPOSER' ? meZone : partnerZone;
+        console.log(target);
         const coin = document.createElement('div');
         coin.className = 'coin';
         coin.setAttribute('aria-hidden', 'true');

@@ -153,6 +153,7 @@ class TimeoutPrompt(Prompt):
         loop: bool = False,
         round_:int = 1,
         num_rounds: int = 1,
+        show_rounds: bool = True,
     ):
         super().__init__(
             text=text,
@@ -164,6 +165,7 @@ class TimeoutPrompt(Prompt):
         self.timeoutAnswer = timeout_answer
         self.round = round_
         self.num_rounds = num_rounds
+        self.show_rounds = show_rounds
 
 ###########################################
 # Custom controls
@@ -178,12 +180,14 @@ class CustomControl(Control):
         external_template: str,
         accumulated_score_me: int = 0,
         accumulated_score_partner: int = 0,
+        show_next: bool = True,
     ) -> None:
         super().__init__()
         self.macro = external_template.split(".")[0]
         self.external_template = external_template
         self.accumulated_score_me = int(accumulated_score_me)
         self.accumulated_score_partner = int(accumulated_score_partner)
+        self.show_next = show_next
 
 
 class InnerProposalControl(Control):

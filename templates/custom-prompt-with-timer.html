@@ -56,9 +56,11 @@
       {{ config.text|safe }}
     </div>
 
+    {% if config.show_rounds is sameas true or config.show_rounds == "True" %}
     <div class="phase-label">
       Round {{ config.round }} / {{ config.num_rounds }}
     </div>
+    {% endif %}
 
     <div class="timer-container" id="timer">
       00:18
