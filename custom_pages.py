@@ -75,17 +75,18 @@ class OuterProposalPage(ModularPage):
 
     def __init__(
         self,
+        time_estimate: int,
         accumulated_score_me: int = 0,
         accumulated_score_partner: int = 0,
         round_: int = 1,
     ) -> None:
         round_ = int(round_)
         prompt = TimeoutPrompt(
-            timeout=1000,
+            timeout=TIMEOUT_PROPOSALS,
             round_=round_,
             num_rounds=NUMBER_OF_ROUNDS,
             text=Markup(
-            f"<h2>Preparation phase</h2>"
+            f"<h3>Giving the endowment</h3>"
             f"<br>"
             f"<p>Drag and drop the coins onto one of the players: </p>"
         ))
@@ -98,7 +99,7 @@ class OuterProposalPage(ModularPage):
             label="outer_proposal",
             prompt=prompt,
             control=control,
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=time_estimate,
             save_answer="outer_proposal",
             show_next_button=False,
         )
@@ -139,7 +140,7 @@ class CustomWaitingPage(Page):
             template = file.read()
         super().__init__(
             label="wait",
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=TIMEOUT_WAITING_FOR_OTHER,
             template_str=template,
             template_arg={
                 "accumulated_score_me": self.accumulated_score_me,
@@ -168,33 +169,40 @@ class OuterAcceptancePage(ModularPage):
 
     def __init__(
         self,
-        context: Dict[str, str],
         proposal: str,
         round_: int,
+        time_estimate: int,
+        accumulated_score_me: int = 0,
+        accumulated_score_partner: int = 0,
     ) -> None:
         assert proposal in [None, "PROPOSER", "RESPONDER"]
+        if proposal == "PROPOSER":
+            recipient = "You have"
+        elif proposal == "RESPONDER":
+            recipient = "Your partner has"
+        else:
+            recipient = None
 
-        prompt = OuterPrompt(
-            text=(
-                f"<p>Do you accept your partner's proposal of you to be the {proposal}? </p>"
-            ),
-            proposal=proposal,
-            context=context,
-            time_estimate=TIMEOUT_PROPOSALS,
-            external_template="outer_acceptance.html",
+        prompt = TimeoutPrompt(
+            timeout=TIMEOUT_PROPOSALS,
             round_=round_,
-        )
-        control = PushButtonControl(
-            choices=["Accept", "Reject"],
-            labels=["Accept", "Reject"],
-            arrange_vertically=False,
+            num_rounds=NUMBER_OF_ROUNDS,
+            text=Markup(
+            f"<h3>{recipient} the endowment</h3>"
+            f"<br>"
+            f"<p>Do you accept this allocation?</p>"
+        ))
+        control = CustomControl(
+            accumulated_score_me=accumulated_score_me,
+            accumulated_score_partner=accumulated_score_partner,
+            external_template="outer_acceptance.html",
         )
 
         super().__init__(
             label="outer_accept_answer",
             prompt=prompt,
             control=control,
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=time_estimate,
             save_answer="outer_accept_answer",
         )
 
