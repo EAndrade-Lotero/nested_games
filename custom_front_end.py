@@ -198,10 +198,8 @@ class InnerProposalControl(Control):
 
     def __init__(
         self,
-        endowment:int,
-        context: Dict[str, str],
-        time_estimate: int,
-        round_:int,
+        accumulated_score_me: int = 0,
+        accumulated_score_partner: int = 0,
     ) -> None:
         super().__init__()
 
@@ -212,13 +210,10 @@ class InnerProposalControl(Control):
         self.n_steps = ENDOWMENT
         self.use_percentage = False
         self.integer_rule = False
-        self.endowment = endowment
-        self.coin_url = context["coin_url"]
-        self.generic_url = context["generic_url"]
-        self.plate_url = context["plate_url"]
-        self.timeout = time_estimate
-        self.round = round_
-        self.num_rounds = NUMBER_OF_ROUNDS
+        self.endowment = ENDOWMENT
+        self.accumulated_score_me = int(accumulated_score_me)
+        self.accumulated_score_partner = int(accumulated_score_partner)
+        self.show_next = False
 
 
 class InnerControl(CustomControl):

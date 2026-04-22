@@ -144,8 +144,8 @@ class CustomWaitingPage(Page):
             time_estimate=TIMEOUT_WAITING_FOR_OTHER,
             template_str=template,
             template_arg={
-                "accumulated_score_me": self.accumulated_score_me,
-                "accumulated_score_partner": self.accumulated_score_partner,
+                "accumulated_score_me": int(self.accumulated_score_me),
+                "accumulated_score_partner": int(self.accumulated_score_partner),
                 "round": self.round,
                 "num_rounds": self.num_rounds,
                 "content": self.content,
@@ -226,35 +226,40 @@ class InnerProposalPage(ModularPage):
     def __init__(
         self,
         outer_game:str,
-        context: Dict[str, str],
         round_: int,
+        time_estimate: int,
+        accumulated_score_me: int = 0,
+        accumulated_score_partner: int = 0,
     ) -> None:
         assert outer_game in ["ultimatum", "dictator"], f"Error: {outer_game} is not a valid game type"
 
-        text = f"<h2>Proposal phase</h2>"
-        text += f"<br>"
+        text = f"<h3>Giving coins</h3>"
+        text += f"<p>"
 
         if outer_game == "ultimatum":
-            text += f"<p>Proposal accepted. You are the PROPOSER. </p>"
+            text += f"Proposal accepted. "
 
-        text += f"<p>Use the slider below to decide how many of the {ENDOWMENT} coins you will give to your partner: <p/>"
-        text += f"<p>Press the 'Next' button when you are ready.</p>"
-        text += f"<p>(Scroll down the page if necessary.)</p>"
-        text += f"<br>"
+        text += f"Use the slider below to decide how many coins you will give "
+        text += f"to your partner, then press <strong>Make the offer</strong> when you are ready. <p/>"
 
-        prompt = Markup(text)
-        control = InnerProposalControl(
-            endowment=ENDOWMENT,
-            context=context,
-            time_estimate=TIMEOUT_PROPOSALS,
+        round_ = int(round_)
+        prompt = TimeoutPrompt(
+            timeout=TIMEOUT_PROPOSALS,
             round_=round_,
+            num_rounds=NUMBER_OF_ROUNDS,
+            text=Markup(text)
+        )
+        control = InnerProposalControl(
+            accumulated_score_me=accumulated_score_me,
+            accumulated_score_partner=accumulated_score_partner,
         )
         super().__init__(
             label="inner_proposal",
             prompt=prompt,
             control=control,
-            time_estimate=5,
+            time_estimate=time_estimate,
             save_answer="inner_proposal",
+            show_next_button=False,
         )
 
     def format_answer(self, raw_answer, **kwargs):

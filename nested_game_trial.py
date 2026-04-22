@@ -308,8 +308,10 @@ class NestedGameTrial(ChainTrial):
                 condition=lambda participant: self.is_the_inner_leader(participant),
                 logic_if_true=InnerProposalPage(
                     outer_game=self.participant.current_trial.definition['outer_game'],
-                    context=self.context,
                     round_=self.position + 1,
+                    accumulated_score_me=self.get_my_accumulated_score(),
+                    accumulated_score_partner=self.get_partner_accumulated_score(),
+                    time_estimate=self.time_estimate,
                 ),
             ),
             CustomBarrier(

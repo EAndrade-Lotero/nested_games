@@ -1,226 +1,7 @@
-{# 0 → bowl; 1–9 → few_coins; 10–30 → more_coins; 31+ → overflow_coins #}
-{% macro bowl_image_src(score) -%}
-  {%- set n = score|default(0)|int -%}
-  {%- if n <= 0 -%}
-../static/bowl.png
-  {%- elif n < 10 -%}
-../static/few_coins.png
-  {%- elif n <= 30 -%}
-../static/more_coins.png
-  {%- else -%}
-../static/overflow_coins.png
-  {%- endif -%}
-{%- endmacro %}
-
 {% macro inner_proposal(config) %}
 
-<style>
-  body {
-    font-family: sans-serif;
-    background: #e5e5e5;
-    display: flex;
-    justify-content: center;
-    {#align-items: center;#}
-    height: 100vh;
-  }
-
-  .container {
-    position: relative;
-    width: 700px;
-    height: 0;
-  }
-
-  .offer-footer {
-    margin-top: 1.75rem;
-    padding-bottom: 0.5rem;
-    text-align: center;
-    position: relative;
-    width: 100%;
-    transform: translateX(5%);
-  }
-
-  .inner-proposal-root .offer-footer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .offer-footer .btn-make-offer {
-    min-width: 11rem;
-    padding: 0.5rem 1.25rem;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    border-radius: 6px;
-    background: #0d6efd;
-    color: #fff;
-  }
-
-  .offer-footer .btn-make-offer:hover {
-    background: #0b5ed7;
-  }
-
-  .offer-footer .btn-make-offer:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
-
-  .player {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .partner {
-    top: -5px;
-    /* left: 50%; */
-    transform: translateX(30%);
-  }
-
-  .me {
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-20%);
-  }
-
-  .avatar {
-    flex-shrink: 0;
-    width: 80px;
-    height: 80px;
-    background-image: url("../static/generic.png");
-    background-size: cover;
-    background-position: center;
-    border-radius: 50%;
-    position: relative;
-    cursor: grab;
-    user-select: none;
-    color: white;
-    font-weight: bold;
-  }
-  
-  .avatar.partner {
-    width: 65px;
-    height: 65px;
-  }
-
-  .bowl {
-    height: 80px;
-    width: auto;
-    object-fit: contain;
-    flex-shrink: 0;
-    display: block;
-  }
-
-  .bowl.partner {
-    height: 65px;
-  }
-
-  .bowl-stack {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
-  }
-
-  .bowl-label {
-    font-size: 0.85rem;
-    text-align: left;
-    line-height: 1.2;
-  }
-
-  /* Adjust horizontal nudge for each bowl caption independently */
-  .bowl-label-partner {
-    transform: translateX(60%);
-  }
-
-  .bowl-label-me {
-    transform: translateX(5%);
-  }
-
-  .player-stack {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .player-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: nowrap;
-    gap: 12px;
-  }
-
-  .player-row.me-row {
-    gap: 20px;
-  }
-
-  .player-label {
-    text-align: center;
-    transform: translateX(80%);
-  }
-
-  .dropzone {
-    flex-shrink: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 70px;
-    height: 70px;
-    border: 2px dashed #2f4f4f;
-    border-radius: 10px;
-    margin: 0;
-    background: #f2f2f2;
-  }
-
-  .dropzone.partner {
-    width: 55px;
-    height: 55px;
-  }
-
-  .table {
-    position: relative;
-    top: 10px;
-    left: 150px;
-    width: 400px;
-    height: 200px;
-    background: #8d8570;
-    clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
-  }
-
-  .coins {
-    position: absolute;
-    top: 150px;
-    right: 60px;
-  }
-
-  .coin {
-    width: 50px;
-    height: 50px;
-    align-items: center;
-    margin: 4px;
-    font-weight: bold;
-    cursor: grab;
-    user-select: none;
-    background-size: cover;
-    background-position: center;
-    background-image: url("../static/heap.png");
-  }
-
-  .coin:active {
-    cursor: grabbing;
-  }
-
-  .inner-proposal-root .offer-footer .inner-proposal-card {
-    margin-top: 0;
-  }
-
+<div class="inner-proposal-root">
+  <style>
     .inner-proposal-root {
       font-family: Arial, sans-serif;
       box-sizing: border-box;
@@ -314,15 +95,21 @@
     }
 
     .inner-proposal-root .inner-proposal-basket {
+      width: 200px;
+      max-width: 100%;
+      height: 100px;
+      aspect-ratio: 1 / 1;
+      background-image: url("../static/plate.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      position: relative;
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
       justify-content: center;
-      min-height: 60px;
-    }
-
-    .inner-proposal-root .inner-proposal-basket .inner-proposal-coin {
-      width: calc(25px * 0.8);
+      align-items: center;
+      gap: 4px;
+      padding: 10px;
     }
 
     .inner-proposal-root .inner-proposal-coin-pile {
@@ -330,7 +117,6 @@
       flex-wrap: wrap;
       gap: 6px;
       justify-content: center;
-      min-height: 60px;
     }
 
     .inner-proposal-root .inner-proposal-coin {
@@ -431,28 +217,35 @@
     }
   </style>
 
-<div class="inner-proposal-root">
-    <div class="container">
+  <div class="inner-proposal-text">{{ config.text }}</div>
 
-      <div class="player partner">
-        <div class="player-stack">
-          <div class="player-row">
-            <div class="bowl-stack">
-              <img class="bowl partner" src="{{ bowl_image_src(config.accumulated_score_partner) }}" alt="" />
-              <div class="bowl-label bowl-label-partner">{{ config.accumulated_score_partner }} coins</div>
-            </div>
-            <div class="avatar partner"></div>
-          </div>
-          <div class="player-label">Partner</div>
+  <div class="inner-proposal-tabletop">
+
+    <div class="inner-proposal-countdown" id="inner-proposal-countdown">00:00</div>
+
+    <div class="inner-proposal-phase-label">
+        Round {{ config.round }} / {{ config.num_rounds }}
+    </div>
+
+    <div class="inner-proposal-zone inner-proposal-center-top">
+      <div class="inner-proposal-rectangle">RESPONDER</div>
+      <div class="inner-proposal-avatarzone">
+        <div class="inner-proposal-avatar partner" draggable="false" id="partner">
+          <span class="inner-proposal-avatar-label">Partner</span>
         </div>
       </div>
-
       <div class="inner-proposal-basket" id="inner-proposal-basket"></div>
-    
-      <div class="table"></div>
-    
+    </div>
+
+    <div class="inner-proposal-zone inner-proposal-center-middle">
+      <div class="inner-proposal-rectangle">PROPOSER</div>
+      <div class="inner-proposal-avatarzone">
+        <div class="inner-proposal-avatar" draggable="false" id="me">
+          <span class="inner-proposal-avatar-label">Me</span>
+        </div>
+      </div>
       <div class="inner-proposal-coin-pile" id="inner-proposal-coin-pile">
-        {% for i in range(1, config.endowment + 1) %}
+        {% for i in range(1, 11) %}
         <div
           class="inner-proposal-coin"
           draggable="false"
@@ -460,18 +253,9 @@
         ></div>
         {% endfor %}
       </div>
-    <div class="player me">
-        <div class="player-stack">
-        <div class="player-row me-row">
-        <div class="bowl-stack">
-          <img class="bowl" src="{{ bowl_image_src(config.accumulated_score_me) }}" alt="" />
-          <div class="bowl-label bowl-label-me">{{ config.accumulated_score_me }} coins</div>
-        </div>
-        <div class="avatar"></div>
-      </div>
-      <div class="player-label">Me</div>
     </div>
-    </div>
+
+  </div>
 
   <div class="inner-proposal-card">
     <div class="inner-proposal-slider-row">
@@ -489,10 +273,6 @@
         </div>
       </div>
     </div>
-  </div>
-  <div class="offer-footer">
-    <button type="button" class="btn-make-offer" id="makeOfferBtn">Make the offer</button>
-  </div>
   </div>
 
   <script>
@@ -523,6 +303,34 @@
           coinPile.appendChild(coin);
         }
       }
+
+      let timeRemaining = {{ config.timeout }};
+
+      function updateClock() {
+        const countdownEl = root.querySelector("#inner-proposal-countdown");
+        if (!countdownEl) return;
+
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        countdownEl.textContent =
+          `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+        if (timeRemaining > 0) {
+          timeRemaining--;
+        } else {
+          clearInterval(timer);
+            document.dispatchEvent(new Event("done"));
+            psynet.trial.registerEvent(
+                "done",
+                {info: "timeout"}
+              );
+            const timeoutProposer = "No answer";
+            psynet.nextPage(timeoutProposer);
+        }
+      }
+
+      updateClock();
+      const timer = setInterval(updateClock, 1000);
 
       const slider = root.querySelector("#inner-proposal-slider");
       const minLabel = root.querySelector("#inner-proposal-min-label");
@@ -604,22 +412,9 @@
 
       updateSliderConfig();
 
-      function handleMakeOffer() {
-        if (typeof psynet === "undefined") {
-          return;
-        }
-        const answer = slider.value;
-        psynet.stageResponse = function () {
-          psynet.response.staged.rawAnswer = answer;
-        };
-        psynet.stageResponse();
-        psynet.nextPage(answer);
-      }
-
-      const makeOfferBtn = root.querySelector("#makeOfferBtn");
-      if (makeOfferBtn) {
-        makeOfferBtn.addEventListener("click", handleMakeOffer);
-      }
+      psynet.stageResponse = function () {
+        psynet.response.staged.rawAnswer = slider.value;
+      };
     })();
   </script>
 </div>
