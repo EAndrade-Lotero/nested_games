@@ -136,6 +136,8 @@ class NestedGameTrial(ChainTrial):
                 on_release=self.assign_inner_roles,
                 active_participant=self.am_i_the_outer_leader(),
                 wait_page=CustomWaitingPage(
+                    accumulated_score_me=self.get_my_accumulated_score(),
+                    accumulated_score_partner=self.get_partner_accumulated_score(),
                     template_path=self.context["waiting_page_path"],
                     content="Waiting for the leader...",
                 )
@@ -161,6 +163,8 @@ class NestedGameTrial(ChainTrial):
                 on_release=self.assign_outer_acceptance,
                 active_participant=not self.am_i_the_outer_leader(),
                 wait_page=CustomWaitingPage(
+                    accumulated_score_me=self.get_my_accumulated_score(),
+                    accumulated_score_partner=self.get_partner_accumulated_score(),
                     template_path=self.context["waiting_page_path"],
                     content="Waiting for acceptance...",
                     proposer=self.am_i_the_inner_leader(),
@@ -305,6 +309,8 @@ class NestedGameTrial(ChainTrial):
                 on_release=self.assign_inner_proposal,
                 active_participant=self.am_i_the_inner_leader(),
                 wait_page=CustomWaitingPage(
+                    accumulated_score_me=self.get_my_accumulated_score(),
+                    accumulated_score_partner=self.get_partner_accumulated_score(),
                     template_path=self.context["waiting_page_path"],
                     content="Waiting for the leader...",
                     proposer=self.am_i_the_inner_leader(),
@@ -331,10 +337,12 @@ class NestedGameTrial(ChainTrial):
                 id_="inner_acceptance_stage",
                 active_participant=not self.am_i_the_inner_leader(),
                 wait_page=CustomWaitingPage(
+                    accumulated_score_me=self.get_my_accumulated_score(),
+                    accumulated_score_partner=self.get_partner_accumulated_score(),
                     template_path=self.context["waiting_page_path"],
                     content="Waiting for acceptance...",
                     proposer=self.am_i_the_inner_leader(),
-                    n_coins=self.get_inner_proposal(),
+                    # n_coins=self.get_inner_proposal(),
                 )
             ),
         )

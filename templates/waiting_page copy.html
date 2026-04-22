@@ -1,0 +1,298 @@
+{% extends "timeline-page.html" %}
+
+{% block stylesheets %}
+    {{ super() }}
+    <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #eceaea;
+      display: block;
+      justify-content: center;
+      align-items: flex-start; /* ← change this */
+      min-height: 100vh;
+      margin: 0;
+      overflow-y: auto;
+      padding-top: 20px; /* optional spacing from top */
+    }
+
+    .tabletop {
+        width: 700px;
+        min-height: 400px;
+        background: #eceaea;
+        border-radius: 20px;
+        padding: 20px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        margin: auto;
+        gap: 20px;
+    }
+
+    #countdown {
+      position: absolute;
+      top: 15px;
+      left: 20px;
+      font-family: "Book Antiqua", Palatino, serif;
+      font-size: 22px;
+      font-weight: bold;
+      color: rgb(83, 83, 83);
+    }
+
+    .zone {
+      border: 2px solid #365c5c;
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .center-top {
+        width: 300px;
+        height: 280px;
+    }
+
+    .center-middle {
+        width: 200px;
+        height: 220px;
+    }
+
+    .rectangle {
+      width: 150px;
+      height: 50px;
+      background: rgb(221, 233, 255);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Book Antiqua", Palatino, serif;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .basket {
+      width: 200px;
+      height: 100px;
+      /* background-image: url("{{ config.plate_url }}"); */
+      background-image: url("../static/plate.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      padding: 10px;
+    }
+
+    .coin-pile {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    .coin {
+      width: 25px;
+      aspect-ratio: 1 / 1;
+      background-image: url("../static/coin.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      cursor: grab;
+    }
+
+    .avatar {
+      width: 80px;
+      height: 80px;
+      background-image: url("../static/generic.png");
+      background-size: cover;
+      background-position: center;
+      border-radius: 50%;
+      position: relative;
+      cursor: grab;
+      user-select: none;
+      color: white;
+      font-weight: bold;
+    }
+
+    .avatar.partner {
+      background-image: url("../static/generic.png");
+    }
+
+    .avatar.dragging {
+      opacity: 0.5;
+    }
+
+    .avatar-label {
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      background: rgba(168, 168, 168, 0.5);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .avatarzone {
+        min-height: 90px;
+        width: 30%;
+        border: 0px dashed rgb(55, 0, 255);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        text-align: center;
+    }
+
+    .dropzone .avatar {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+    </style>
+
+{% endblock %}
+
+{% block main_body %}
+
+    <div>{{ content }}</div>
+
+    <div class="tabletop">
+
+      <div id="countdown">Please wait...</div>
+
+      <!-- TOP PLACE -->
+      <div class="zone center-top">
+        <div class="rectangle">RESPONDER</div>
+        <div class="avatarzone">
+            <div class="avatar partner" draggable="false" id="partner">
+                <span class="avatar-label">?</span>
+            </div>
+        </div>
+        <div class="basket" id="basket"></div>
+      </div>
+
+      <!-- SECOND PLACE (DROP TARGET) -->
+      <div class="zone center-middle">
+        <div class="rectangle">PROPOSER</div>
+        <div class="avatarzone" id="dropzone">
+            <div class="avatar" draggable="false" id="me">
+            <span class="avatar-label">?</span>
+            </div>
+        </div>
+        <div class="coin-pile" id="coinPile">
+            <div class="coin" draggable="false" id="coin1"></div>
+            <div class="coin" draggable="false" id="coin2"></div>
+            <div class="coin" draggable="false" id="coin3"></div>
+            <div class="coin" draggable="false" id="coin4"></div>
+            <div class="coin" draggable="false" id="coin5"></div>
+            <div class="coin" draggable="false" id="coin6"></div>
+            <div class="coin" draggable="false" id="coin7"></div>
+            <div class="coin" draggable="false" id="coin8"></div>
+            <div class="coin" draggable="false" id="coin9"></div>
+            <div class="coin" draggable="false" id="coin10"></div>
+        </div>
+      </div>
+
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+
+    <script>
+
+        /// TIMER
+        let timeRemaining = {{ wait_time }};
+        let dots = 0;
+
+        function updateClock() {
+
+            dots = (dots + 1) % 4;  // cycles: 0,1,2,3
+            const dotString = ".".repeat(dots);
+
+            document.getElementById("countdown").textContent =
+                "Please wait" + dotString;
+
+            if (timeRemaining > 0) {
+                timeRemaining--;
+            } else {
+                clearInterval(timer);
+
+                document.dispatchEvent(new Event("done"));
+                psynet.trial.registerEvent(
+                    "done",
+                    {info: "timeout"}
+                );
+            }
+        }
+
+        updateClock();
+
+        const timer = setInterval(updateClock, 500);
+
+        setTimeout(function () {
+            psynet.nextPage();
+        }, 1000 * {{ wait_time }});
+
+        /// AVATARS
+        const avatars = document.querySelectorAll('.avatar-label');
+        let p1 = "?";
+        let p2 = "?";
+        const proposer = "{{ proposer }}";
+
+        console.log("Proposer:", proposer);
+
+        if (proposer === "True") {
+            console.log("Me proposer");
+            p1 = "Partner";
+            p2 = "Me";
+        } else if (proposer === "False") {
+            p1 = "Me";
+            p2 = "Partner";
+        }
+
+        avatars[0].textContent = p1; // RESPONDER
+        avatars[1].textContent = p2; // PROPOSER
+
+        ///BASKET
+        const basket = document.getElementById("basket");
+        const coinPile = document.getElementById("coinPile");
+        const TOTAL_COINS = {{ endowment }}; // adjust if needed
+
+        function updateCoins(value) {
+          basket.innerHTML = "";
+          coinPile.innerHTML = "";
+
+          const basketCoins = Math.round(value);
+          const pileCoins = TOTAL_COINS - basketCoins;
+
+          // Fill basket
+          for (let i = 0; i < basketCoins; i++) {
+            const coin = document.createElement("div");
+            coin.classList.add("coin");
+            basket.appendChild(coin);
+          }
+
+          // Fill remaining pile
+          for (let i = 0; i < pileCoins; i++) {
+            const coin = document.createElement("div");
+            coin.classList.add("coin");
+            coinPile.appendChild(coin);
+          }
+        }
+
+        let v = {{ n_coins }};
+        updateCoins(v);
+        console.log("Proposal:", v);
+
+    </script>
+{% endblock %}

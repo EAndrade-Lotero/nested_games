@@ -1,207 +1,257 @@
 {% extends "timeline-page.html" %}
 
+{# 0 → bowl; 1–9 → few_coins; 10–30 → more_coins; 31+ → overflow_coins #}
+{% macro bowl_image_src(score) -%}
+  {%- set n = score|default(0)|int -%}
+  {%- if n <= 0 -%}
+../static/bowl.png
+  {%- elif n < 10 -%}
+../static/few_coins.png
+  {%- elif n <= 30 -%}
+../static/more_coins.png
+  {%- else -%}
+../static/overflow_coins.png
+  {%- endif -%}
+{%- endmacro %}
+
 {% block stylesheets %}
     {{ super() }}
-    <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #eceaea;
-      display: block;
-      justify-content: center;
-      align-items: flex-start; /* ← change this */
-      min-height: 100vh;
-      margin: 0;
-      overflow-y: auto;
-      padding-top: 20px; /* optional spacing from top */
-    }
+<style>
+  body {
+    font-family: sans-serif;
+    background: #e5e5e5;
+    display: flex;
+    justify-content: center;
+    {#align-items: center;#}
+    height: 100vh;
+  }
 
-    .tabletop {
-        width: 700px;
-        min-height: 400px;
-        background: #eceaea;
-        border-radius: 20px;
-        padding: 20px;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
-        margin: auto;
-        gap: 20px;
-    }
+  .container {
+    position: relative;
+    width: 700px;
+    height: 0;
+  }
 
-    #countdown {
-      position: absolute;
-      top: 15px;
-      left: 20px;
-      font-family: "Book Antiqua", Palatino, serif;
-      font-size: 22px;
-      font-weight: bold;
-      color: rgb(83, 83, 83);
-    }
+  .player {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 
-    .zone {
-      border: 2px solid #365c5c;
-      border-radius: 12px;
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
+  .partner {
+    top: -5px;
+    /* left: 50%; */
+    transform: translateX(30%);
+  }
 
-    .center-top {
-        width: 300px;
-        height: 280px;
-    }
+  .me {
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-20%);
+  }
 
-    .center-middle {
-        width: 200px;
-        height: 220px;
-    }
+  .avatar {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+    background-image: url("../static/generic.png");
+    background-size: cover;
+    background-position: center;
+    border-radius: 50%;
+    position: relative;
+    cursor: grab;
+    user-select: none;
+    color: white;
+    font-weight: bold;
+  }
+  
+  .avatar.partner {
+    width: 65px;
+    height: 65px;
+  }
 
-    .rectangle {
-      width: 150px;
-      height: 50px;
-      background: rgb(221, 233, 255);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: "Book Antiqua", Palatino, serif;
-      font-weight: bold;
-      letter-spacing: 1px;
-    }
+  .bowl {
+    height: 80px;
+    width: auto;
+    object-fit: contain;
+    flex-shrink: 0;
+    display: block;
+  }
 
-    .basket {
-      width: 200px;
-      height: 100px;
-      /* background-image: url("{{ config.plate_url }}"); */
-      background-image: url("../static/plate.png");
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      position: relative;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-      gap: 4px;
-      padding: 10px;
-    }
+  .bowl.partner {
+    height: 65px;
+  }
 
-    .coin-pile {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: center;
-    }
+  .bowl-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
 
-    .coin {
-      width: 25px;
-      aspect-ratio: 1 / 1;
-      background-image: url("../static/coin.png");
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      cursor: grab;
-    }
+  .bowl-label {
+    font-size: 0.85rem;
+    text-align: left;
+    line-height: 1.2;
+  }
 
-    .avatar {
-      width: 80px;
-      height: 80px;
-      background-image: url("../static/generic.png");
-      background-size: cover;
-      background-position: center;
-      border-radius: 50%;
-      position: relative;
-      cursor: grab;
-      user-select: none;
-      color: white;
-      font-weight: bold;
-    }
+  /* Adjust horizontal nudge for each bowl caption independently */
+  .bowl-label-partner {
+    transform: translateX(60%);
+  }
 
-    .avatar.partner {
-      background-image: url("../static/generic.png");
-    }
+  .bowl-label-me {
+    transform: translateX(5%);
+  }
 
-    .avatar.dragging {
-      opacity: 0.5;
-    }
+  .player-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
 
-    .avatar-label {
-      position: absolute;
-      bottom: 4px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 14px;
-      background: rgba(168, 168, 168, 0.5);
-      padding: 2px 6px;
-      border-radius: 6px;
-    }
+  .player-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 12px;
+  }
 
-    .avatarzone {
-        min-height: 90px;
-        width: 30%;
-        border: 0px dashed rgb(55, 0, 255);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        position: relative;
-        text-align: center;
-    }
+  .player-row.me-row {
+    gap: 20px;
+  }
 
-    .dropzone .avatar {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-    }
-    </style>
+  .player-label {
+    text-align: center;
+    transform: translateX(80%);
+  }
+
+  .dropzone {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 70px;
+    height: 70px;
+    border: 2px dashed #2f4f4f;
+    border-radius: 10px;
+    margin: 0;
+    background: #f2f2f2;
+  }
+
+  .dropzone.partner {
+    width: 55px;
+    height: 55px;
+  }
+
+  .table {
+    position: relative;
+    top: 10px;
+    left: 150px;
+    width: 400px;
+    height: 200px;
+    background: #8d8570;
+    clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+  }
+
+  .coins {
+    position: absolute;
+    top: 150px;
+    right: 60px;
+  }
+
+  .coin {
+    width: 50px;
+    height: 50px;
+    align-items: center;
+    margin: 4px;
+    font-weight: bold;
+    cursor: grab;
+    user-select: none;
+    background-size: cover;
+    background-position: center;
+    background-image: url("../static/heap.png");
+  }
+
+  .coin:active {
+    cursor: grabbing;
+  }
+
+  .offer-footer {
+    margin-top: 1.75rem;
+    padding-bottom: 0.5rem;
+    text-align: center;
+    position: relative;
+    width: 100%;
+    transform: translateX(5%);
+  }
+
+  .offer-footer .btn-make-offer {
+    min-width: 11rem;
+    padding: 0.5rem 1.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    background: #0d6efd;
+    color: #fff;
+  }
+
+  .offer-footer .btn-make-offer:hover {
+    background: #0b5ed7;
+  }
+
+  .offer-footer .btn-make-offer:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+</style>
 
 {% endblock %}
 
 {% block main_body %}
 
-    <div>{{ content }}</div>
+<div>{{ content }}</div>
 
-    <div class="tabletop">
+<div class="container">
 
-      <div id="countdown">Please wait...</div>
-
-      <!-- TOP PLACE -->
-      <div class="zone center-top">
-        <div class="rectangle">RESPONDER</div>
-        <div class="avatarzone">
-            <div class="avatar partner" draggable="false" id="partner">
-                <span class="avatar-label">?</span>
-            </div>
+    <div class="player partner">
+      <div class="player-stack">
+        <div class="player-row">
+          <div class="bowl-stack">
+            <img class="bowl partner" src="{{ bowl_image_src(accumulated_score_partner) }}" alt="" />
+            <div class="bowl-label bowl-label-partner">{{ accumulated_score_partner }} coins</div>
+          </div>
+          <div class="avatar partner"></div>
         </div>
-        <div class="basket" id="basket"></div>
+        <div class="player-label">Partner</div>
       </div>
-
-      <!-- SECOND PLACE (DROP TARGET) -->
-      <div class="zone center-middle">
-        <div class="rectangle">PROPOSER</div>
-        <div class="avatarzone" id="dropzone">
-            <div class="avatar" draggable="false" id="me">
-            <span class="avatar-label">?</span>
-            </div>
-        </div>
-        <div class="coin-pile" id="coinPile">
-            <div class="coin" draggable="false" id="coin1"></div>
-            <div class="coin" draggable="false" id="coin2"></div>
-            <div class="coin" draggable="false" id="coin3"></div>
-            <div class="coin" draggable="false" id="coin4"></div>
-            <div class="coin" draggable="false" id="coin5"></div>
-            <div class="coin" draggable="false" id="coin6"></div>
-            <div class="coin" draggable="false" id="coin7"></div>
-            <div class="coin" draggable="false" id="coin8"></div>
-            <div class="coin" draggable="false" id="coin9"></div>
-            <div class="coin" draggable="false" id="coin10"></div>
-        </div>
-      </div>
-
     </div>
+
+    <div class="table"></div>
+
+<div class="player me">
+  <div class="player-stack">
+    <div class="player-row me-row">
+      <div class="bowl-stack">
+        <img class="bowl" src="{{ bowl_image_src(accumulated_score_me) }}" alt="" />
+        <div class="bowl-label bowl-label-me">{{ accumulated_score_me }} coins</div>
+      </div>
+      <div class="avatar"></div>
+    </div>
+    <div class="player-label">Me</div>
+  </div>
+</div>
+
+  <div class="coins" id="coinPile"></div>
+
+</div>
 
 {% endblock %}
 
