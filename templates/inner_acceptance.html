@@ -298,8 +298,8 @@
       basket.innerHTML = "";
       coinPile.innerHTML = "";
 
-      const basketCoins = Math.round(value);
-      const pileCoins = TOTAL_COINS - basketCoins;
+      const pileCoins = Math.round(value);
+      const basketCoins = TOTAL_COINS - pileCoins;
       console.log("Entering updateCoins...", [basketCoins, pileCoins]);
 
       // Fill basket
