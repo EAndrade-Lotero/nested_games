@@ -1,5 +1,4 @@
 # psynet@git+https://gitlab.com/PsyNetDev/PsyNet@master#egg=psynet
-rq==2.6.1
 numpy
 pandas
 markupsafe
