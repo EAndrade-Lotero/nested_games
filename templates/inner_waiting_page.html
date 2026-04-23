@@ -227,35 +227,49 @@
     cursor: grabbing;
   }
 
-  .offer-footer {
-    margin-top: 1.75rem;
-    padding-bottom: 0.5rem;
-    text-align: center;
-    position: relative;
-    width: 100%;
-    transform: translateX(5%);
+  .inner-proposal-root {
+    font-family: Arial, sans-serif;
+    box-sizing: border-box;
+    max-width: 100%;
+    padding: 0.25rem 0 1rem;
   }
 
-  .offer-footer .btn-make-offer {
-    min-width: 11rem;
-    padding: 0.5rem 1.25rem;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    border-radius: 6px;
-    background: #0d6efd;
-    color: #fff;
+  .inner-proposal-root *,
+  .inner-proposal-root *::before,
+  .inner-proposal-root *::after {
+    box-sizing: inherit;
   }
 
-  .offer-footer .btn-make-offer:hover {
-    background: #0b5ed7;
+  .inner-proposal-basket {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    min-height: 60px;
   }
 
-  .offer-footer .btn-make-offer:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
+  .inner-proposal-basket .inner-proposal-coin {
+    width: calc(25px * 0.8);
   }
+
+  .inner-proposal-coin-pile {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    min-height: 60px;
+  }
+
+  .inner-proposal-coin {
+    width: 25px;
+    aspect-ratio: 1 / 1;
+    background-image: url("../static/coin.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: default;
+  }
+
 </style>
 
 {% endblock %}
@@ -274,7 +288,8 @@
   00:18
 </div>
 
-<div class="container">
+<div class="inner-proposal-root">
+  <div class="container">
 
   <div class="player partner">
     <div class="player-stack">
@@ -284,104 +299,103 @@
           <div class="bowl-label bowl-label-partner">{{ accumulated_score_partner }} coins</div>
         </div>
         <div class="avatar partner"></div>
-        <div class="dropzone partner" id="partnerZone"></div>
       </div>
       <div class="player-label">Partner</div>
     </div>
   </div>
 
+  <div class="inner-proposal-basket" id="basket"></div>
+    
   <div class="table"></div>
 
-<div class="player me">
-<div class="player-stack">
-  <div class="player-row me-row">
-    <div class="bowl-stack">
-      <img class="bowl" src="{{ bowl_image_src(accumulated_score_me) }}" alt="" />
-      <div class="bowl-label bowl-label-me">{{ accumulated_score_me }} coins</div>
-    </div>
-    <div class="avatar"></div>
-    <div class="dropzone" id="myZone"></div>
+  <div class="inner-proposal-coin-pile" id="coinPile">
   </div>
-  <div class="player-label">Me</div>
-</div>
-</div>
 
-<div class="coins" id="coinPile"></div>
-
+  <div class="player me">
+    <div class="player-stack">
+      <div class="player-row me-row">
+        <div class="bowl-stack">
+          <img class="bowl" src="{{ bowl_image_src(accumulated_score_me) }}" alt="" />
+          <div class="bowl-label bowl-label-me">{{ accumulated_score_me }} coins</div>
+        </div>
+        <div class="avatar"></div>
+      </div>
+      <div class="player-label">Me</div>
+    </div>
+  </div>
 </div>
 
 {% endblock %}
 
 {% block scripts %}
-    {{ super() }}
+  {{ super() }}
 
-    <script>
+  <script>
 
-        /// TIMER
-        let timeRemaining = {{ wait_time }};
-        let dots = 0;
+    /// TIMER
+    let timeRemaining = {{ wait_time }};
+    let dots = 0;
 
-        function updateClock() {
+    function updateClock() {
 
-            dots = (dots + 1) % 4;  // cycles: 0,1,2,3
-            const dotString = ".".repeat(dots);
+        dots = (dots + 1) % 4;  // cycles: 0,1,2,3
+        const dotString = ".".repeat(dots);
 
-            document.getElementById("countdown").textContent =
-                "Please wait" + dotString;
+        document.getElementById("countdown").textContent =
+            "Please wait" + dotString;
 
-            if (timeRemaining > 0) {
-                timeRemaining--;
-            } else {
-                clearInterval(timer);
+        if (timeRemaining > 0) {
+            timeRemaining--;
+        } else {
+            clearInterval(timer);
 
-                document.dispatchEvent(new Event("done"));
-                psynet.trial.registerEvent(
-                    "done",
-                    {info: "timeout"}
-                );
-            }
+            document.dispatchEvent(new Event("done"));
+            psynet.trial.registerEvent(
+                "done",
+                {info: "timeout"}
+            );
         }
+    }
 
-        updateClock();
+    updateClock();
 
-        const timer = setInterval(updateClock, 500);
+    const timer = setInterval(updateClock, 500);
 
-        setTimeout(function () {
-            psynet.nextPage();
-        }, 1000 * {{ wait_time }});
+    setTimeout(function () {
+        psynet.nextPage();
+    }, 1000 * {{ wait_time }});
 
-        ///BASKET
-        const outerAcceptanceProposal = "{{ proposer }}";
-        console.log("Proposal:", outerAcceptanceProposal);
+    ///BASKET
+    const basket = document.getElementById("basket");
+    const coinPile = document.getElementById("coinPile");
+    const TOTAL_COINS = {{ endowment }}; // adjust if needed
 
-        function putCoins() {
-          const meZone = document.getElementById('myZone');
-          const partnerZone = document.getElementById('partnerZone');
-          if (!meZone || !partnerZone) {
-              return;
-          }
-          meZone.querySelectorAll('.coin').forEach((el) => el.remove());
-          partnerZone.querySelectorAll('.coin').forEach((el) => el.remove());
+    function updateCoins(value) {
+      basket.innerHTML = "";
+      coinPile.innerHTML = "";
 
-          let target = null;
-          if (outerAcceptanceProposal === 'True') {
-              target = meZone;
-          } else if (outerAcceptanceProposal === 'False') {
-              target = partnerZone;
-          }
-          if (!target) {
-              return;
-          }
-          const coin = document.createElement('div');
-          coin.className = 'coin';
-          coin.setAttribute('aria-hidden', 'true');
-          target.appendChild(coin);
-        }
+      const basketCoins = Math.round(value);
+      const pileCoins = TOTAL_COINS - basketCoins;
+      console.log("Entering updateCoins...", [basketCoins, pileCoins]);
 
-        putCoins();
+      // Fill basket
+      for (let i = 0; i < basketCoins; i++) {
+        const coin = document.createElement("div");
+        coin.classList.add("inner-proposal-coin");
+        basket.appendChild(coin);
+      }
 
-        // Coins
+      // Fill remaining pile
+      for (let i = 0; i < pileCoins; i++) {
+        const coin = document.createElement("div");
+        coin.classList.add("inner-proposal-coin");
+        coinPile.appendChild(coin);
+      }
+    }
 
+    let v = {{ proposal }};
+    updateCoins(v);
+    console.log("proposal:", v);
 
-    </script>
+  </script>
 {% endblock %}

@@ -355,7 +355,7 @@ class NestedGameTrial(ChainTrial):
                     template_path=self.context["inner_waiting_page_path"],
                     content="Waiting for acceptance...",
                     proposer=self.am_i_the_inner_leader(),
-                    # n_coins=self.get_inner_proposal(),
+                    proposal=self.get_inner_proposal(),
                 )
             ),
         )
@@ -481,12 +481,13 @@ class NestedGameTrial(ChainTrial):
                 proposer=True,
                 proposal=0,
                 remainder_=0,
-                accumulated_score=my_accumulated_score,
-                partners_accumulated_score=partners_accumulated_score,
+                accumulated_score_me=my_accumulated_score,
+                accumulated_score_partner=partners_accumulated_score,
                 outer_accepted=False,
                 inner_accepted=False,
                 round_failed=self.did_round_fail(),
                 num_rounds_failed=num_rounds_failed,
+                round_=self.position + 1,
             )
 
         else:
@@ -523,11 +524,12 @@ class NestedGameTrial(ChainTrial):
                     proposer=self.am_i_the_inner_leader(),
                     proposal=proposal,
                     remainder_=remainder_,
-                    accumulated_score=my_accumulated_score,
-                    partners_accumulated_score=partners_accumulated_score,
+                    accumulated_score_me=my_accumulated_score,
+                    accumulated_score_partner=partners_accumulated_score,
                     inner_accepted=accept_answer == "Accept",
                     round_failed=self.did_round_fail(),
                     num_rounds_failed=num_rounds_failed,
+                    round_=self.position + 1,
                 )
             else:
                 page = EndRoundPage(

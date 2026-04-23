@@ -13,7 +13,6 @@ from psynet.utils import get_logger, get_translator
 from .game_paramters import (
     ENDOWMENT,
     NUMBER_OF_ROUNDS,
-    MAX_TIMEOUT_ROUNDS,
 )
 
 logger = get_logger()
@@ -21,73 +20,6 @@ logger = get_logger()
 ###########################################
 # Custom prompts
 ###########################################
-
-class ScorePrompt(Prompt):
-    macro = "scores"
-    external_template = "scores.html"
-
-    def __init__(
-        self,
-        outer_game_type: str,
-        inner_game_type: str,
-        proposer: bool,
-        proposal: int,
-        remainder_: int,
-        accumulated_score: int,
-        partners_accumulated_score: int,
-        timeout: int,
-        outer_accepted: Optional[bool]=True,
-        inner_accepted: Optional[bool]=True,
-        round_failed: Optional[bool]=False,
-        num_rounds_failed: Optional[int] = 0,
-    ):
-        super().__init__()
-        self.timeoutSeconds = timeout
-        self.timeoutAnswer = "No answer"
-        self.my_score = int(accumulated_score)
-        self.partner_score = int(partners_accumulated_score)
-
-        if num_rounds_failed >= MAX_TIMEOUT_ROUNDS:
-            self.text = f"""
-                <p>Round finished with score 0 coins. </p>
-                <p>Number of timeouts exceeded! Experiment failed! </p>
-            """
-        else:
-            if round_failed:
-                self.text = f"""
-                    <p>Round failed! One of the participants timed out. Round finished with score 0 coins. </p>
-                """
-            else:
-                if outer_game_type == "ultimatum" and not outer_accepted:
-                    self.text = f"""
-                        <p>Proposal was not accepted. Round finished with score 0 coins. </p>
-                    """
-                else:
-                    if inner_game_type == "dictator":
-                        self.text = f"""
-                            <p>You have given {proposal} coins to your partner. </p>
-                            <p>You keep the remainder of {remainder_} coins. </p>
-                        """
-                    elif inner_game_type == "ultimatum":
-                        if inner_accepted:
-                            if proposer:
-                                self.text = f"""
-                                    <p>You have proposed {proposal} coins to your partner. </p>
-                                    <p>Your proposal was accepted. </p>
-                                    <p>You keep the remainder of {remainder_} coins. </p>
-                                """
-                            else:
-                                self.text = f"""
-                                    <p>Your partner has proposed to give you {proposal} coins. </p>
-                                    <p>You accepted this proposal. You keep these {proposal} coins. </p>
-                                """
-                        else:
-                            self.text = f"""
-                                <p>Proposal was not accepted. Round finished with score 0 coins. </p>
-                            """
-                    else:
-                        raise ValueError(f"{inner_game_type} is not a valid inner game type.")
-
 
 class OuterPrompt(Prompt):
     macro = ""
@@ -236,21 +168,20 @@ class InnerAcceptanceControl(Control):
         self.show_next = False
 
 
-class InnerControl(OuterProposalControl):
+class ScoreControl(Control):
+    macro = "scores"
+    external_template = "scores.html"
 
     def __init__(
         self,
-        value:int,
-        context:Dict[str, str],
-        time_estimate:int,
-        external_template:str,
-    ) -> None:
-        super().__init__(
-            context=context,
-            time_estimate=time_estimate,
-            external_template=external_template,
-        )
-        self.value = value
+        content: str,
+        accumulated_score_me: int = 0,
+        accumulated_score_partner: int = 0,
+    ):
+        super().__init__()
+        self.content = content
+        self.accumulated_score_me = int(accumulated_score_me)
+        self.accumulated_score_partner = int(accumulated_score_partner)
 
 
 class CustomLikertControl(Control):
