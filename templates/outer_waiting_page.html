@@ -18,6 +18,8 @@
 
   {{ super() }}
 
+  {%- set bag_coins_n = ((round|default(1)|int - 1) % 5) + 1 -%}
+
 <style>
   body {
     font-family: sans-serif;
@@ -200,7 +202,7 @@
     left: 150px;
     width: 400px;
     height: 200px;
-    background: #8d8570;
+    background: #d5c39b;
     clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
   }
 
@@ -220,7 +222,7 @@
     user-select: none;
     background-size: cover;
     background-position: center;
-    background-image: url("../static/heap.png");
+    background-image: url("../static/bag_of_coins_{{ bag_coins_n }}.png");
   }
 
   .coin:active {

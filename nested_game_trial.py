@@ -289,8 +289,8 @@ class NestedGameTrial(ChainTrial):
         if self.participant.current_trial.definition["outer_game"] == "ultimatum":
             # Determine if proposal was accepted
             for participant in participants:
-                accept_answer = variable_handler.get_value(participant, "outer_accept_answer")
-                if accept_answer is not None:
+                if not self.is_the_outer_leader(participant):
+                    accept_answer = variable_handler.get_value(participant, "outer_accept_answer")
                     break
 
         return accept_answer

@@ -54,9 +54,6 @@ def get_start_nodes():
                 "transition": "random",  # constant, random, bid
             },
             context={
-                "coin_url": "static/coin_url.png",
-                "generic_url": "static/generic_url.png",
-                "plate_url": "static/plate_url.png",
                 "outer_waiting_page_path": "templates/outer_waiting_page.html",
                 "inner_waiting_page_path": "templates/inner_waiting_page.html",
             }

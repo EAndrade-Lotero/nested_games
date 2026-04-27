@@ -21,55 +21,6 @@ logger = get_logger()
 # Custom prompts
 ###########################################
 
-class OuterPrompt(Prompt):
-    macro = ""
-    external_template = ""
-
-    def __init__(
-        self,
-        text:str,
-        proposal:str,
-        context:Dict[str, str],
-        time_estimate:int,
-        external_template:str,
-        round_:int,
-    ) -> None:
-        super().__init__()
-        self.text = text
-        self.proposal = proposal
-        self.coin_url = context["coin_url"]
-        self.generic_url = context["generic_url"]
-        self.plate_url = context["plate_url"]
-        self.timeout = time_estimate
-        self.macro = external_template.split(".")[0]
-        self.external_template = external_template
-        self.round = round_
-        self.num_rounds = NUMBER_OF_ROUNDS
-
-
-class InnerPrompt(OuterPrompt):
-
-    def __init__(
-        self,
-        text:str,
-        proposal:int,
-        endowment:int,
-        context:Dict[str, str],
-        time_estimate:int,
-        external_template:str,
-        round_:int,
-    ) -> None:
-        super().__init__(
-            text=text,
-            proposal=str(proposal),
-            context=context,
-            time_estimate=time_estimate,
-            external_template=external_template,
-            round_=round_,
-        )
-        self.endowment = endowment
-
-
 class TimeoutPrompt(Prompt):
 
     macro = "timeout"
@@ -113,6 +64,7 @@ class OuterProposalControl(Control):
         proposal: Union[str, None] = None,
         accumulated_score_me: int = 0,
         accumulated_score_partner: int = 0,
+        round_: Optional[int] = 1,
         show_next: bool = True,
     ) -> None:
         super().__init__()
@@ -122,6 +74,7 @@ class OuterProposalControl(Control):
         self.accumulated_score_partner = int(accumulated_score_partner)
         self.show_next = show_next
         self.proposal = proposal
+        self.round = round_
 
 
 class InnerProposalControl(Control):

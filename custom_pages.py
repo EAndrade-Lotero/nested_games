@@ -180,7 +180,7 @@ class OuterAcceptancePage(ModularPage):
             round_=round_,
             num_rounds=NUMBER_OF_ROUNDS,
             text=Markup(
-            f"<h3>{recipient} the endowment</h3>"
+            f"<h3>{recipient} the bag of coins</h3>"
             f"<br>"
             f"<p>Do you accept this allocation?</p>"
         ))
