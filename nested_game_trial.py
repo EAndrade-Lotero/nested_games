@@ -147,6 +147,7 @@ class NestedGameTrial(ChainTrial):
                         "<br>"
                         "<p>Waiting for a proposal...</p>"
                     ),
+                    round_=self.position + 1,
                 )
             ),
         )
@@ -177,6 +178,7 @@ class NestedGameTrial(ChainTrial):
                     template_path=self.context["outer_waiting_page_path"],
                     content="Waiting for acceptance...",
                     proposer=self.am_i_the_inner_leader(),
+                    round_=self.position + 1,
                 )
             ),
         )
@@ -325,6 +327,7 @@ class NestedGameTrial(ChainTrial):
                     template_path=self.context["outer_waiting_page_path"],
                     content="Waiting for partner...",
                     proposer=self.am_i_the_inner_leader(),
+                    round_=self.position + 1,
                 )
             ),
         )
@@ -356,6 +359,7 @@ class NestedGameTrial(ChainTrial):
                     content="Waiting for acceptance...",
                     proposer=self.am_i_the_inner_leader(),
                     proposal=self.get_inner_proposal(),
+                    round_=self.position + 1,
                 )
             ),
         )

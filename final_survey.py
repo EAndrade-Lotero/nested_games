@@ -18,6 +18,7 @@ def get_final_survey():
                     <p></p>
                 """),
                 timeout=TIMEOUT_PROPOSALS * 5,
+                show_rounds=False,
             ),
             control=SurveyJSControl(
                 {
