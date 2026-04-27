@@ -77,9 +77,9 @@ class OuterProposalPage(ModularPage):
             round_=round_,
             num_rounds=NUMBER_OF_ROUNDS,
             text=Markup(
-            f"<h3>Giving the endowment</h3>"
+            f"<h3>Who gets the bag of coins?</h3>"
             f"<br>"
-            f"<p>Drag and drop the coins onto one of the players: </p>"
+            f"<p>Drag and drop the bag of coins onto one of the players: </p>"
         ))
         control = OuterProposalControl(
             accumulated_score_me=accumulated_score_me,
