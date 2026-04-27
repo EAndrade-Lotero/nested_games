@@ -545,6 +545,7 @@ class NestedGameTrial(ChainTrial):
                     ),
                     save_answer="reward",
                     time_estimate=5,
+                    show_next_button=False,
                 )
 
         return page

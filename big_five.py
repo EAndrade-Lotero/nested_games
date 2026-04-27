@@ -87,7 +87,7 @@ class PersonalityTrial(StaticTrial):
 
         text = "<h2>Before we start</h2>"
         text += "<p>We want to ask you some questions about your personality traits. </p>"
-        text += "<p>Please report how accurate is the following statement: </p>"
+        text += "<p><span style='font-weight:700'>Please report how accurate is the following statement:</span> </p>"
         text += "<br>"
         text += f"<h6>I see myself as someone who {format_text(question)}</h6>"
         text += "<br>"
@@ -119,7 +119,7 @@ class WaitingTrial(StaticTrial):
         text = "<h2>Waiting...</h2>"
         text += "<br>"
         text += "<p>We are waiting for other participants. </p>"
-        text += "<p>In the meantime, please report how accurate is the following statement: </p>"
+        text += "<p>In the meantime, <span style='font-weight:700'>please report how accurate is the following statement:</span> </p>"
         text += "<br>"
         text += f"<h6>I see myself as someone who {format_text(question)}</h6>"
         text += "<br>"

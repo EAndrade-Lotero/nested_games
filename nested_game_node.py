@@ -36,24 +36,6 @@ class NestedGameNode(ChainNode):
         ]), f"{[answer for answer in filtered_answers]}"
 
         ###################################
-        # ACCUMULATE REWARDS
-        ###################################
-        rewards = {}
-        for trial in filtered_trials:
-            accumulated_reward = variable_handler.get_value(
-                participant=trial.participant,
-                variable="accumulated_reward"
-            )
-            round_reward = trial.answer["reward"]
-            accumulated_reward += float(round_reward)
-            variable_handler.set_value(
-                participant=trial.participant,
-                variable="accumulated_reward",
-                value=accumulated_reward,
-            )
-            rewards[trial.participant_id] = accumulated_reward
-
-        ###################################
         # SANITY CHECKS
         ###################################
         outer_game = self.definition["outer_game"]
@@ -90,6 +72,31 @@ class NestedGameNode(ChainNode):
             assert inner_proposal is not None
             if inner_game == "ultimatum":
                 assert inner_acceptance is not None
+
+        ###################################
+        # ACCUMULATE REWARDS
+        ###################################
+
+        if "summary" in self.definition.keys():
+            rewards = self.definition["summary"]["accumulated_rewards"]
+        else:
+            rewards = {
+                trial.participant_id: 0 for trial in filtered_trials
+            }
+
+        if not round_failed:
+            if outer_game != "ultimatum" or outer_acceptance == "Accept":
+                if inner_game != "ultimatum" or inner_acceptance == "Accept":
+                    for trial in filtered_trials:
+                        accumulated_reward = rewards[str(trial.participant_id)]
+                        round_reward = trial.answer["reward"]
+                        accumulated_reward += float(round_reward)
+                        variable_handler.set_value(
+                            participant=trial.participant,
+                            variable="accumulated_reward",
+                            value=accumulated_reward,
+                        )
+                        rewards[str(trial.participant_id)] = accumulated_reward
 
         ############################
         # ACCUMULATE ROUNDS FAILED

@@ -1,3 +1,4 @@
+from typing import Union
 from psynet.timeline import (
     Timeline,
     PageMakerFinishedError,
@@ -24,7 +25,7 @@ class EndRoundPage(ModularPage):
     def __init__(
         self,
         label: str,
-        prompt: Prompt,
+        prompt: Union[Prompt | str],
         control: Control,
         save_answer: str,
         time_estimate: int,

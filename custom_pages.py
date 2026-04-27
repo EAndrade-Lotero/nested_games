@@ -50,6 +50,7 @@ class OuterProposalPage(ModularPage):
             accumulated_score_me=accumulated_score_me,
             accumulated_score_partner=accumulated_score_partner,
             external_template="outer_proposal.html",
+            round_=round_,
             show_next=False,
         )
         super().__init__(
@@ -153,6 +154,7 @@ class OuterAcceptancePage(ModularPage):
             accumulated_score_me=accumulated_score_me,
             accumulated_score_partner=accumulated_score_partner,
             external_template="outer_acceptance.html",
+            round_=round_,
             show_next=False,
         )
 
