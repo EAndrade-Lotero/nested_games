@@ -97,7 +97,7 @@ class Exp(psynet.experiment.Experiment):
         "currency": "$",
         # **get_prolific_settings(),
         "title": "Nested games experiment (Chrome browser, ~15 minutes, $2.30)",
-        "description": "This experiment is about collective behavior in nested games.",
+        "description": "This experiment is about collective behavior.",
         'initial_recruitment_size': 2,
         "auto_recruit": False,
         "show_reward": True,
@@ -105,10 +105,10 @@ class Exp(psynet.experiment.Experiment):
     }
 
     timeline = CustomTimeline(
-        # consent_cococo_science_of_learning(
-        #     DURATION=15,
-        #     PAYMENT=2.30,
-        # ),
+        consent_cococo_science_of_learning(
+            DURATION=15,
+            PAYMENT=2.30,
+        ),
         # personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(

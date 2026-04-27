@@ -14,7 +14,6 @@ from .game_paramters import (
     NUMBER_OF_ROUNDS,
 )
 from .custom_front_end import TimeoutPrompt
-from .custom_pages import CustomInfoPage
 
 OBJECTIVE = f"""
     <h2>Instructions</h2>

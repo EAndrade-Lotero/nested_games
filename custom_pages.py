@@ -26,41 +26,6 @@ from .custom_timeline import EndRoundPage
 
 logger = get_logger()
 
-_CUSTOM_INFO_TEMPLATE = Path(__file__).resolve().parent / "templates" / "custom_info_page.html"
-
-
-class CustomInfoPage(Page):
-    """
-    Like ``InfoPage``: shows HTML/text and PsyNet's normal Next control, but also
-    shows a countdown and calls ``psynet.nextPage()`` when it reaches zero.
-    """
-
-    def __init__(
-        self,
-        text: Union[str, Markup],
-        *,
-        time_estimate: int = 30,
-        label: str = "custom_info",
-        **kwargs,
-        ) -> None:
-        body = text if isinstance(text, Markup) else Markup(str(text))
-        self._countdown_seconds = int(time_estimate)
-        with open(_CUSTOM_INFO_TEMPLATE, "r", encoding="utf-8") as f:
-            template_str = f.read()
-        super().__init__(
-            label=label,
-            time_estimate=time_estimate,
-            template_str=template_str,
-            template_arg={
-                "body": body,
-                "timeout": self._countdown_seconds,
-            },
-            **kwargs,
-        )
-
-    def get_bot_response(self, experiment, bot):
-        return None
-
 
 class OuterProposalPage(ModularPage):
 
@@ -103,7 +68,6 @@ class OuterProposalPage(ModularPage):
             event_log = metadata.get("event_log") or []
             if any(entry.get("eventType") == "done" for entry in event_log):
                 participant.var.fail_me = True
-                participant.var.num_rounds_failed += 1
         return super().format_answer(raw_answer, **kwargs)
 
 
@@ -397,6 +361,8 @@ class ScorePage(EndRoundPage):
             if round_failed:
                 text = f"""
                     <p>Round failed! One of the participants timed out. Round finished with score 0 coins. </p>
+                    <p>Participants have timed out {num_rounds_failed} round{"s" if num_rounds_failed > 1 else ""}. </p>
+                    <p>If you timeout more than {MAX_TIMEOUT_ROUNDS} round{"s" if MAX_TIMEOUT_ROUNDS > 1 else ""}, the experiment will fail.</p>
                 """
             else:
                 if outer_game_type == "ultimatum" and not outer_accepted:
@@ -447,6 +413,7 @@ class ScorePage(EndRoundPage):
             control=control,
             time_estimate=5,
             save_answer="reward",
+            show_next_button=False,
         )
 
     def format_answer(self, raw_answer, **kwargs):

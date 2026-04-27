@@ -43,7 +43,7 @@ variable_handler = VariableHandler()
 
 
 class NestedGameTrial(ChainTrial):
-    time_estimate = 5
+    time_estimate = 15
     accumulate_answers = True
 
     def show_trial(self, experiment, participant):
@@ -634,7 +634,7 @@ class NestedGameTrial(ChainTrial):
             try:
                 score = float(answer)
             except Exception as e:
-                text = f"Error with finding reward from answer: {answer}"
+                text = f"Error finding reward from answer: {answer}"
                 text += f"\nGot error: {e}"
                 score = 0.0
         else:

@@ -82,6 +82,10 @@ function updateTimer() {
     } else {
         clearInterval(timerInterval);
         document.getElementById("timer").textContent = "Time's up!";
+        psynet.trial.registerEvent(
+            "done",
+            {info: "timeout"}
+          );
         const timeoutAnswer = "{{ config.timeoutAnswer }}";
         psynet.nextPage(timeoutAnswer);
     }
