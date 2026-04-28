@@ -1,0 +1,735 @@
+{% macro inner_proposal_tutorial(config) %}
+
+<style>
+  body {
+    font-family: sans-serif;
+    background: #e5e5e5;
+    display: flex;
+    justify-content: center;
+    {#align-items: center;#}
+    height: 100vh;
+  }
+
+  .container {
+    position: relative;
+    width: 700px;
+    height: 0;
+  }
+
+  .offer-footer {
+    margin-top: 1.75rem;
+    padding-bottom: 0.5rem;
+    text-align: center;
+    position: relative;
+    width: 100%;
+    transform: translateX(5%);
+  }
+
+  .offer-footer .btn-make-offer {
+    min-width: 11rem;
+    padding: 0.5rem 1.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    background: #0d6efd;
+    color: #fff;
+  }
+
+  .offer-footer .btn-make-offer:hover {
+    background: #0b5ed7;
+  }
+
+  .offer-footer .btn-make-offer:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .player {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .partner {
+    top: -5px;
+    /* left: 50%; */
+    transform: translateX(30%);
+  }
+
+  .me {
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-20%);
+  }
+
+  .avatar {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+    background-image: url("../static/generic.png");
+    background-size: cover;
+    background-position: center;
+    border-radius: 50%;
+    position: relative;
+    cursor: grab;
+    user-select: none;
+    color: white;
+    font-weight: bold;
+  }
+  
+  .avatar.partner {
+    width: 65px;
+    height: 65px;
+  }
+
+  .bowl {
+    height: 80px;
+    width: auto;
+    object-fit: contain;
+    flex-shrink: 0;
+    display: block;
+  }
+
+  .bowl.partner {
+    height: 65px;
+  }
+
+  .bowl-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .bowl-label {
+    font-size: 0.85rem;
+    text-align: left;
+    line-height: 1.2;
+  }
+
+  /* Adjust horizontal nudge for each bowl caption independently */
+  .bowl-label-partner {
+    transform: translateX(60%);
+  }
+
+  .bowl-label-me {
+    transform: translateX(5%);
+  }
+
+  .player-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .player-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 12px;
+  }
+
+  .player-row.me-row {
+    gap: 20px;
+  }
+
+  .player-label {
+    text-align: center;
+    transform: translateX(80%);
+  }
+
+  .dropzone {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 70px;
+    height: 70px;
+    border: 2px dashed #2f4f4f;
+    border-radius: 10px;
+    margin: 0;
+    background: #f2f2f2;
+  }
+
+  .dropzone.partner {
+    width: 55px;
+    height: 55px;
+  }
+
+  .table {
+    position: relative;
+    top: 10px;
+    left: 150px;
+    width: 400px;
+    height: 200px;
+    background: #8d8570;
+    clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+  }
+
+  .coins {
+    position: absolute;
+    top: 150px;
+    right: 60px;
+  }
+
+  .coin {
+    width: 50px;
+    height: 50px;
+    align-items: center;
+    margin: 4px;
+    font-weight: bold;
+    cursor: grab;
+    user-select: none;
+    background-size: cover;
+    background-position: center;
+    background-image: url("../static/heap.png");
+  }
+
+  .coin:active {
+    cursor: grabbing;
+  }
+
+    .inner-proposal-root {
+      font-family: Arial, sans-serif;
+      box-sizing: border-box;
+      max-width: 100%;
+      padding: 0.25rem 0 1rem;
+    }
+
+    .inner-proposal-root *,
+    .inner-proposal-root *::before,
+    .inner-proposal-root *::after {
+      box-sizing: inherit;
+    }
+
+    .inner-proposal-root .offer-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .inner-proposal-root .offer-footer .inner-proposal-card {
+    margin-top: 0;
+  }
+
+  .inner-proposal-root .inner-proposal-text {
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      margin-bottom: 0.75rem;
+    }
+
+    .inner-proposal-root .inner-proposal-tabletop {
+      width: 700px;
+      max-width: 100%;
+      min-height: 400px;
+      background: #eceaea;
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      margin-left: auto;
+      margin-right: auto;
+      gap: 20px;
+    }
+
+    .inner-proposal-root .inner-proposal-phase-label {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-family: "Book Antiqua", Palatino, serif;
+        font-size: 22px;
+        font-weight: bold;
+        color: rgb(83, 83, 83);
+        text-align: right;
+    }
+
+    .inner-proposal-root .inner-proposal-countdown {
+      position: absolute;
+      top: 15px;
+      left: 20px;
+      font-family: "Book Antiqua", Palatino, serif;
+      font-size: 22px;
+      font-weight: bold;
+      color: rgb(83, 83, 83);
+    }
+
+    .inner-proposal-root .inner-proposal-zone {
+      border: 2px solid #365c5c;
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .inner-proposal-root .inner-proposal-center-top {
+      width: 300px;
+      max-width: 100%;
+      height: 280px;
+    }
+
+    .inner-proposal-root .inner-proposal-center-middle {
+      width: 200px;
+      max-width: 100%;
+      height: 220px;
+    }
+
+    .inner-proposal-root .inner-proposal-rectangle {
+      width: 150px;
+      height: 50px;
+      background: rgb(221, 233, 255);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Book Antiqua", Palatino, serif;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .inner-proposal-root .inner-proposal-basket {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      min-height: 60px;
+    }
+
+    .inner-proposal-root .inner-proposal-basket .inner-proposal-coin {
+      width: calc(25px * 0.8);
+    }
+
+    .inner-proposal-root .inner-proposal-coin-pile {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      min-height: 60px;
+    }
+
+    .inner-proposal-root .inner-proposal-coin {
+      width: 25px;
+      aspect-ratio: 1 / 1;
+      background-image: url("../static/coin.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      cursor: default;
+    }
+
+    .inner-proposal-root .inner-proposal-avatar {
+      width: 80px;
+      height: 80px;
+      background-image: url("../static/generic.png");
+      background-size: cover;
+      background-position: center;
+      border-radius: 50%;
+      position: relative;
+      user-select: none;
+      color: white;
+      font-weight: bold;
+    }
+
+    .inner-proposal-root .inner-proposal-avatar.partner {
+      background-image: url("../static/generic.png");
+    }
+
+    .inner-proposal-root .inner-proposal-avatar-label {
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      background: rgba(168, 168, 168, 0.5);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .inner-proposal-root .inner-proposal-avatarzone {
+      min-height: 90px;
+      width: 30%;
+      min-width: 80px;
+      border: 0 dashed rgb(55, 0, 255);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      text-align: center;
+    }
+
+    .inner-proposal-root .inner-proposal-card {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .inner-proposal-root .inner-proposal-slider-row {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .inner-proposal-root .inner-proposal-slider-row input[type="range"] {
+      width: 100%;
+    }
+
+    .inner-proposal-root .inner-proposal-min-current-max {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      width: 100%;
+      font-size: 14px;
+      margin-top: 2px;
+    }
+
+    .inner-proposal-root .inner-proposal-min-current-max .inner-proposal-min {
+      justify-self: start;
+    }
+
+    .inner-proposal-root .inner-proposal-min-current-max .inner-proposal-max {
+      justify-self: end;
+    }
+
+    .inner-proposal-root .inner-proposal-min-current-max .inner-proposal-current {
+      justify-self: center;
+      font-size: 18px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: #f4f4f6;
+    }
+
+  .inner-proposal-tutorial-feedback[hidden] {
+    display: none !important;
+  }
+
+  .inner-proposal-tutorial-feedback {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    box-sizing: border-box;
+  }
+
+  .inner-proposal-tutorial-feedback__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.48);
+  }
+
+  .inner-proposal-tutorial-feedback__panel {
+    position: relative;
+    z-index: 1;
+    max-width: 28rem;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.94);
+    border-radius: 10px;
+    padding: 1.25rem 1.4rem 1.1rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.22);
+    color: #222;
+    line-height: 1.5;
+  }
+
+  .inner-proposal-tutorial-feedback__message {
+    font-size: 0.95rem;
+    margin: 0 0 1rem;
+  }
+
+  .inner-proposal-tutorial-feedback__btn {
+    display: block;
+    width: 100%;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #0d6efd;
+    color: #fff;
+  }
+
+  .inner-proposal-tutorial-feedback__btn:hover {
+    background: #0b5ed7;
+  }
+  </style>
+
+<div class="inner-proposal-root">
+    <div class="container">
+
+      <div class="player partner">
+        <div class="player-stack">
+          <div class="player-row">
+            <div class="bowl-stack">
+              <img class="bowl partner" src="../static/bowl.png" alt="" />
+              <div class="bowl-label bowl-label-partner">0 coins</div>
+            </div>
+            <div class="avatar partner"></div>
+          </div>
+          <div class="player-label">Partner</div>
+        </div>
+      </div>
+
+      <div class="inner-proposal-basket" id="inner-proposal-basket"></div>
+    
+      <div class="table"></div>
+    
+      <div class="inner-proposal-coin-pile" id="inner-proposal-coin-pile">
+        {% for i in range(1, config.endowment + 1) %}
+        <div
+          class="inner-proposal-coin"
+          draggable="false"
+          id="inner-proposal-coin-{{ i }}"
+        ></div>
+        {% endfor %}
+      </div>
+
+      <div class="player me">
+        <div class="player-stack">
+        <div class="player-row me-row">
+        <div class="bowl-stack">
+          <img class="bowl" src="../static/bowl.png" alt="" />
+          <div class="bowl-label bowl-label-me">{{ config.accumulated_score_me }} coins</div>
+        </div>
+        <div class="avatar"></div>
+      </div>
+      <div class="player-label">Me</div>
+    </div>
+    </div>
+
+  <div class="inner-proposal-card">
+    <div class="inner-proposal-slider-row">
+      <input id="inner-proposal-slider" type="range" />
+
+      <div class="inner-proposal-min-current-max">
+        <div class="inner-proposal-min">
+          Min: <strong id="inner-proposal-min-label"></strong>
+        </div>
+        <div class="inner-proposal-current">
+          <span id="inner-proposal-current-label"></span> coins
+        </div>
+        <div class="inner-proposal-max">
+          Max: <strong id="inner-proposal-max-label"></strong>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="offer-footer">
+    <button type="button" class="btn-make-offer" id="makeOfferBtn">Make the offer</button>
+  </div>
+
+  <div
+    id="inner-proposal-tutorial-feedback"
+    class="inner-proposal-tutorial-feedback"
+    role="dialog"
+    aria-modal="true"
+    hidden
+  >
+    <div class="inner-proposal-tutorial-feedback__backdrop" aria-hidden="true"></div>
+    <div class="inner-proposal-tutorial-feedback__panel">
+      <p id="inner-proposal-tutorial-feedback-text" class="inner-proposal-tutorial-feedback__message"></p>
+      <button type="button" id="inner-proposal-tutorial-feedback-continue" class="inner-proposal-tutorial-feedback__btn">
+        Continue
+      </button>
+      <button type="button" id="inner-proposal-tutorial-feedback-ok" class="inner-proposal-tutorial-feedback__btn" hidden>
+        OK
+      </button>
+    </div>
+  </div>
+
+  </div>
+
+  <script>
+    (function () {
+      const root = document.currentScript.closest(".inner-proposal-root");
+      if (!root) return;
+
+      const basket = root.querySelector("#inner-proposal-basket");
+      const coinPile = root.querySelector("#inner-proposal-coin-pile");
+      const TOTAL_COINS = {{ config.endowment }};
+      const TARGET_COINS = Number({{ config.num_coins }});
+
+      const feedbackEl = root.querySelector("#inner-proposal-tutorial-feedback");
+      const feedbackText = root.querySelector("#inner-proposal-tutorial-feedback-text");
+      const feedbackContinue = root.querySelector("#inner-proposal-tutorial-feedback-continue");
+      const feedbackOk = root.querySelector("#inner-proposal-tutorial-feedback-ok");
+
+      function updateCoins(value) {
+        basket.innerHTML = "";
+        coinPile.innerHTML = "";
+
+        const basketCoins = Math.round(value);
+        const pileCoins = TOTAL_COINS - basketCoins;
+
+        for (let i = 0; i < basketCoins; i++) {
+          const coin = document.createElement("div");
+          coin.classList.add("inner-proposal-coin");
+          basket.appendChild(coin);
+        }
+
+        for (let i = 0; i < pileCoins; i++) {
+          const coin = document.createElement("div");
+          coin.classList.add("inner-proposal-coin");
+          coinPile.appendChild(coin);
+        }
+      }
+
+      const slider = root.querySelector("#inner-proposal-slider");
+      const minLabel = root.querySelector("#inner-proposal-min-label");
+      const maxLabel = root.querySelector("#inner-proposal-max-label");
+      const currentLabel = root.querySelector("#inner-proposal-current-label");
+
+      const use_percentage = {{ config.use_percentage | tojson }};
+      const integer_rule_true = {{ (config.integer_rule == True) | tojson }};
+
+      function clamp(x, lo, hi) {
+        return Math.min(hi, Math.max(lo, x));
+      }
+
+      function computeStep(min, max, steps) {
+        if (integer_rule_true) {
+          return (max + 1 - min) / steps;
+        }
+        return (max - min) / steps;
+      }
+
+      function formatNumber(x) {
+        if (Number.isInteger(x)) return String(x);
+        return x.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+      }
+
+      function snapToStep(value, min, step) {
+        const k = Math.round((value - min) / step);
+        return min + k * step;
+      }
+
+      function updateSliderConfig() {
+        let min = {{ config.min_value }};
+        let max = {{ config.max_value }};
+        let steps = {{ config.n_steps }};
+
+        const step = computeStep(min, max, steps);
+
+        slider.min = String(min);
+        slider.max = String(max);
+        slider.step = String(step);
+
+        let current = Number({{ config.start_value }});
+
+        current = clamp(current, min, max);
+        current = snapToStep(current, min, step);
+        slider.value = String(current);
+
+        if (use_percentage) {
+          minLabel.textContent = String(0);
+          maxLabel.textContent = String(100);
+          currentLabel.textContent = formatNumber(current * 100);
+        } else {
+          minLabel.textContent = formatNumber(min);
+          maxLabel.textContent = formatNumber(max);
+          currentLabel.textContent = formatNumber(current);
+        }
+      }
+
+      function onSliderInput() {
+        const min = Number(slider.min);
+        const max = Number(slider.max);
+        const step = Number(slider.step);
+
+        let v = Number(slider.value);
+        v = clamp(v, min, max);
+        v = snapToStep(v, min, step);
+        slider.value = String(v);
+
+        if (use_percentage) {
+          currentLabel.textContent = formatNumber(v * 100);
+        } else {
+          currentLabel.textContent = formatNumber(v);
+        }
+
+        updateCoins(v);
+      }
+
+      slider.addEventListener("input", onSliderInput);
+
+      updateSliderConfig();
+
+      function getCurrentProposedCoins() {
+        const min = Number(slider.min);
+        const max = Number(slider.max);
+        const step = Number(slider.step);
+        let v = Number(slider.value);
+        v = clamp(v, min, max);
+        v = snapToStep(v, min, step);
+        return Math.round(v);
+      }
+
+      function showFeedbackSuccess() {
+        feedbackText.textContent = "Excellent! Press the continue button to proceed to the next page.";
+        feedbackContinue.hidden = false;
+        feedbackOk.hidden = true;
+        feedbackEl.removeAttribute("hidden");
+      }
+
+      function showFeedbackError() {
+        feedbackText.textContent = "Incorrect! Please try again!";
+        feedbackContinue.hidden = true;
+        feedbackOk.hidden = false;
+        feedbackEl.removeAttribute("hidden");
+      }
+
+      function hideFeedback() {
+        feedbackEl.setAttribute("hidden", "");
+      }
+
+      function handleMakeOffer() {
+        if (typeof psynet === "undefined") {
+          return;
+        }
+        const proposed = getCurrentProposedCoins();
+        if (proposed === TARGET_COINS) {
+          showFeedbackSuccess();
+        } else {
+          showFeedbackError();
+        }
+      }
+
+      const makeOfferBtn = root.querySelector("#makeOfferBtn");
+      if (makeOfferBtn) {
+        makeOfferBtn.addEventListener("click", handleMakeOffer);
+      }
+
+      if (feedbackContinue) {
+        feedbackContinue.addEventListener("click", function () {
+          hideFeedback();
+          psynet.nextPage("Tutorial_Ok");
+        });
+      }
+
+      if (feedbackOk) {
+        feedbackOk.addEventListener("click", hideFeedback);
+      }
+    })();
+  </script>
+</div>
+
+{% endmacro %}

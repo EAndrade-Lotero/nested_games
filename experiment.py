@@ -15,6 +15,7 @@ from .game_paramters import (
     MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
     TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
     TIMEOUT_PERSONALITY_TEST,
+    TIMEOUT_PROPOSALS,
     NUMBER_OF_ROUNDS,
     RNG,
 )
@@ -28,6 +29,7 @@ from .big_five import (
 from .custom_barriers import CustomBarrier
 from .custom_timeline import CustomTimeline
 from .consent_science_of_learning import consent_cococo_science_of_learning
+from .tutorial import get_tutorial_pages
 from .final_survey import get_final_survey
 
 logger = get_logger()
@@ -60,6 +62,7 @@ def get_start_nodes():
         )
     ]
 
+tutorial_pages = get_tutorial_pages()
 
 waiting_trial_maker = PersonalityTrialMaker(
     id_="waiting",
@@ -109,7 +112,7 @@ class Exp(psynet.experiment.Experiment):
             DURATION=15,
             PAYMENT=2.30,
         ),
-        # personality_trial_maker,
+        personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(
                 group_type="chain",
@@ -127,6 +130,14 @@ class Exp(psynet.experiment.Experiment):
             content="Please wait while your partner completes the personality test...",
             on_release=assign_roles,
             timeout_between_barriers=TIMEOUT_PERSONALITY_TEST,
+            participant_timeout_action="kick",
+        ),
+        *get_tutorial_pages(),
+        CustomBarrier(
+            id_="assign_roles",
+            content="Please wait while your partner completes the tutorial...",
+            on_release=assign_roles,
+            timeout_between_barriers=len(tutorial_pages) * TIMEOUT_PROPOSALS,
             participant_timeout_action="kick",
         ),
         NestedGameTrialMaker(

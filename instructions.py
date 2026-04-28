@@ -18,17 +18,17 @@ from .custom_front_end import TimeoutPrompt
 OBJECTIVE = f"""
     <h2>Instructions</h2>
     <br>
-    <p>Welcome to the <strong>"Who is the proposer?"</strong> experiment!</p>
+    <p>Welcome to the <strong>"Who splits the bag of coins?"</strong> experiment!</p>
     <br>
     <p>You will be paired with another participant to play {NUMBER_OF_ROUNDS} rounds.</p>
     <br>
     <p>Each round consists of two phases:</p>
     <ul>
         <li>
-            <strong>Preparation phase:</strong> Both participants decide which one of them will receive an endowment of {ENDOWMENT} coins.
+            <strong>Preparation phase:</strong> One of the participants decides which one gets a bag of coins with {ENDOWMENT} coins.
         </li>
         <li>
-            <strong>Proposal phase:</strong> The selected proposer decides how to split the endowment between the two players.
+            <strong>Proposal phase:</strong> The participant with the bag decides how to split the coins between the two players.
         </li>
     </ul>
     <br>

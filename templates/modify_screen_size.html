@@ -1,0 +1,325 @@
+{% macro modify_screen_size(config) %}
+
+<style>
+    body {
+      font-family: sans-serif;
+      background: #e5e5e5;
+      display: flex;
+      justify-content: center;
+      height: 100vh;
+    }
+  
+    .container {
+      position: relative;
+      width: 700px;
+      height: 0;
+    }
+    
+    .player {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+  
+    .partner {
+      top: -5px;
+      /* left: 50%; */
+      transform: translateX(30%);
+    }
+  
+    .me {
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-20%);
+    }
+  
+    .avatar {
+      flex-shrink: 0;
+      width: 80px;
+      height: 80px;
+      background-image: url("../static/generic.png");
+      background-size: cover;
+      background-position: center;
+      border-radius: 50%;
+      position: relative;
+      cursor: grab;
+      user-select: none;
+      color: white;
+      font-weight: bold;
+    }
+    
+    .avatar.partner {
+      width: 65px;
+      height: 65px;
+    }
+  
+    .bowl {
+      height: 80px;
+      width: auto;
+      object-fit: contain;
+      flex-shrink: 0;
+      display: block;
+    }
+  
+    .bowl.partner {
+      height: 65px;
+    }
+  
+    .bowl-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+  
+    .bowl-label {
+      font-size: 0.85rem;
+      text-align: left;
+      line-height: 1.2;
+    }
+  
+    /* Adjust horizontal nudge for each bowl caption independently */
+    .bowl-label-partner {
+      transform: translateX(60%);
+    }
+  
+    .bowl-label-me {
+      transform: translateX(5%);
+    }
+  
+    .player-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+  
+    .player-row {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+      gap: 12px;
+    }
+  
+    .player-row.me-row {
+      gap: 20px;
+    }
+  
+    .player-label {
+      text-align: center;
+      transform: translateX(80%);
+    }
+  
+    .table {
+      position: relative;
+      top: 10px;
+      left: 150px;
+      width: 400px;
+      height: 200px;
+      background: #8d8570;
+      clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+    }
+  
+      .inner-proposal-root {
+        font-family: Arial, sans-serif;
+        box-sizing: border-box;
+        max-width: 100%;
+        padding: 0.25rem 0 1rem;
+      }
+  
+      .inner-proposal-root *,
+      .inner-proposal-root *::before,
+      .inner-proposal-root *::after {
+        box-sizing: inherit;
+      }
+  
+        .inner-proposal-root .inner-proposal-basket {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
+        min-height: 60px;
+      }
+  
+      .inner-proposal-root .inner-proposal-basket .inner-proposal-coin {
+        width: calc(25px * 0.8);
+      }
+  
+      .inner-proposal-root .inner-proposal-coin-pile {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
+        min-height: 60px;
+      }
+  
+      .inner-proposal-root .inner-proposal-coin {
+        width: 25px;
+        aspect-ratio: 1 / 1;
+        background-image: url("../static/coin.png");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        cursor: default;
+      }
+  
+    .modify-screen-size-popup[hidden] {
+      display: none !important;
+    }
+  
+    .modify-screen-size-popup {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      box-sizing: border-box;
+    }
+  
+    .modify-screen-size-popup__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.48);
+    }
+  
+    .modify-screen-size-popup__panel {
+      position: relative;
+      max-width: 28rem;
+      width: 100%;
+      max-height: min(80vh, 100%);
+      overflow: auto;
+      /* Semitransparent “glass” so the table behind is faintly visible */
+      background: rgba(255, 255, 255, 0.88);
+      border-radius: 10px;
+      padding: 1.25rem 1.4rem 1.1rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.22);
+      color: #222;
+      line-height: 1.5;
+    }
+  
+    .modify-screen-size-popup__panel p:last-child {
+      margin-bottom: 0;
+    }
+  
+    .modify-screen-size-popup__content {
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+  
+    .modify-screen-size-popup__dismiss {
+      display: block;
+      width: 100%;
+      margin-top: 0.5rem;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+      background: #0d6efd;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  
+    .modify-screen-size-popup__dismiss:hover {
+      background: #0b5ed7;
+    }
+  
+  </style>
+  
+  <div class="inner-proposal-root">
+      <div class="container">
+  
+      <div class="modify-screen-size-popup" id="modifyScreenSizePopup" role="dialog" aria-modal="true" aria-label="Screen size" hidden>
+        <div class="modify-screen-size-popup__backdrop" aria-hidden="true"></div>
+        <div class="modify-screen-size-popup__panel">
+          <div class="modify-screen-size-popup__content" id="modifyScreenSizeContent">
+            Excellent! Press the continue button to proceed to the next page.
+          </div>
+          <button type="button" class="modify-screen-size-popup__dismiss">Continue</button>
+        </div>
+      </div>
+      
+    </div>
+  
+<script>
+
+    let zoomCount = 0;
+    let modifyScreenSizePopupShown = false;
+    const zoomInOut = "{{ config.zoom_in_out }}";
+    const MAX_EVENTS = Number("{{ config.zoom_count }}");
+
+    // Baseline (reference point)
+    let baseW = window.innerWidth;
+    let baseH = window.innerHeight;
+
+    // Tune this: relative change required (~8%)
+    const THRESHOLD_RATIO = 0.08;
+
+    // Debounce
+    let lastEventTime = 0;
+    const DEBOUNCE_MS = 50;
+
+    function classifyZoom(newW, newH) {
+    const ratioW = (newW - baseW) / baseW;
+    const ratioH = (newH - baseH) / baseH;
+
+    // Use the dominant dimension
+    const ratio = Math.abs(ratioW) > Math.abs(ratioH) ? ratioW : ratioH;
+
+    if (ratio > THRESHOLD_RATIO) return "out";   // more pixels visible
+    if (ratio < -THRESHOLD_RATIO) return "in";   // fewer pixels visible
+    return null;
+    }
+
+    function handleResize() {
+    const now = Date.now();
+    if (now - lastEventTime < DEBOUNCE_MS) return;
+
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+
+    const detected = classifyZoom(w, h);
+
+    if (!detected) return;
+
+    // Now apply your config condition
+    if (detected === zoomInOut) {
+        zoomCount++;
+        lastEventTime = now;
+
+        console.log(`Zoom ${zoomInOut} detected:`, zoomCount);
+
+        if (zoomCount >= MAX_EVENTS && !modifyScreenSizePopupShown) {
+          modifyScreenSizePopupShown = true;
+          console.log(`User triggered zoom ${zoomInOut} ${MAX_EVENTS} times`);
+          const popup = document.getElementById('modifyScreenSizePopup');
+          if (popup) {
+              popup.removeAttribute('hidden');
+              popup.dispatchEvent(new CustomEvent('modifyScreenSizePopupShow', { bubbles: true }));
+          }
+        }
+    }
+
+    // IMPORTANT: reset baseline after a detected zoom step
+    baseW = w;
+    baseH = h;
+    }
+
+    window.addEventListener("resize", handleResize);
+
+    (function () {
+        const btn = document.querySelector('#modifyScreenSizePopup .modify-screen-size-popup__dismiss');
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+            psynet.nextPage("Tutorial_Ok");
+        });
+    })();
+
+</script>
+{% endmacro %}

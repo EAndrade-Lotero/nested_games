@@ -364,7 +364,7 @@ class ScorePage(EndRoundPage):
                 text = f"""
                     <p>Round failed! One of the participants timed out. Round finished with score 0 coins. </p>
                     <p>Participants have timed out {num_rounds_failed} round{"s" if num_rounds_failed > 1 else ""}. </p>
-                    <p>If you timeout more than {MAX_TIMEOUT_ROUNDS} round{"s" if MAX_TIMEOUT_ROUNDS > 1 else ""}, the experiment will fail.</p>
+                    <p>If participants timeout more than {MAX_TIMEOUT_ROUNDS} round{"s" if MAX_TIMEOUT_ROUNDS > 1 else ""}, the experiment will fail.</p>
                 """
             else:
                 if outer_game_type == "ultimatum" and not outer_accepted:
