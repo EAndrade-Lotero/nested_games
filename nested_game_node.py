@@ -81,7 +81,7 @@ class NestedGameNode(ChainNode):
             rewards = self.definition["summary"]["accumulated_rewards"]
         else:
             rewards = {
-                trial.participant_id: 0 for trial in filtered_trials
+                str(trial.participant_id): 0 for trial in filtered_trials
             }
 
         if not round_failed:

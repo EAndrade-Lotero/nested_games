@@ -377,6 +377,11 @@
           const coin = document.createElement('div');
           coin.className = 'coin';
           coin.setAttribute('aria-hidden', 'true');
+          if (outerAcceptanceProposal === 'True') {
+              coin.style.transform = "scale(2)";
+          } else if (outerAcceptanceProposal === 'False') {
+              coin.transform = "scale(0.85)";
+          }
           target.appendChild(coin);
         }
 

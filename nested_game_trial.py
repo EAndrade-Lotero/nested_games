@@ -43,7 +43,7 @@ variable_handler = VariableHandler()
 
 
 class NestedGameTrial(ChainTrial):
-    time_estimate = 15
+    time_estimate = 10
     accumulate_answers = True
 
     def show_trial(self, experiment, participant):

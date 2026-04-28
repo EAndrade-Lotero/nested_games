@@ -132,7 +132,7 @@ class Exp(psynet.experiment.Experiment):
             timeout_between_barriers=TIMEOUT_PERSONALITY_TEST,
             participant_timeout_action="kick",
         ),
-        *get_tutorial_pages(),
+        # *get_tutorial_pages(),
         CustomBarrier(
             id_="assign_roles",
             content="Please wait while your partner completes the tutorial...",
