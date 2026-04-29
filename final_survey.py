@@ -4,7 +4,8 @@ from psynet.timeline import join
 from psynet.modular_page import ModularPage, SurveyJSControl
 
 from .game_paramters import (
-    TIMEOUT_PROPOSALS,
+    STANDARD_TIMEOUT,
+    TIME_ESTIMATE_FOR_COMPENSATION,
 )
 from .custom_front_end import TimeoutPrompt
 
@@ -17,7 +18,7 @@ def get_final_survey():
                 text=Markup("""
                     <p></p>
                 """),
-                timeout=TIMEOUT_PROPOSALS * 5,
+                timeout=STANDARD_TIMEOUT * 3,
                 show_rounds=False,
             ),
             control=SurveyJSControl(
@@ -98,7 +99,7 @@ def get_final_survey():
                     ],
                 },
             ),
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
         ),
     )
 

@@ -7,7 +7,7 @@ from psynet.timeline import Page
 from psynet.utils import get_logger
 
 from .game_paramters import (
-    TIMEOUT_PROPOSALS,
+    STANDARD_TIMEOUT,
     WAIT_PAGE_TIME,
     TIMEOUT_WAITING_FOR_OTHER,
     NUMBER_OF_ROUNDS,
@@ -38,7 +38,7 @@ class OuterProposalPage(ModularPage):
         ) -> None:
         round_ = int(round_)
         prompt = TimeoutPrompt(
-            timeout=TIMEOUT_PROPOSALS,
+            timeout=STANDARD_TIMEOUT,
             round_=round_,
             num_rounds=NUMBER_OF_ROUNDS,
             text=Markup(
@@ -141,7 +141,7 @@ class OuterAcceptancePage(ModularPage):
             recipient = None
 
         prompt = TimeoutPrompt(
-            timeout=TIMEOUT_PROPOSALS,
+            timeout=STANDARD_TIMEOUT,
             round_=round_,
             num_rounds=NUMBER_OF_ROUNDS,
             text=Markup(
@@ -201,7 +201,7 @@ class InnerProposalPage(ModularPage):
 
         round_ = int(round_)
         prompt = TimeoutPrompt(
-            timeout=TIMEOUT_PROPOSALS,
+            timeout=STANDARD_TIMEOUT,
             round_=round_,
             num_rounds=NUMBER_OF_ROUNDS,
             text=Markup(text)
@@ -310,7 +310,7 @@ class InnerAcceptancePage(ModularPage):
                 text=Markup("")
 
         prompt = TimeoutPrompt(
-            timeout=TIMEOUT_PROPOSALS,
+            timeout=STANDARD_TIMEOUT,
             round_=round_,
             num_rounds=NUMBER_OF_ROUNDS,
             text=Markup(text)
@@ -398,7 +398,7 @@ class ScorePage(EndRoundPage):
                         raise ValueError(f"{inner_game_type} is not a valid inner game type.")
 
         prompt = TimeoutPrompt(
-            timeout=TIMEOUT_PROPOSALS,
+            timeout=STANDARD_TIMEOUT,
             round_=round_,
             num_rounds=NUMBER_OF_ROUNDS,
             text="",

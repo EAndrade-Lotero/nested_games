@@ -1,9 +1,6 @@
 import psynet.experiment
 from psynet.sync import SimpleGrouper
-from psynet.timeline import (
-    Timeline,
-    PageMaker,
-)
+from psynet.timeline import PageMaker
 from psynet.utils import get_logger
 
 from .nested_game_node import NestedGameNode
@@ -15,8 +12,13 @@ from .game_paramters import (
     MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
     TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
     TIMEOUT_PERSONALITY_TEST,
-    TIMEOUT_PROPOSALS,
+    TIME_ESTIMATE_FOR_COMPENSATION,
+    STANDARD_TIMEOUT,
     NUMBER_OF_ROUNDS,
+    CURRENCY,
+    ESTIMATED_DURATION,
+    PAYMENT,
+    HOURLY_PAYMENT,
     RNG,
 )
 from .big_five import (
@@ -34,7 +36,6 @@ from .final_survey import get_final_survey
 
 logger = get_logger()
 
-
 def assign_roles(group, participants):
     assert len(participants) == 2
     ordered = sorted(participants, key=lambda p: p.id)
@@ -45,7 +46,6 @@ def assign_roles(group, participants):
         participant.var.accumulated_reward = 0
         participant.var.round_failed = False
         participant.var.num_rounds_failed = 0
-
 
 def get_start_nodes():
     return [
@@ -68,7 +68,7 @@ waiting_trial_maker = PersonalityTrialMaker(
     id_="waiting",
     trial_class=WaitingTrial,
     nodes=waiting_nodes,
-    expected_trials_per_participant=max(1, MAX_NUM_WAITING_BIG_FIVE_QUESTIONS // 4),
+    expected_trials_per_participant=1,
     max_trials_per_participant=MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
     allow_repeated_nodes=True,  # allow participants to cycle or a bug will occur
 )
@@ -84,7 +84,7 @@ personality_trial_maker = PersonalityTrialMaker(
 
 waiting_logic = PageMaker(
     waiting_trial_maker.cue_trial, 
-    time_estimate=PersonalityTrial.time_estimate
+    time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
 )
 
 
@@ -96,21 +96,21 @@ class Exp(psynet.experiment.Experiment):
         "server_pem": "~/cap.pem",
         # "recruiter": "prolific",
         "recruiter": "hotair",
-        "wage_per_hour": 9,
+        "wage_per_hour": HOURLY_PAYMENT,
         "currency": "$",
         # **get_prolific_settings(),
-        "title": "Nested games experiment (Chrome browser, ~15 minutes, $2.30)",
+        f"title": f"Nested games experiment (Chrome browser, ~{ESTIMATED_DURATION} minutes, {CURRENCY}{PAYMENT})",
         "description": "This experiment is about collective behavior.",
         'initial_recruitment_size': 2,
         "auto_recruit": False,
-        "show_reward": True,
-        "show_progress_bar": True,
+        "show_reward": False,
+        "show_progress_bar": False,
     }
 
     timeline = CustomTimeline(
         consent_cococo_science_of_learning(
-            DURATION=15,
-            PAYMENT=2.30,
+            DURATION=ESTIMATED_DURATION,
+            PAYMENT=PAYMENT,
         ),
         personality_trial_maker,
         waiting_trial_maker.custom(
@@ -132,22 +132,22 @@ class Exp(psynet.experiment.Experiment):
             timeout_between_barriers=TIMEOUT_PERSONALITY_TEST,
             participant_timeout_action="kick",
         ),
-        # *get_tutorial_pages(),
-        CustomBarrier(
-            id_="assign_roles",
-            content="Please wait while your partner completes the tutorial...",
-            on_release=assign_roles,
-            timeout_between_barriers=len(tutorial_pages) * TIMEOUT_PROPOSALS,
-            participant_timeout_action="kick",
-        ),
+        # *tutorial_pages,
+        # CustomBarrier(
+        #     id_="assign_roles",
+        #     content="Please wait while your partner completes the tutorial...",
+        #     on_release=assign_roles,
+        #     timeout_between_barriers=len(tutorial_pages) * STANDARD_TIMEOUT,
+        #     participant_timeout_action="kick",
+        # ),
         NestedGameTrialMaker(
             id_="nested_games_trial_maker",
             trial_class=NestedGameTrial,
             node_class=NestedGameNode,
             chain_type="within",
             start_nodes=get_start_nodes,
-            expected_trials_per_participant=5,
-            max_trials_per_participant=5,
+            expected_trials_per_participant=1,
+            max_trials_per_participant=1,
             chains_per_participant=1,
             # allow_repeated_nodes=True,
             target_n_participants=60,

@@ -19,9 +19,10 @@ from psynet.utils import get_logger
 
 from .variable_handler import VariableHandler
 from .game_paramters import (
+    TIME_ESTIMATE_FOR_COMPENSATION,
     REWARD_SCALING_FACTOR,
     MAX_BONUS_REWARD,
-    TIMEOUT_WAITING_FOR_OTHER,
+    STANDARD_TIMEOUT,
     MAX_TIMEOUT_ROUNDS,
     RNG,
 )
@@ -43,13 +44,13 @@ variable_handler = VariableHandler()
 
 
 class NestedGameTrial(ChainTrial):
-    time_estimate = 10
+    time_estimate = TIME_ESTIMATE_FOR_COMPENSATION
     accumulate_answers = True
 
     def show_trial(self, experiment, participant):
 
         instructions_stage = self.instructions_stage()
-        timeout_at_barrier = TIMEOUT_WAITING_FOR_OTHER * len(instructions_stage)
+        timeout_at_barrier = STANDARD_TIMEOUT * len(instructions_stage)
 
         return join(
             #########################################
@@ -544,7 +545,7 @@ class NestedGameTrial(ChainTrial):
                         choices=[0],
                     ),
                     save_answer="reward",
-                    time_estimate=5,
+                    time_estimate=self.time_estimate,
                     show_next_button=False,
                 )
 

@@ -1,7 +1,7 @@
 from psynet.page import UnsuccessfulEndPage
 from psynet.timeline import conditional
 
-from .game_paramters import TIMEOUT_PROPOSALS
+from .game_paramters import STANDARD_TIMEOUT
 from .tutorial_pages import (
     OuterProposalTutorial, 
     InnerProposalTutorial, 
@@ -16,7 +16,7 @@ def get_tutorial_pages():
         ModifyScreenSize(
             zoom_in_out="out",
             zoom_count=3,
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=STANDARD_TIMEOUT,
         ),
         conditional(
             label="check_tutorial_failed",
@@ -29,7 +29,7 @@ def get_tutorial_pages():
         ModifyScreenSize(
             zoom_in_out="in",
             zoom_count=3,
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=STANDARD_TIMEOUT,
         ),
         conditional(
             label="check_tutorial_failed",
@@ -41,7 +41,7 @@ def get_tutorial_pages():
         ),
         OuterProposalTutorial(
             avatar="me",
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=STANDARD_TIMEOUT,
         ),
         conditional(
             label="check_tutorial_failed",
@@ -53,7 +53,7 @@ def get_tutorial_pages():
         ),
         OuterProposalTutorial(
             avatar="partner",
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=STANDARD_TIMEOUT,
         ),
         conditional(
             label="check_tutorial_failed",
@@ -65,7 +65,7 @@ def get_tutorial_pages():
         ),
         InnerProposalTutorial(
             num_coins=5,
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=STANDARD_TIMEOUT,
         ),
         conditional(
             label="check_tutorial_failed",
@@ -77,7 +77,7 @@ def get_tutorial_pages():
         ),
         InnerProposalTutorial(
             num_coins=7,
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=STANDARD_TIMEOUT,
         ),
         conditional(
             label="check_tutorial_failed",

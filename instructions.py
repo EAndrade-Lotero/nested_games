@@ -10,7 +10,8 @@ from psynet.modular_page import (
 
 from .game_paramters import (
     ENDOWMENT,
-    TIMEOUT_PROPOSALS,
+    STANDARD_TIMEOUT,
+    TIME_ESTIMATE_FOR_COMPENSATION,
     NUMBER_OF_ROUNDS,
 )
 from .custom_front_end import TimeoutPrompt
@@ -159,11 +160,11 @@ def get_instructions(
             label="Instructions",
             prompt=TimeoutPrompt(
                 text=Markup(OBJECTIVE),
-                timeout=TIMEOUT_PROPOSALS,
+                timeout=STANDARD_TIMEOUT,
                 show_rounds=False,
             ),
             control=NullControl(),
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
         ),
         # ModularPage(
         #     label="Instructions",
@@ -172,7 +173,7 @@ def get_instructions(
         #         timeout=TIMEOUT_PROPOSALS,
         #     ),
         #     control=NullControl(),
-        #     time_estimate=TIMEOUT_PROPOSALS,
+        #     time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
         # ),
         # ModularPage(
         #     label="Instructions",
@@ -181,7 +182,7 @@ def get_instructions(
         #         timeout=TIMEOUT_PROPOSALS,
         #     ),
         #     control=NullControl(),
-        #     time_estimate=TIMEOUT_PROPOSALS,
+        #     time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
         # ),
         # ModularPage(
         #     label="Instructions",
@@ -190,7 +191,7 @@ def get_instructions(
         #         timeout=TIMEOUT_PROPOSALS,
         #     ),
         #     control=NullControl(),
-        #     time_estimate=TIMEOUT_PROPOSALS,
+        #     time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
         # ),
     )
 

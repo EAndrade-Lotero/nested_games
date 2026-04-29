@@ -1,7 +1,11 @@
 from psynet.modular_page import ModularPage, NullControl
 from .custom_front_end import TimeoutPrompt
 
-from .game_paramters import ENDOWMENT, TIMEOUT_PROPOSALS
+from .game_paramters import (
+    ENDOWMENT,
+    STANDARD_TIMEOUT,
+    TIME_ESTIMATE_FOR_COMPENSATION,
+)
 
 
 ########################################################
@@ -24,9 +28,9 @@ class ModifyScreenSize(ModularPage):
         self,
         zoom_in_out: str = "out",
         zoom_count: int = 0,
-        time_estimate: int = TIMEOUT_PROPOSALS,
+        timeout: int = STANDARD_TIMEOUT,
     ):
-        self.time_estimate = time_estimate
+        self.time_estimate = TIME_ESTIMATE_FOR_COMPENSATION
         assert zoom_in_out in ["in", "out"], "zoom_in_out must be either 'in' or 'out'"
         assert zoom_count >= 0, "zoom_count must be greater than 0"
 
@@ -49,7 +53,7 @@ class ModifyScreenSize(ModularPage):
 
         prompt = TimeoutPrompt(
             text=text,
-            timeout=time_estimate,
+            timeout=timeout,
             show_rounds=False,
         )
         super().__init__(
@@ -83,9 +87,9 @@ class OuterProposalTutorial(ModularPage):
     def __init__(
         self,
         avatar: str = "me",
-        time_estimate: int = TIMEOUT_PROPOSALS,
+        timeout: int = STANDARD_TIMEOUT,
     ):
-        self.time_estimate = time_estimate
+        self.time_estimate = TIME_ESTIMATE_FOR_COMPENSATION
         assert avatar in ["me", "partner"], "avatar must be either 'me' or 'partner'"
 
         avatar_ = f"<span style='font-weight: bold;'>{avatar.upper()}</span>"
@@ -94,13 +98,13 @@ class OuterProposalTutorial(ModularPage):
             label="drag_and_drop_coins",
             prompt=TimeoutPrompt(
                 text=f"Drag and drop the coins onto the {avatar_} avatar: ",
-                timeout=time_estimate,
+                timeout=timeout,
                 show_rounds=False,
             ),
             control=OuterProposalTutorialControl(
                 avatar=avatar,
             ),
-            time_estimate=time_estimate,
+            time_estimate=self.time_estimate,
         )
 
 
@@ -142,9 +146,9 @@ class InnerProposalTutorial(ModularPage):
     def __init__(
         self,
         num_coins: int = 5,
-        time_estimate: int = 1000,
+        timeout: int = STANDARD_TIMEOUT,
     ):
-        self.time_estimate = time_estimate
+        self.time_estimate = TIME_ESTIMATE_FOR_COMPENSATION
         endowment = ENDOWMENT
         nc = int(num_coins)
         assert 0 <= nc <= endowment, "num_coins must be between 0 and endowment"
@@ -157,12 +161,12 @@ class InnerProposalTutorial(ModularPage):
                     f"<p>Use the slider below to give <strong>{num_coins}</strong> coins "
                     f"to your partner:</p>"
                 ),
-                timeout=time_estimate,
+                timeout=timeout,
                 show_rounds=False,
             ),
             control=InnerProposalTutorialControl(
                 num_coins=num_coins,
             ),
-            time_estimate=time_estimate,
+            time_estimate=self.time_estimate,
         )
 
