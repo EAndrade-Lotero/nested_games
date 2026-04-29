@@ -108,11 +108,12 @@ class Exp(psynet.experiment.Experiment):
     }
 
     timeline = CustomTimeline(
-        consent_cococo_science_of_learning(
-            DURATION=ESTIMATED_DURATION,
-            PAYMENT=PAYMENT,
-        ),
-        personality_trial_maker,
+        # consent_cococo_science_of_learning(
+        #     DURATION=ESTIMATED_DURATION,
+        #     PAYMENT=PAYMENT,
+        # ),
+        *tutorial_pages,
+        # personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(
                 group_type="chain",
@@ -132,22 +133,14 @@ class Exp(psynet.experiment.Experiment):
             timeout_between_barriers=TIMEOUT_PERSONALITY_TEST,
             participant_timeout_action="kick",
         ),
-        # *tutorial_pages,
-        # CustomBarrier(
-        #     id_="assign_roles",
-        #     content="Please wait while your partner completes the tutorial...",
-        #     on_release=assign_roles,
-        #     timeout_between_barriers=len(tutorial_pages) * STANDARD_TIMEOUT,
-        #     participant_timeout_action="kick",
-        # ),
         NestedGameTrialMaker(
             id_="nested_games_trial_maker",
             trial_class=NestedGameTrial,
             node_class=NestedGameNode,
             chain_type="within",
             start_nodes=get_start_nodes,
-            expected_trials_per_participant=1,
-            max_trials_per_participant=1,
+            expected_trials_per_participant=NUMBER_OF_ROUNDS,
+            max_trials_per_participant=NUMBER_OF_ROUNDS,
             chains_per_participant=1,
             # allow_repeated_nodes=True,
             target_n_participants=60,

@@ -54,6 +54,14 @@ class TimeoutPrompt(Prompt):
 # Custom controls
 ###########################################
 
+class TestSizeControl(Control):
+    macro = "size_test"
+    external_template = "test_screen_size.html"
+
+    def __init__(self):
+        super().__init__()
+
+
 class OuterProposalControl(Control):
     macro = ""
     external_template = ""

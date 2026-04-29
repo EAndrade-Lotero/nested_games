@@ -9,17 +9,17 @@ from psynet.utils import get_logger
 from .game_paramters import (
     STANDARD_TIMEOUT,
     WAIT_PAGE_TIME,
-    TIMEOUT_WAITING_FOR_OTHER,
     NUMBER_OF_ROUNDS,
     MAX_TIMEOUT_ROUNDS,
     ENDOWMENT,
+    TIME_ESTIMATE_FOR_COMPENSATION,
 )
 from .custom_front_end import (
     OuterProposalControl,
     InnerProposalControl,
     InnerAcceptanceControl,
     ScoreControl,
-    TimeoutPrompt
+    TimeoutPrompt,
 )
 from .custom_timeline import EndRoundPage
 
@@ -31,7 +31,7 @@ class OuterProposalPage(ModularPage):
 
     def __init__(
             self,
-            time_estimate: int,
+            time_estimate: int=TIME_ESTIMATE_FOR_COMPENSATION,
             accumulated_score_me: int = 0,
             accumulated_score_partner: int = 0,
             round_: int = 1,
@@ -97,7 +97,7 @@ class OuterWaitingPage(Page):
             template = file.read()
         super().__init__(
             label="wait",
-            time_estimate=TIMEOUT_WAITING_FOR_OTHER,
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
             template_str=template,
             template_arg={
                 "accumulated_score_me": int(self.accumulated_score_me),
@@ -128,7 +128,7 @@ class OuterAcceptancePage(ModularPage):
             self,
             proposal: str,
             round_: int,
-            time_estimate: int,
+            time_estimate: int=TIME_ESTIMATE_FOR_COMPENSATION,
             accumulated_score_me: int = 0,
             accumulated_score_partner: int = 0,
         ) -> None:
@@ -184,7 +184,7 @@ class InnerProposalPage(ModularPage):
             self,
             outer_game:str,
             round_: int,
-            time_estimate: int,
+            time_estimate: int=TIME_ESTIMATE_FOR_COMPENSATION,
             accumulated_score_me: int = 0,
             accumulated_score_partner: int = 0,
         ) -> None:
@@ -257,7 +257,7 @@ class InnerWaitingPage(Page):
             template = file.read()
         super().__init__(
             label="wait",
-            time_estimate=TIMEOUT_WAITING_FOR_OTHER,
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
             template_str=template,
             template_arg={
                 "accumulated_score_me": int(self.accumulated_score_me),
@@ -290,12 +290,14 @@ class InnerAcceptancePage(ModularPage):
             self,
             proposal: int,
             round_: int,
-            time_estimate: int,
+            time_estimate: int=TIME_ESTIMATE_FOR_COMPENSATION,
             accumulated_score_me: int = 0,
             accumulated_score_partner: int = 0,
         ) -> None:
         text = Markup("")
         if proposal is not None:
+            if proposal == "No answer":
+                return
             if proposal == 0:
                 text=Markup(
                     f"<h3>No coins have been offered to you.</h3>"
@@ -413,7 +415,7 @@ class ScorePage(EndRoundPage):
             label="reward",
             prompt=prompt,
             control=control,
-            time_estimate=5,
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
             save_answer="reward",
             show_next_button=False,
         )

@@ -1,5 +1,7 @@
+from markupsafe import Markup
+
 from psynet.modular_page import ModularPage, NullControl
-from .custom_front_end import TimeoutPrompt
+from .custom_front_end import TimeoutPrompt, TestSizeControl
 
 from .game_paramters import (
     ENDOWMENT,
@@ -7,10 +9,28 @@ from .game_paramters import (
     TIME_ESTIMATE_FOR_COMPENSATION,
 )
 
-
 ########################################################
 # Modify Screen Size Page
 ########################################################
+
+class TestSizePage(ModularPage):
+
+    def __init__(self):
+        prompt = TimeoutPrompt(
+            text=Markup(
+                "<p>Drag each figure from the corners to the square in the center that matches its color.</p>"
+                "<p>Adjust the screen size if needed.</p>"
+            ),
+            timeout=STANDARD_TIMEOUT,
+        )
+        control = TestSizeControl()
+        super().__init__(
+            label="Test size page",
+            prompt=prompt,
+            control=control,
+            show_next_button=False,
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
+        )
 
 class ModifyScreenSizeControl(NullControl):
     macro = "modify_screen_size"

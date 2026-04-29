@@ -430,7 +430,7 @@
     }
   </style>
 
-<div class="inner-proposal-root">
+<div class="inner-proposal-root" id="root">
     <div class="container">
 
       <div class="player partner">
@@ -496,6 +496,10 @@
   </div>
 
   <script>
+    const root = document.getElementById("root");
+    const rect = root.getBoundingClientRect();
+    console.log("Root dimensions:", rect.width, rect.height);
+
     (function () {
       const root = document.currentScript.closest(".inner-proposal-root");
       if (!root) return;
