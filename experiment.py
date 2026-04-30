@@ -2,6 +2,11 @@ import psynet.experiment
 from psynet.sync import SimpleGrouper
 from psynet.timeline import PageMaker
 from psynet.utils import get_logger
+from psynet.modular_page import (
+    ModularPage,
+    VideoPrompt,
+    NullControl,
+)
 
 from .nested_game_node import NestedGameNode
 from .nested_game_trial import (
@@ -13,7 +18,6 @@ from .game_paramters import (
     TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
     TIMEOUT_PERSONALITY_TEST,
     TIME_ESTIMATE_FOR_COMPENSATION,
-    STANDARD_TIMEOUT,
     NUMBER_OF_ROUNDS,
     CURRENCY,
     ESTIMATED_DURATION,
@@ -31,7 +35,6 @@ from .big_five import (
 from .custom_barriers import CustomBarrier
 from .custom_timeline import CustomTimeline
 from .consent_science_of_learning import consent_cococo_science_of_learning
-from .tutorial import get_tutorial_pages
 from .final_survey import get_final_survey
 
 logger = get_logger()
@@ -61,8 +64,6 @@ def get_start_nodes():
             }
         )
     ]
-
-tutorial_pages = get_tutorial_pages()
 
 waiting_trial_maker = PersonalityTrialMaker(
     id_="waiting",
@@ -108,12 +109,11 @@ class Exp(psynet.experiment.Experiment):
     }
 
     timeline = CustomTimeline(
-        # consent_cococo_science_of_learning(
-        #     DURATION=ESTIMATED_DURATION,
-        #     PAYMENT=PAYMENT,
-        # ),
-        *tutorial_pages,
-        # personality_trial_maker,
+        consent_cococo_science_of_learning(
+            DURATION=ESTIMATED_DURATION,
+            PAYMENT=PAYMENT,
+        ),
+        personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(
                 group_type="chain",
@@ -132,6 +132,17 @@ class Exp(psynet.experiment.Experiment):
             on_release=assign_roles,
             timeout_between_barriers=TIMEOUT_PERSONALITY_TEST,
             participant_timeout_action="kick",
+        ),
+        ModularPage(
+            label="test",
+            prompt=VideoPrompt(
+                text="Please see the tutorial video below:",
+                text_align="center",
+                video="../static/Instructions.mp4",
+                controls=True,
+            ),
+            control=NullControl(),
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
         ),
         NestedGameTrialMaker(
             id_="nested_games_trial_maker",

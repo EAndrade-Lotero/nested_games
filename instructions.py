@@ -4,7 +4,6 @@ from psynet.timeline import join
 from psynet.graphics import Prompt
 from psynet.modular_page import (
     ModularPage,
-    PushButtonControl,
     NullControl,
 )
 
@@ -166,33 +165,33 @@ def get_instructions(
             control=NullControl(),
             time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
         ),
-        # ModularPage(
-        #     label="Instructions",
-        #     prompt=TimeoutPrompt(
-        #         text=Markup(preparation_phase),
-        #         timeout=TIMEOUT_PROPOSALS,
-        #     ),
-        #     control=NullControl(),
-        #     time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
-        # ),
-        # ModularPage(
-        #     label="Instructions",
-        #     prompt=TimeoutPrompt(
-        #         text=Markup(proposal_phase),
-        #         timeout=TIMEOUT_PROPOSALS,
-        #     ),
-        #     control=NullControl(),
-        #     time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
-        # ),
-        # ModularPage(
-        #     label="Instructions",
-        #     prompt=TimeoutPrompt(
-        #         text=Markup(example_text),
-        #         timeout=TIMEOUT_PROPOSALS,
-        #     ),
-        #     control=NullControl(),
-        #     time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
-        # ),
+        ModularPage(
+            label="Instructions",
+            prompt=TimeoutPrompt(
+                text=Markup(preparation_phase),
+                timeout=TIMEOUT_PROPOSALS,
+            ),
+            control=NullControl(),
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
+        ),
+        ModularPage(
+            label="Instructions",
+            prompt=TimeoutPrompt(
+                text=Markup(proposal_phase),
+                timeout=TIMEOUT_PROPOSALS,
+            ),
+            control=NullControl(),
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
+        ),
+        ModularPage(
+            label="Instructions",
+            prompt=TimeoutPrompt(
+                text=Markup(example_text),
+                timeout=TIMEOUT_PROPOSALS,
+            ),
+            control=NullControl(),
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
+        ),
     )
 
     return list_of_pages

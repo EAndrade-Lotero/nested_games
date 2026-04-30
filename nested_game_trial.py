@@ -26,7 +26,6 @@ from .game_paramters import (
     MAX_TIMEOUT_ROUNDS,
     RNG,
 )
-from .instructions import get_instructions
 from .custom_barriers import CustomBarrier
 from .custom_timeline import EndRoundPage
 from .custom_pages import (
@@ -49,19 +48,7 @@ class NestedGameTrial(ChainTrial):
 
     def show_trial(self, experiment, participant):
 
-        instructions_stage = self.instructions_stage()
-        timeout_at_barrier = STANDARD_TIMEOUT * len(instructions_stage)
-
         return join(
-            #########################################
-            # INSTRUCTIONS
-            #########################################
-            conditional(
-                label="only_first_round",
-                condition=lambda participant: self.position == 0,
-                logic_if_true=instructions_stage,
-                logic_if_false=None
-            ),
             #############################################
             # CHOOSE OUTER ROLES DEPENDING ON TREATMENT
             #############################################
@@ -69,7 +56,7 @@ class NestedGameTrial(ChainTrial):
                 id_="choose_outer_roles",
                 content="Please wait for your partner...",
                 on_release = self.choose_new_outer_role,
-                timeout_at_barrier=timeout_at_barrier,
+                timeout_at_barrier=STANDARD_TIMEOUT,
             ),
             #########################################
             # OUTER GAME
