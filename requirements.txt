@@ -3,8 +3,7 @@ numpy
 pandas
 markupsafe
 
-dallinger
-# psynet==13.1.1
+dallinger==12.1.2
 psynet@git+https://gitlab.com/PsyNetDev/PsyNet@1264d9ed58af0379e9990c839f2e9a613d1678e4#egg=psynet
 
 # Alternatively, you can use one of the following syntaxes to specify a custom PsyNet version

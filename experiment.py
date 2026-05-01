@@ -1,3 +1,5 @@
+import json
+
 import psynet.experiment
 from psynet.sync import SimpleGrouper
 from psynet.timeline import PageMaker
@@ -88,6 +90,20 @@ waiting_logic = PageMaker(
     time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
 )
 
+def get_prolific_settings():
+    with open("qualification_prolific_en.json", "r") as f:
+        qualification = json.dumps(json.load(f))
+    return {
+        "recruiter": "prolific",
+        "base_payment": PAYMENT,
+        "prolific_estimated_completion_minutes": ESTIMATED_DURATION,
+        "prolific_recruitment_config": qualification,
+        "auto_recruit": False,
+        "wage_per_hour": HOURLY_PAYMENT,
+        "currency": CURRENCY,
+        "show_reward": False,
+    }
+
 
 class Exp(psynet.experiment.Experiment):
     label = "Nested games"
@@ -95,13 +111,13 @@ class Exp(psynet.experiment.Experiment):
 
     config = {
         "server_pem": "~/cap.pem",
-        # "recruiter": "prolific",
-        "recruiter": "hotair",
+        "recruiter": "prolific",
+        # "recruiter": "hotair",
         "wage_per_hour": HOURLY_PAYMENT,
-        "currency": "$",
-        # **get_prolific_settings(),
+        "currency": CURRENCY,
+        **get_prolific_settings(),
         f"title": f"Nested games experiment (Chrome browser, ~{ESTIMATED_DURATION} minutes, {CURRENCY}{PAYMENT})",
-        "description": "This experiment is about collective behavior.",
+        "description": "This experiment is about collective behavior and group outcomes.",
         'initial_recruitment_size': 2,
         "auto_recruit": False,
         "show_reward": False,
@@ -154,7 +170,7 @@ class Exp(psynet.experiment.Experiment):
             max_trials_per_participant=NUMBER_OF_ROUNDS,
             chains_per_participant=1,
             # allow_repeated_nodes=True,
-            target_n_participants=60,
+            target_n_participants=40,
             wait_for_networks=True,
             max_nodes_per_chain=NUMBER_OF_ROUNDS,
             trials_per_node=1,
