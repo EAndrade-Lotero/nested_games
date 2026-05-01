@@ -96,17 +96,6 @@ class NestedGameTrial(ChainTrial):
         )  # end main join
 
     ######################################################
-    # METHODS FOR THE INSTRUCTIONS
-    ######################################################
-    def instructions_stage(self):
-        return get_instructions(
-            outer_game=self.participant.current_trial.definition["outer_game"],
-            inner_game=self.participant.current_trial.definition["inner_game"],
-            transition=self.participant.current_trial.definition["transition"],
-            outer_role=self.get_outer_role(self.participant),
-        )
-
-    ######################################################
     # METHODS FOR THE OUTER GAME
     ######################################################
     def outer_dictator_stage(self):
