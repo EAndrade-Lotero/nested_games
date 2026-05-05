@@ -134,19 +134,6 @@ class Exp(psynet.experiment.Experiment):
             DURATION=ESTIMATED_DURATION,
             PAYMENT=PAYMENT,
         ),
-        # personality_trial_maker,
-        waiting_trial_maker.custom(
-            SimpleGrouper(
-                group_type="chain",
-                initial_group_size=2,
-                max_group_size="initial_group_size",
-                min_group_size=2,
-                join_existing_groups=False,
-                waiting_logic=waiting_logic,
-                waiting_logic_expected_repetitions=MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
-                max_wait_time=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS * (MAX_NUM_WAITING_BIG_FIVE_QUESTIONS - 1),
-            ),
-        ),
         ModularPage(
             label="tutorial",
             prompt=VideoPrompt(
@@ -171,11 +158,24 @@ class Exp(psynet.experiment.Experiment):
         conditional(
             label="Checking if participant timeout",
             condition=lambda participant: participant.answer == "No answer",
-            logic_if_true=lambda participant: participant.var.set("experiment_failed", True),
-            # logic_if_true=UnsuccessfulEndPage(
-            #     failure_tags=["waiting_pages_timeout"],
-            # ),
+            # logic_if_true=lambda participant: participant.var.set("experiment_failed", True),
+            logic_if_true=UnsuccessfulEndPage(
+                failure_tags=["waiting_pages_timeout"],
+            ),
             logic_if_false=None,
+        ),
+        # personality_trial_maker,
+        waiting_trial_maker.custom(
+            SimpleGrouper(
+                group_type="chain",
+                initial_group_size=2,
+                max_group_size="initial_group_size",
+                min_group_size=2,
+                join_existing_groups=False,
+                waiting_logic=waiting_logic,
+                waiting_logic_expected_repetitions=MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
+                max_wait_time=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS * (MAX_NUM_WAITING_BIG_FIVE_QUESTIONS - 1),
+            ),
         ),
         CustomBarrier(
             id_="assign_roles",

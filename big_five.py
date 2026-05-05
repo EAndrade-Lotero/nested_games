@@ -120,7 +120,8 @@ class WaitingTrial(StaticTrial):
         text += "<p>We are waiting for other participants. </p>"
         text += "<p>In the meantime, <span style='font-weight:700'>please report how accurate is the following statement:</span> </p>"
         text += "<br>"
-        text += f"<h6>I see myself as someone who {format_text(question)}</h6>"
+        text += f"<span style='display: block; text-align: center; font-size: 14pt; font-style: italic;'>I see myself as someone who {format_text(question)}</span>"
+        text += "<br>"
         text += "<br>"
         text += "<p><span style='font-weight: bold;'>Important:</span> Please do not allow the experiment to timeout.</p>"
         text += "<p>We cannot compensate you monetarily if you allow this page to timeout.</p>"
@@ -144,10 +145,9 @@ class WaitingTrial(StaticTrial):
             conditional(
                 label="Checking if participant timeout",
                 condition=lambda participant: participant.answer == "No answer",
-                logic_if_true=lambda participant: participant.var.set("experiment_failed", True),
-                # logic_if_true=UnsuccessfulEndPage(
-                #     failure_tags=["waiting_pages_timeout"],
-                # ),
+                logic_if_true=UnsuccessfulEndPage(
+                    failure_tags=["waiting_pages_timeout"],
+                ),
                 logic_if_false=None,
             )
         ]

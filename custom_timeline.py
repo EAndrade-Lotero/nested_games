@@ -85,28 +85,28 @@ class CustomTimeline(Timeline):
 
         round_failed = CustomTimeline.get_round_failed(participant)
         # logger.info(f"Do I see round failed? {round_failed}")
-        experiment_failed = CustomTimeline.get_experiment_failed(participant)
-        logger.info(f"Do I see experiment failed? {experiment_failed}")
+        # experiment_failed = CustomTimeline.get_experiment_failed(participant)
+        # logger.info(f"Do I see experiment failed? {experiment_failed}")
 
-        if experiment_failed:
+        # if experiment_failed:
+        #
+        #     while True:
+        #         new_elt = self.increase_one_page(experiment, participant)
+        #
+        #         logger.info(f"Considering elt of type: {type(new_elt)}")
+        #         if isinstance(new_elt, EndExperimentPage):
+        #             finished = True
+        #             break
+        #
+        #         try:
+        #             elt_id_max = participant.elt_id_max[-1]
+        #         except IndexError:
+        #             raise Exception("End of timeline reached. No end experiment page found.")
+        #
+        #         if participant.elt_id[-1] == participant.elt_id_max[-1]:
+        #             raise Exception("End of timeline reached. No end round page found.")
 
-            while True:
-                new_elt = self.increase_one_page(experiment, participant)
-
-                logger.info(f"Considering elt of type: {type(new_elt)}")
-                if isinstance(new_elt, EndExperimentPage):
-                    finished = True
-                    break
-
-                try:
-                    elt_id_max = participant.elt_id_max[-1]
-                except IndexError:
-                    raise Exception("End of timeline reached. No end experiment page found.")
-
-                if participant.elt_id[-1] == participant.elt_id_max[-1]:
-                    raise Exception("End of timeline reached. No end round page found.")
-
-        elif round_failed:
+        if round_failed:
 
             finished = False
 
@@ -163,10 +163,10 @@ class CustomTimeline(Timeline):
         else:
             return False
 
-    @staticmethod
-    def get_experiment_failed(participant):
-        if participant.var.has("experiment_failed"):
-            experiment_failed = getattr(participant.var, "experiment_failed")
-            return experiment_failed
-        else:
-            return False
+    # @staticmethod
+    # def get_experiment_failed(participant):
+    #     if participant.var.has("experiment_failed"):
+    #         experiment_failed = getattr(participant.var, "experiment_failed")
+    #         return experiment_failed
+    #     else:
+    #         return False
