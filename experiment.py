@@ -115,7 +115,7 @@ class Exp(psynet.experiment.Experiment):
         # "recruiter": "hotair",
         "wage_per_hour": HOURLY_PAYMENT,
         "currency": CURRENCY,
-        # **get_prolific_settings(),
+        **get_prolific_settings(),
         f"title": f"Nested games experiment (Chrome browser, ~{ESTIMATED_DURATION} minutes, {CURRENCY}{PAYMENT})",
         "description": "This experiment is about collective behavior and group outcomes.",
         'initial_recruitment_size': 2,
@@ -125,10 +125,10 @@ class Exp(psynet.experiment.Experiment):
     }
 
     timeline = CustomTimeline(
-        # consent_cococo_science_of_learning(
-        #     DURATION=ESTIMATED_DURATION,
-        #     PAYMENT=PAYMENT,
-        # ),
+        consent_cococo_science_of_learning(
+            DURATION=ESTIMATED_DURATION,
+            PAYMENT=PAYMENT,
+        ),
         # personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(
