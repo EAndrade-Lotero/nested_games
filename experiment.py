@@ -21,7 +21,7 @@ from .game_paramters import (
     MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
     TIMEOUT_WATCH_TUTORIAL,
     TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
-    TIMEOUT_PERSONALITY_TEST,
+    STANDARD_TIMEOUT,
     TIME_ESTIMATE_FOR_COMPENSATION,
     TIME_ESTIMATE_FOR_COMPENSATION_TUTORIAL_VIDEO,
     NUMBER_OF_ROUNDS,
@@ -180,7 +180,7 @@ class Exp(psynet.experiment.Experiment):
             id_="assign_roles",
             content="The experiment is loading now, please wait a second...",
             on_release=assign_roles,
-            timeout_between_barriers=TIMEOUT_PERSONALITY_TEST,
+            timeout_between_barriers=STANDARD_TIMEOUT,
             participant_timeout_action="kick",
         ),
         NestedGameTrialMaker(
