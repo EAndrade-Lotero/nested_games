@@ -1,4 +1,7 @@
 from typing import Union
+
+from markupsafe import Markup
+
 from psynet.timeline import (
     Timeline,
     PageMakerFinishedError,
@@ -15,9 +18,37 @@ from psynet.modular_page import (
     ModularPage,
     Prompt,
     Control,
+    NullControl,
 )
 
 logger = get_logger()
+
+
+class EndExperimentPage(ModularPage):
+
+    def __init__(
+        self,
+        show_failed_experiment: bool,
+        **kwargs
+    ) -> None:
+
+        text = "<h3>Experiment finished</h3>"
+        text += "<br>"
+        text += "<p>Thank you for your participation.</p>"
+        text += "<br>"
+
+        if show_failed_experiment:
+            text += "<p>(Timeout failure by one or both participants)</p>"
+            text += "<br>"
+
+        prompt = Markup(text)
+
+        super().__init__(
+            label="End of experiment",
+            prompt=prompt,
+            control=NullControl(),
+            time_estimate=5,
+        )
 
 
 class EndRoundPage(ModularPage):
@@ -53,9 +84,29 @@ class CustomTimeline(Timeline):
     def advance_page(self, experiment, participant):
 
         round_failed = CustomTimeline.get_round_failed(participant)
-        logger.info(f"Do I see round failed? {round_failed}")
+        # logger.info(f"Do I see round failed? {round_failed}")
+        experiment_failed = CustomTimeline.get_experiment_failed(participant)
+        logger.info(f"Do I see experiment failed? {experiment_failed}")
 
-        if round_failed:
+        if experiment_failed:
+
+            while True:
+                new_elt = self.increase_one_page(experiment, participant)
+
+                logger.info(f"Considering elt of type: {type(new_elt)}")
+                if isinstance(new_elt, EndExperimentPage):
+                    finished = True
+                    break
+
+                try:
+                    elt_id_max = participant.elt_id_max[-1]
+                except IndexError:
+                    raise Exception("End of timeline reached. No end experiment page found.")
+
+                if participant.elt_id[-1] == participant.elt_id_max[-1]:
+                    raise Exception("End of timeline reached. No end round page found.")
+
+        elif round_failed:
 
             finished = False
 
@@ -107,8 +158,15 @@ class CustomTimeline(Timeline):
     @staticmethod
     def get_round_failed(participant):
         if participant.var.has("round_failed"):
-            # round_failed = participant.var.round_failed
             round_failed = getattr(participant.var, "round_failed")
             return round_failed
+        else:
+            return False
+
+    @staticmethod
+    def get_experiment_failed(participant):
+        if participant.var.has("experiment_failed"):
+            experiment_failed = getattr(participant.var, "experiment_failed")
+            return experiment_failed
         else:
             return False

@@ -39,7 +39,7 @@ from .big_five import (
     waiting_nodes,
 )
 from .custom_barriers import CustomBarrier
-from .custom_timeline import CustomTimeline
+from .custom_timeline import CustomTimeline, EndExperimentPage
 from .consent_science_of_learning import consent_cococo_science_of_learning
 from .final_survey import get_final_survey
 from .custom_front_end import NextWithTimerControl
@@ -120,7 +120,7 @@ class Exp(psynet.experiment.Experiment):
         # "recruiter": "hotair",
         "wage_per_hour": HOURLY_PAYMENT,
         "currency": CURRENCY,
-        **get_prolific_settings(),
+        # **get_prolific_settings(),
         f"title": f"Nested games experiment (Chrome browser, ~{ESTIMATED_DURATION} minutes, {CURRENCY}{PAYMENT})",
         "description": "This experiment is about collective behavior and group outcomes.",
         'initial_recruitment_size': 2,
@@ -171,9 +171,10 @@ class Exp(psynet.experiment.Experiment):
         conditional(
             label="Checking if participant timeout",
             condition=lambda participant: participant.answer == "No answer",
-            logic_if_true=UnsuccessfulEndPage(
-                failure_tags=["tutorial_timeout"],
-            ),
+            logic_if_true=lambda participant: participant.var.set("experiment_failed", True),
+            # logic_if_true=UnsuccessfulEndPage(
+            #     failure_tags=["waiting_pages_timeout"],
+            # ),
             logic_if_false=None,
         ),
         CustomBarrier(
@@ -200,4 +201,15 @@ class Exp(psynet.experiment.Experiment):
             sync_group_type="chain",
         ),
         get_final_survey(),
+        EndExperimentPage(
+            show_failed_experiment=True,
+        )
     )
+
+    @staticmethod
+    def get_experiment_failed(participant):
+        if participant.var.has("experiment_failed"):
+            experiment_failed = getattr(participant.var, "experiment_failed")
+            return experiment_failed
+        else:
+            return False

@@ -144,9 +144,10 @@ class WaitingTrial(StaticTrial):
             conditional(
                 label="Checking if participant timeout",
                 condition=lambda participant: participant.answer == "No answer",
-                logic_if_true=UnsuccessfulEndPage(
-                    failure_tags=["waiting_pages_timeout"],
-                ),
+                logic_if_true=lambda participant: participant.var.set("experiment_failed", True),
+                # logic_if_true=UnsuccessfulEndPage(
+                #     failure_tags=["waiting_pages_timeout"],
+                # ),
                 logic_if_false=None,
             )
         ]
