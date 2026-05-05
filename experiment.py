@@ -1,4 +1,5 @@
 import json
+from markupsafe import Markup
 
 import psynet.experiment
 from psynet.sync import SimpleGrouper
@@ -7,8 +8,9 @@ from psynet.utils import get_logger
 from psynet.modular_page import (
     ModularPage,
     VideoPrompt,
-    NullControl,
 )
+from psynet.page import UnsuccessfulEndPage
+from psynet.timeline import conditional
 
 from .nested_game_node import NestedGameNode
 from .nested_game_trial import (
@@ -17,6 +19,7 @@ from .nested_game_trial import (
 )
 from .game_paramters import (
     MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
+    TIMEOUT_WATCH_TUTORIAL,
     TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
     TIMEOUT_PERSONALITY_TEST,
     TIME_ESTIMATE_FOR_COMPENSATION,
@@ -38,6 +41,7 @@ from .custom_barriers import CustomBarrier
 from .custom_timeline import CustomTimeline
 from .consent_science_of_learning import consent_cococo_science_of_learning
 from .final_survey import get_final_survey
+from .custom_front_end import NextWithTimerControl
 
 logger = get_logger()
 
@@ -142,23 +146,41 @@ class Exp(psynet.experiment.Experiment):
                 max_wait_time=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS * (MAX_NUM_WAITING_BIG_FIVE_QUESTIONS - 1),
             ),
         ),
-        CustomBarrier(
-            id_="assign_roles",
-            content="Please wait while your partner completes the personality test...",
-            on_release=assign_roles,
-            timeout_between_barriers=TIMEOUT_PERSONALITY_TEST,
-            participant_timeout_action="kick",
-        ),
         ModularPage(
-            label="test",
+            label="tutorial",
             prompt=VideoPrompt(
-                text="Please see the tutorial video below:",
+                text=Markup(
+                    "<p><span style='font-weight: bold;'>Please watch the following tutorial video.</span></p>"
+                    "<br>"
+                    "<p><span style='font-weight: bold;'>Important:</span> Please do not allow the experiment to timeout.</p>"
+                    "<p>We cannot compensate you monetarily if you allow this page to timeout.</p>"
+                    "<br>"
+                ),
                 text_align="center",
                 video="../static/Instructions.mp4",
                 controls=True,
             ),
-            control=NullControl(),
-            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
+            control=NextWithTimerControl(
+                timeout=TIMEOUT_WATCH_TUTORIAL
+            ),
+            save_answer="tutorial",
+            time_estimate=90,
+            show_next_button=False,
+        ),
+        conditional(
+            label="Checking if participant timeout",
+            condition=lambda participant: participant.answer == "No answer",
+            logic_if_true=UnsuccessfulEndPage(
+                failure_tags=["tutorial_timeout"],
+            ),
+            logic_if_false=None,
+        ),
+        CustomBarrier(
+            id_="assign_roles",
+            content="The experiment is loading now, please wait a second...",
+            on_release=assign_roles,
+            timeout_between_barriers=TIMEOUT_PERSONALITY_TEST,
+            participant_timeout_action="kick",
         ),
         NestedGameTrialMaker(
             id_="nested_games_trial_maker",

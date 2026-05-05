@@ -228,4 +228,14 @@ class CustomSliderControl(Control):
             return float(raw_answer)
         except (ValueError, AssertionError):
             return f"INVALID_RESPONSE"
+
+
+class NextWithTimerControl(Control):
+    macro = "next_with_timer"
+    external_template = "next-with-timer.html"
+
+    def __init__(self, timeout: int):
+        super().__init__()
+        self.timeout = timeout
+        self.timeout_answer = "No answer"
 ###########################################

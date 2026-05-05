@@ -8,14 +8,8 @@ from psynet.trial.static import (
     StaticTrial,
     StaticNode,
 )
-from psynet.page import (
-    InfoPage,
-    UnsuccessfulEndPage,
-)
-from psynet.timeline import (
-    PageMaker,
-    conditional,
-)
+from psynet.page import UnsuccessfulEndPage
+from psynet.timeline import conditional
 from psynet.modular_page import ModularPage
 from psynet.utils import get_logger
 
@@ -128,6 +122,9 @@ class WaitingTrial(StaticTrial):
         text += "<br>"
         text += f"<h6>I see myself as someone who {format_text(question)}</h6>"
         text += "<br>"
+        text += "<p><span style='font-weight: bold;'>Important:</span> Please do not allow the experiment to timeout.</p>"
+        text += "<p>We cannot compensate you monetarily if you allow this page to timeout.</p>"
+        text += "<br>"
 
         return [
             ModularPage(
@@ -148,15 +145,11 @@ class WaitingTrial(StaticTrial):
                 label="Checking if participant timeout",
                 condition=lambda participant: participant.answer == "No answer",
                 logic_if_true=UnsuccessfulEndPage(
-                    failure_tags=["tutorial_failed"],
+                    failure_tags=["waiting_pages_timeout"],
                 ),
                 logic_if_false=None,
             )
         ]
-
-    def check_timeout(self, participant):
-        return participant.answer == "No answer"
-
 
 
 class PersonalityTrialMaker(StaticTrialMaker):
