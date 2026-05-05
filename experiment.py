@@ -23,6 +23,7 @@ from .game_paramters import (
     TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
     TIMEOUT_PERSONALITY_TEST,
     TIME_ESTIMATE_FOR_COMPENSATION,
+    TIME_ESTIMATE_FOR_COMPENSATION_TUTORIAL_VIDEO,
     NUMBER_OF_ROUNDS,
     CURRENCY,
     ESTIMATED_DURATION,
@@ -164,7 +165,7 @@ class Exp(psynet.experiment.Experiment):
                 timeout=TIMEOUT_WATCH_TUTORIAL
             ),
             save_answer="tutorial",
-            time_estimate=90,
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION_TUTORIAL_VIDEO,
             show_next_button=False,
         ),
         conditional(
@@ -192,7 +193,7 @@ class Exp(psynet.experiment.Experiment):
             max_trials_per_participant=NUMBER_OF_ROUNDS,
             chains_per_participant=1,
             # allow_repeated_nodes=True,
-            target_n_participants=40,
+            target_n_participants=6,
             wait_for_networks=True,
             max_nodes_per_chain=NUMBER_OF_ROUNDS,
             trials_per_node=1,
