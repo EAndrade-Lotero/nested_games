@@ -8,10 +8,15 @@ from psynet.trial.static import (
     StaticTrial,
     StaticNode,
 )
-from psynet.modular_page import (
-    ModularPage,
-    PushButtonControl,
+from psynet.page import (
+    InfoPage,
+    UnsuccessfulEndPage,
 )
+from psynet.timeline import (
+    PageMaker,
+    conditional,
+)
+from psynet.modular_page import ModularPage
 from psynet.utils import get_logger
 
 from .game_paramters import (
@@ -124,20 +129,34 @@ class WaitingTrial(StaticTrial):
         text += f"<h6>I see myself as someone who {format_text(question)}</h6>"
         text += "<br>"
 
-        return ModularPage(
-            label="waiting_trial",
-            prompt=TimeoutPrompt(
-                text=Markup(text),
-                timeout=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
-                show_rounds=False,
+        return [
+            ModularPage(
+                label="waiting_trial",
+                prompt=TimeoutPrompt(
+                    text=Markup(text),
+                    timeout=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
+                    show_rounds=False,
+                ),
+                control=CustomLikertControl(
+                    lowest_value="Very inaccurate",
+                    highest_value="Very accurate",
+                    n_steps=5,
+                ),
+                time_estimate=self.time_estimate
             ),
-            control=CustomLikertControl(
-                lowest_value="Very inaccurate",
-                highest_value="Very accurate",
-                n_steps=5,
-            ),
-            time_estimate=self.time_estimate
-        )
+            conditional(
+                label="Checking if participant timeout",
+                condition=lambda participant: participant.answer == "No answer",
+                logic_if_true=UnsuccessfulEndPage(
+                    failure_tags=["tutorial_failed"],
+                ),
+                logic_if_false=None,
+            )
+        ]
+
+    def check_timeout(self, participant):
+        return participant.answer == "No answer"
+
 
 
 class PersonalityTrialMaker(StaticTrialMaker):
