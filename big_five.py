@@ -155,7 +155,7 @@ class WaitingTrial(StaticTrial):
 
     def format_answer(self, raw_answer, **kwargs):
         return {
-            "item": self.item,
+            "item_id": self.item["id"],
             "choice": raw_answer,
         }
 
