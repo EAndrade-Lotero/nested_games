@@ -37,6 +37,7 @@ class TimeoutPrompt(Prompt):
         round_:int = 1,
         num_rounds: int = 1,
         show_rounds: bool = True,
+        use_sounds: bool = True,
     ):
         super().__init__(
             text=text,
@@ -49,6 +50,7 @@ class TimeoutPrompt(Prompt):
         self.round = round_
         self.num_rounds = num_rounds
         self.show_rounds = show_rounds
+        self.use_sounds = use_sounds
 
 ###########################################
 # Custom controls

@@ -66,7 +66,18 @@
       00:18
     </div>
 <script>
+const useSounds = {% if config.use_sounds %}true{% else %}false{% endif %};
 let timeRemaining = {{ config.timeoutSeconds }};
+let countdown10Played = false;
+
+function playSound(src) {
+    const audio = new Audio(src);
+    audio.play().catch(function () {});
+}
+
+if (useSounds) {
+    playSound("../static/starting-alarm.mp3");
+}
 
 function updateTimer() {
     let minutes = Math.floor(timeRemaining / 60);
@@ -76,6 +87,11 @@ function updateTimer() {
 
     document.getElementById("timer").textContent =
         "Time left: " + minutes + ":" + seconds;
+
+    if (useSounds && !countdown10Played && timeRemaining === 10) {
+        countdown10Played = true;
+        playSound("../static/countdown.mp3");
+    }
 
     if (timeRemaining > 0) {
         timeRemaining--;
