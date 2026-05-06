@@ -9,7 +9,7 @@ from psynet.modular_page import (
     ModularPage,
     VideoPrompt,
 )
-from psynet.page import UnsuccessfulEndPage
+from psynet.page import UnsuccessfulEndPage, InfoPage
 from psynet.timeline import conditional
 
 from .nested_game_node import NestedGameNode
@@ -121,7 +121,7 @@ class Exp(psynet.experiment.Experiment):
         # "recruiter": "hotair",
         "wage_per_hour": HOURLY_PAYMENT,
         "currency": CURRENCY,
-        **get_prolific_settings(),
+        # **get_prolific_settings(),
         f"title": f"Nested games experiment (Chrome browser, ~{ESTIMATED_DURATION} minutes, {CURRENCY}{PAYMENT})",
         "description": "This experiment is about collective behavior and group outcomes.",
         'initial_recruitment_size': 2,
@@ -131,40 +131,40 @@ class Exp(psynet.experiment.Experiment):
     }
 
     timeline = CustomTimeline(
-        consent_cococo_science_of_learning(
-            DURATION=ESTIMATED_DURATION,
-            PAYMENT=PAYMENT,
-        ),
-        ModularPage(
-            label="tutorial",
-            prompt=VideoPrompt(
-                text=Markup(
-                    "<p><span style='font-weight: bold;'>Please watch the following tutorial video.</span></p>"
-                    "<br>"
-                    "<p><span style='font-weight: bold;'>Important:</span> Please do not allow the experiment to timeout.</p>"
-                    "<p>We cannot compensate you monetarily if you allow this page to timeout.</p>"
-                    "<br>"
-                ),
-                text_align="center",
-                video="../static/Instructions.mp4",
-                controls=True,
-            ),
-            control=NextWithTimerControl(
-                timeout=TIMEOUT_WATCH_TUTORIAL
-            ),
-            save_answer="tutorial",
-            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION_TUTORIAL_VIDEO,
-            show_next_button=False,
-        ),
-        conditional(
-            label="Checking if participant timeout",
-            condition=lambda participant: participant.answer == "No answer",
-            # logic_if_true=lambda participant: participant.var.set("experiment_failed", True),
-            logic_if_true=UnsuccessfulEndPage(
-                failure_tags=["waiting_pages_timeout"],
-            ),
-            logic_if_false=None,
-        ),
+        # consent_cococo_science_of_learning(
+        #     DURATION=ESTIMATED_DURATION,
+        #     PAYMENT=PAYMENT,
+        # ),
+        # ModularPage(
+        #     label="tutorial",
+        #     prompt=VideoPrompt(
+        #         text=Markup(
+        #             "<p><span style='font-weight: bold;'>Please watch the following tutorial video.</span></p>"
+        #             "<br>"
+        #             "<p><span style='font-weight: bold;'>Important:</span> Please do not allow the experiment to timeout.</p>"
+        #             "<p>We cannot compensate you monetarily if you allow this page to timeout.</p>"
+        #             "<br>"
+        #         ),
+        #         text_align="center",
+        #         video="../static/Instructions.mp4",
+        #         controls=True,
+        #     ),
+        #     control=NextWithTimerControl(
+        #         timeout=TIMEOUT_WATCH_TUTORIAL
+        #     ),
+        #     save_answer="tutorial",
+        #     time_estimate=TIME_ESTIMATE_FOR_COMPENSATION_TUTORIAL_VIDEO,
+        #     show_next_button=False,
+        # ),
+        # conditional(
+        #     label="Checking if participant timeout",
+        #     condition=lambda participant: participant.answer == "No answer",
+        #     # logic_if_true=lambda participant: participant.var.set("experiment_failed", True),
+        #     logic_if_true=UnsuccessfulEndPage(
+        #         failure_tags=["waiting_pages_timeout"],
+        #     ),
+        #     logic_if_false=None,
+        # ),
         # personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(
@@ -174,43 +174,33 @@ class Exp(psynet.experiment.Experiment):
                 min_group_size=2,
                 join_existing_groups=False,
                 waiting_logic=waiting_logic,
-                waiting_logic_expected_repetitions=MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
-                max_wait_time=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS * (MAX_NUM_WAITING_BIG_FIVE_QUESTIONS - 1),
+                waiting_logic_expected_repetitions=1,
+                max_wait_time=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
             ),
         ),
-        CustomBarrier(
-            id_="assign_roles",
-            content="The experiment is loading now, please wait a second...",
-            on_release=assign_roles,
-            timeout_between_barriers=STANDARD_TIMEOUT,
-            participant_timeout_action="kick",
-        ),
-        NestedGameTrialMaker(
-            id_="nested_games_trial_maker",
-            trial_class=NestedGameTrial,
-            node_class=NestedGameNode,
-            chain_type="within",
-            start_nodes=get_start_nodes,
-            expected_trials_per_participant=NUMBER_OF_ROUNDS,
-            max_trials_per_participant=NUMBER_OF_ROUNDS,
-            chains_per_participant=1,
-            # allow_repeated_nodes=True,
-            target_n_participants=TARGET_PARTICIPANTS,
-            wait_for_networks=True,
-            max_nodes_per_chain=NUMBER_OF_ROUNDS,
-            trials_per_node=1,
-            sync_group_type="chain",
-        ),
-        get_final_survey(),
-        EndExperimentPage(
-            show_failed_experiment=True,
-        )
+        InfoPage("OK", time_estimate=1),
+        # CustomBarrier(
+        #     id_="assign_roles",
+        #     content="The experiment is loading now, please wait a second...",
+        #     on_release=assign_roles,
+        #     timeout_between_barriers=STANDARD_TIMEOUT,
+        #     participant_timeout_action="kick",
+        # ),
+        # NestedGameTrialMaker(
+        #     id_="nested_games_trial_maker",
+        #     trial_class=NestedGameTrial,
+        #     node_class=NestedGameNode,
+        #     chain_type="within",
+        #     start_nodes=get_start_nodes,
+        #     expected_trials_per_participant=NUMBER_OF_ROUNDS,
+        #     max_trials_per_participant=NUMBER_OF_ROUNDS,
+        #     chains_per_participant=1,
+        #     # allow_repeated_nodes=True,
+        #     target_n_participants=TARGET_PARTICIPANTS,
+        #     wait_for_networks=True,
+        #     max_nodes_per_chain=NUMBER_OF_ROUNDS,
+        #     trials_per_node=1,
+        #     sync_group_type="chain",
+        # ),
+        # get_final_survey(),
     )
-
-    @staticmethod
-    def get_experiment_failed(participant):
-        if participant.var.has("experiment_failed"):
-            experiment_failed = getattr(participant.var, "experiment_failed")
-            return experiment_failed
-        else:
-            return False

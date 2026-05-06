@@ -16,7 +16,8 @@ from psynet.utils import get_logger
 from .game_paramters import (
     RNG,
     NUM_BIG_FIVE_QUESTIONS,
-    TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
+    TIME_ESTIMATE_FOR_COMPENSATION,
+    STANDARD_TIMEOUT,
 )
 from .custom_front_end import (
     CustomLikertControl,
@@ -68,7 +69,7 @@ personality_nodes = [
 
 
 class PersonalityTrial(StaticTrial):
-    time_estimate = 5
+    time_estimate = TIME_ESTIMATE_FOR_COMPENSATION
 
     def show_trial(self, experiment, participant):
         return join([
@@ -95,7 +96,7 @@ class PersonalityTrial(StaticTrial):
             label=page_label,
             prompt=TimeoutPrompt(
                 text=Markup(text),
-                timeout=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
+                timeout=STANDARD_TIMEOUT,
                 show_rounds=False,
             ),
             control=CustomLikertControl(
@@ -109,12 +110,12 @@ class PersonalityTrial(StaticTrial):
 
 
 class WaitingTrial(StaticTrial):
-    time_estimate = 3
+    time_estimate = TIME_ESTIMATE_FOR_COMPENSATION
 
     def show_trial(self, experiment, participant):
 
-        item = RNG.choice(full_items)
-        question = item["item"]
+        self.item = RNG.choice(full_items)
+        question = self.item["item"]
         text = "<h2>Waiting...</h2>"
         text += "<br>"
         text += "<p>We are waiting for other participants. </p>"
@@ -132,7 +133,7 @@ class WaitingTrial(StaticTrial):
                 label="waiting_trial",
                 prompt=TimeoutPrompt(
                     text=Markup(text),
-                    timeout=TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
+                    timeout=STANDARD_TIMEOUT,
                     show_rounds=False,
                 ),
                 control=CustomLikertControl(
@@ -152,6 +153,22 @@ class WaitingTrial(StaticTrial):
             )
         ]
 
+    def format_answer(self, raw_answer, **kwargs):
+        return {
+            "item": self.item,
+            "choice": raw_answer,
+        }
+
 
 class PersonalityTrialMaker(StaticTrialMaker):
     pass
+
+    # SOMETHING ODD HAPPENS WHEN max_trials_per_participant IS REACHED
+    # THE TIMELINE ENTERS AN INFINITE LOOP.
+    # PROBABLY THE FOLLOWING CODE HELPS, BUT IS NOT WORKING RIGHT NOW
+    # def find_networks(self, participant, experiment):
+    #     result = self.find_networks(participant, experiment)
+    #     if result == "exit":
+    #         participant.fail(reason="Waiting_time_exceeded")
+    #     return result
+

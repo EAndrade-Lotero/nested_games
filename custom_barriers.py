@@ -67,7 +67,9 @@ class CustomBarrier(GroupBarrier):
     def can_participant_exit(self, participant: Participant) -> bool:
         super_condition = super().can_participant_exit(participant)
         round_failed = CustomBarrier.get_round_failed(participant)
-        return super_condition or round_failed
+        logger.info(f"OK --- {participant.current_trial.find_networks()}")
+        max_repetitions_reached = participant.current_trial.find_networks() == "exit"
+        return super_condition or round_failed or max_repetitions_reached
 
     @staticmethod
     def get_round_failed(participant: Participant) -> bool:
