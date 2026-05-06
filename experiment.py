@@ -29,6 +29,7 @@ from .game_paramters import (
     ESTIMATED_DURATION,
     PAYMENT,
     HOURLY_PAYMENT,
+    TARGET_PARTICIPANTS,
     RNG,
 )
 from .big_five import (
@@ -120,7 +121,7 @@ class Exp(psynet.experiment.Experiment):
         # "recruiter": "hotair",
         "wage_per_hour": HOURLY_PAYMENT,
         "currency": CURRENCY,
-        # **get_prolific_settings(),
+        **get_prolific_settings(),
         f"title": f"Nested games experiment (Chrome browser, ~{ESTIMATED_DURATION} minutes, {CURRENCY}{PAYMENT})",
         "description": "This experiment is about collective behavior and group outcomes.",
         'initial_recruitment_size': 2,
@@ -194,7 +195,7 @@ class Exp(psynet.experiment.Experiment):
             max_trials_per_participant=NUMBER_OF_ROUNDS,
             chains_per_participant=1,
             # allow_repeated_nodes=True,
-            target_n_participants=6,
+            target_n_participants=TARGET_PARTICIPANTS,
             wait_for_networks=True,
             max_nodes_per_chain=NUMBER_OF_ROUNDS,
             trials_per_node=1,

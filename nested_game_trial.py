@@ -1,6 +1,7 @@
 from typing import Union
 from markupsafe import Markup
 
+from psynet.page import UnsuccessfulEndPage
 from psynet.modular_page import (
     ModularPage,
     PushButtonControl,
@@ -9,7 +10,6 @@ from psynet.modular_page import (
 from psynet.timeline import (
     join,
     conditional,
-    CodeBlock,
 )
 from psynet.trial.chain import (
     ChainTrial,
@@ -89,8 +89,8 @@ class NestedGameTrial(ChainTrial):
             conditional(
                 label="check_max_timeout",
                 condition=lambda participant: self.check_max_timeout(),
-                logic_if_true=CodeBlock(
-                    lambda experiment, participant: experiment.timeline.redirect_to_branch(experiment, participant, "unsuccessful_end")
+                logic_if_true=UnsuccessfulEndPage(
+                    failure_tags=["max_timeouts_reached"],
                 ),
             )
         )  # end main join
@@ -123,6 +123,8 @@ class NestedGameTrial(ChainTrial):
                         "<h3>Please wait</h3>"
                         "<br>"
                         "<p>Waiting for a proposal...</p>"
+                        "<br>"
+                        "<p><span style='font-weight: bold;'>Please do not refresh this page!</span></p>"
                     ),
                     round_=self.position + 1,
                 )
@@ -153,7 +155,13 @@ class NestedGameTrial(ChainTrial):
                     accumulated_score_me=self.get_my_accumulated_score(),
                     accumulated_score_partner=self.get_partner_accumulated_score(),
                     template_path=self.context["outer_waiting_page_path"],
-                    content="Waiting for acceptance...",
+                    content=Markup(
+                        "<h3>Please wait</h3>"
+                        "<br>"
+                        "<p>Waiting for your partner's acceptance...</p>"
+                        "<br>"
+                        "<p><span style='font-weight: bold;'>Please do not refresh this page!</span></p>"
+                    ),
                     proposer=self.am_i_the_inner_leader(),
                     round_=self.position + 1,
                 )
@@ -302,7 +310,13 @@ class NestedGameTrial(ChainTrial):
                     accumulated_score_me=self.get_my_accumulated_score(),
                     accumulated_score_partner=self.get_partner_accumulated_score(),
                     template_path=self.context["outer_waiting_page_path"],
-                    content="Waiting for partner...",
+                    content=Markup(
+                        "<h3>Please wait</h3>"
+                        "<br>"
+                        "<p>Waiting for a proposal...</p>"
+                        "<br>"
+                        "<p><span style='font-weight: bold;'>Please do not refresh this page!</span></p>"
+                    ),
                     proposer=self.am_i_the_inner_leader(),
                     round_=self.position + 1,
                 )
@@ -333,7 +347,13 @@ class NestedGameTrial(ChainTrial):
                     accumulated_score_me=self.get_my_accumulated_score(),
                     accumulated_score_partner=self.get_partner_accumulated_score(),
                     template_path=self.context["inner_waiting_page_path"],
-                    content="Waiting for acceptance...",
+                    content=Markup(
+                        "<h3>Please wait</h3>"
+                        "<br>"
+                        "<p>Waiting for your partner's acceptance...</p>"
+                        "<br>"
+                        "<p><span style='font-weight: bold;'>Please do not refresh this page!</span></p>"
+                    ),
                     proposer=self.am_i_the_inner_leader(),
                     proposal=self.get_inner_proposal(),
                     round_=self.position + 1,
