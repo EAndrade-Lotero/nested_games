@@ -2,12 +2,17 @@
 numpy
 pandas
 markupsafe
+
+dallinger
+psynet
+
 rq<2.0
 
 dallinger==12.1.2
 psynet@git+https://gitlab.com/PsyNetDev/PsyNet@1264d9ed58af0379e9990c839f2e9a613d1678e4#egg=psynet
 
-# Alternatively, you can use one of the following syntaxes to specify a custom PsyNet version
-# psynet@git+https://gitlab.com/PsyNetDev/PsyNet@v10.4.0#egg=psynet
-# psynet@git+https://gitlab.com/PsyNetDev/PsyNet@45f317688af59350f9a6f3052fd73076318f2775#egg=psynet
-# psynet@git+https://gitlab.com/PsyNetDev/PsyNet@45f31768#egg=psynet
+# dallinger==12.1.2
+# psynet@git+https://gitlab.com/PsyNetDev/PsyNet@f5a893f1dae8466e84442ebe85845a0ea615b7bf#egg=psynet
+
+# psynet@git+https://gitlab.com/PsyNetDev/PsyNet.git@f1172454cb0656a135d3307585b29c7d8d76a386#egg=psynet
+# dallinger==12.2.0

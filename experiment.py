@@ -44,6 +44,7 @@ from .custom_timeline import CustomTimeline, EndExperimentPage
 from .consent_science_of_learning import consent_cococo_science_of_learning
 from .final_survey import get_final_survey
 from .custom_front_end import NextWithTimerControl
+from. safeguards import js_page_switch
 
 logger = get_logger()
 
@@ -117,11 +118,11 @@ class Exp(psynet.experiment.Experiment):
 
     config = {
         "server_pem": "~/cap.pem",
-        "recruiter": "prolific",
-        # "recruiter": "hotair",
+        # "recruiter": "prolific",
+        "recruiter": "hotair",
         "wage_per_hour": HOURLY_PAYMENT,
         "currency": CURRENCY,
-        **get_prolific_settings(),
+        # **get_prolific_settings(),
         f"title": f"Nested games experiment (Chrome browser, ~{ESTIMATED_DURATION} minutes, {CURRENCY}{PAYMENT})",
         "description": "This experiment is about collective behavior and group outcomes.",
         'initial_recruitment_size': 2,
@@ -143,7 +144,8 @@ class Exp(psynet.experiment.Experiment):
                     "<br>"
                     "<p><span style='font-weight: bold;'>Important:</span> Please do not allow the experiment to timeout.</p>"
                     "<p>We cannot compensate you monetarily if you allow this page to timeout.</p>"
-                    "<br>"
+                    "<br>" +
+                    js_page_switch
                 ),
                 text_align="center",
                 video="../static/Instructions.mp4",
@@ -198,7 +200,7 @@ class Exp(psynet.experiment.Experiment):
             target_n_participants=TARGET_PARTICIPANTS,
             wait_for_networks=True,
             max_nodes_per_chain=NUMBER_OF_ROUNDS,
-            trials_per_node=1,
+            trials_per_node=2,
             sync_group_type="chain",
         ),
         get_final_survey(),
