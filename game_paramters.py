@@ -21,7 +21,7 @@ TIMEOUT_WAITING_BIG_FIVE_QUESTIONS = 180
 TIMEOUT_WATCH_TUTORIAL = 120
 TIMEOUT_WAITING_FOR_OTHER = 1.5 * STANDARD_TIMEOUT # Max wait at a barrier
 TIMEOUT_BETWEEN_BARRIERS = 1.5 * STANDARD_TIMEOUT # Max time between barriers
-WAIT_PAGE_TIME = 1.25  # Refresh interval at barrier
+WAIT_PAGE_TIME = 3  # Refresh interval at barrier
 
 # Important for Prolific
 ESTIMATED_DURATION = 20

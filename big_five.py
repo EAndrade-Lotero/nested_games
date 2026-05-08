@@ -9,7 +9,7 @@ from psynet.trial.static import (
     StaticNode,
 )
 from psynet.page import UnsuccessfulEndPage
-from psynet.timeline import conditional
+from psynet.timeline import conditional, Event
 from psynet.modular_page import ModularPage
 from psynet.utils import get_logger
 
@@ -141,7 +141,16 @@ class WaitingTrial(StaticTrial):
                     highest_value="Very accurate",
                     n_steps=5,
                 ),
-                time_estimate=self.time_estimate
+                time_estimate=self.time_estimate,
+                events={
+                    "increment_focus_loss": Event(
+                        is_triggered_by="Focus_lost",
+                        delay=0.0,
+                        message="Focus lost",
+                        message_color="red",
+                        js="increment_focus_loss(participant)",
+                    )
+                },
             ),
             conditional(
                 label="Checking if participant timeout",
@@ -158,6 +167,17 @@ class WaitingTrial(StaticTrial):
             "item_id": self.item["id"],
             "choice": raw_answer,
         }
+
+    def increment_focus_loss(self, participant):
+        if not hasattr(participant.var, "focus_loss"):
+            participant.var.focus_loss = 0
+
+        logger.info(f"Focus loss incremented for participant {participant.id}. New value: {participant.var.focus_loss}")
+        participant.var.focus_loss += 1
+
+        if participant.var.focus_loss >= 3:
+            logger.info(f"Focus loss exceeded for participant {participant.id}. Failing participant.")
+            participant.fail(reason="focus_loss_exceeded")
 
 
 class PersonalityTrialMaker(StaticTrialMaker):

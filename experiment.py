@@ -44,7 +44,6 @@ from .custom_timeline import CustomTimeline, EndExperimentPage
 from .consent_science_of_learning import consent_cococo_science_of_learning
 from .final_survey import get_final_survey
 from .custom_front_end import NextWithTimerControl
-from. safeguards import js_page_switch
 
 logger = get_logger()
 
@@ -144,8 +143,7 @@ class Exp(psynet.experiment.Experiment):
                     "<br>"
                     "<p><span style='font-weight: bold;'>Important:</span> Please do not allow the experiment to timeout.</p>"
                     "<p>We cannot compensate you monetarily if you allow this page to timeout.</p>"
-                    "<br>" +
-                    js_page_switch
+                    "<br>"
                 ),
                 text_align="center",
                 video="../static/Instructions.mp4",
