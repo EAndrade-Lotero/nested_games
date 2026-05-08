@@ -65,10 +65,18 @@ class OuterProposalPage(ModularPage):
     def format_answer(self, raw_answer, **kwargs):
         metadata = kwargs.get("metadata") or {}
         participant = kwargs.get("participant")
+
         if participant is not None:
             event_log = metadata.get("event_log") or []
             if any(entry.get("eventType") == "done" for entry in event_log):
                 participant.var.fail_me = True
+
+        increment_focus_loss = getattr(participant.current_trial, "increment_focus_loss", None)
+        if participant is not None and callable(increment_focus_loss):
+            for entry in metadata.get("event_log") or []:
+                if entry.get("eventType") == "Focus_lost":
+                    increment_focus_loss(participant)
+
         return super().format_answer(raw_answer, **kwargs)
 
 
@@ -170,11 +178,19 @@ class OuterAcceptancePage(ModularPage):
     def format_answer(self, raw_answer, **kwargs):
         metadata = kwargs.get("metadata") or {}
         participant = kwargs.get("participant")
+
         if participant is not None:
             event_log = metadata.get("event_log") or []
             if any(entry.get("eventType") == "done" for entry in event_log):
                 participant.var.fail_me = True
                 participant.var.num_rounds_failed += 1
+
+        increment_focus_loss = getattr(participant.current_trial, "increment_focus_loss", None)
+        if participant is not None and callable(increment_focus_loss):
+            for entry in metadata.get("event_log") or []:
+                if entry.get("eventType") == "Focus_lost":
+                    increment_focus_loss(participant)
+
         return super().format_answer(raw_answer, **kwargs)
 
 
@@ -222,11 +238,19 @@ class InnerProposalPage(ModularPage):
     def format_answer(self, raw_answer, **kwargs):
         metadata = kwargs.get("metadata") or {}
         participant = kwargs.get("participant")
+
         if participant is not None:
             event_log = metadata.get("event_log") or []
             if any(entry.get("eventType") == "done" for entry in event_log):
                 participant.var.fail_me = True
                 participant.var.num_rounds_failed += 1
+
+        increment_focus_loss = getattr(participant.current_trial, "increment_focus_loss", None)
+        if participant is not None and callable(increment_focus_loss):
+            for entry in metadata.get("event_log") or []:
+                if entry.get("eventType") == "Focus_lost":
+                    increment_focus_loss(participant)
+
         return super().format_answer(raw_answer, **kwargs)
 
 
@@ -331,6 +355,23 @@ class InnerAcceptancePage(ModularPage):
             show_next_button=control.show_next,
         )
 
+    def format_answer(self, raw_answer, **kwargs):
+        metadata = kwargs.get("metadata") or {}
+        participant = kwargs.get("participant")
+
+        if participant is not None:
+            event_log = metadata.get("event_log") or []
+            if any(entry.get("eventType") == "done" for entry in event_log):
+                participant.var.fail_me = True
+                participant.var.num_rounds_failed += 1
+
+        increment_focus_loss = getattr(participant.current_trial, "increment_focus_loss", None)
+        if participant is not None and callable(increment_focus_loss):
+            for entry in metadata.get("event_log") or []:
+                if entry.get("eventType") == "Focus_lost":
+                    increment_focus_loss(participant)
+
+        return super().format_answer(raw_answer, **kwargs)
 
 class ScorePage(EndRoundPage):
 

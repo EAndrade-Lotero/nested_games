@@ -9,7 +9,7 @@ from psynet.trial.static import (
     StaticNode,
 )
 from psynet.page import UnsuccessfulEndPage
-from psynet.timeline import conditional, Event
+from psynet.timeline import conditional
 from psynet.modular_page import ModularPage
 from psynet.utils import get_logger
 
@@ -67,6 +67,20 @@ personality_nodes = [
     )
 ]
 
+class WaitingTrialLikertPage(ModularPage):
+    """Calls ``WaitingTrial.increment_focus_loss`` once per ``Focus_lost`` entry in the trial event log."""
+
+    def format_answer(self, raw_answer, **kwargs):
+        metadata = kwargs.get("metadata") or {}
+        participant = kwargs.get("participant")
+        trial = kwargs.get("trial")
+        increment_focus_loss = getattr(trial, "increment_focus_loss", None)
+        if participant is not None and callable(increment_focus_loss):
+            for entry in metadata.get("event_log") or []:
+                if entry.get("eventType") == "Focus_lost":
+                    increment_focus_loss(participant)
+        return super().format_answer(raw_answer, **kwargs)
+
 
 class PersonalityTrial(StaticTrial):
     time_estimate = TIME_ESTIMATE_FOR_COMPENSATION
@@ -89,10 +103,14 @@ class PersonalityTrial(StaticTrial):
         text += "<p>We want to ask you some questions about your personality traits. </p>"
         text += "<p><span style='font-weight:700'>Please report how accurate is the following statement:</span> </p>"
         text += "<br>"
-        text += f"<h6>I see myself as someone who {format_text(question)}</h6>"
+        text += f"<span style='display: block; text-align: center; font-size: 14pt; font-style: italic;'>I see myself as someone who {format_text(question)}</span>"
+        text += "<br>"
+        text += "<br>"
+        text += "<p><span style='font-weight: bold;'>Important:</span> Please do not allow the experiment to timeout.</p>"
+        text += "<p>We cannot compensate you monetarily if you allow this page to timeout.</p>"
         text += "<br>"
 
-        return ModularPage(
+        return WaitingTrialLikertPage(
             label=page_label,
             prompt=TimeoutPrompt(
                 text=Markup(text),
@@ -129,12 +147,13 @@ class WaitingTrial(StaticTrial):
         text += "<br>"
 
         return [
-            ModularPage(
+            WaitingTrialLikertPage(
                 label="waiting_trial",
                 prompt=TimeoutPrompt(
                     text=Markup(text),
                     timeout=STANDARD_TIMEOUT,
                     show_rounds=False,
+                    ask_not_to_loose_focus=True,
                 ),
                 control=CustomLikertControl(
                     lowest_value="Very inaccurate",
@@ -142,15 +161,6 @@ class WaitingTrial(StaticTrial):
                     n_steps=5,
                 ),
                 time_estimate=self.time_estimate,
-                events={
-                    "increment_focus_loss": Event(
-                        is_triggered_by="Focus_lost",
-                        delay=0.0,
-                        message="Focus lost",
-                        message_color="red",
-                        js="increment_focus_loss(participant)",
-                    )
-                },
             ),
             conditional(
                 label="Checking if participant timeout",
@@ -169,15 +179,10 @@ class WaitingTrial(StaticTrial):
         }
 
     def increment_focus_loss(self, participant):
-        if not hasattr(participant.var, "focus_loss"):
-            participant.var.focus_loss = 0
+        if not participant.var.has("focus_loss"):
+            participant.var.set("focus_loss", 0)
 
-        logger.info(f"Focus loss incremented for participant {participant.id}. New value: {participant.var.focus_loss}")
         participant.var.focus_loss += 1
-
-        if participant.var.focus_loss >= 3:
-            logger.info(f"Focus loss exceeded for participant {participant.id}. Failing participant.")
-            participant.fail(reason="focus_loss_exceeded")
 
 
 class PersonalityTrialMaker(StaticTrialMaker):

@@ -109,6 +109,17 @@ class NestedGameNode(ChainNode):
         if round_failed:
             num_rounds_failed += 1
 
+        ############################
+        # RECORD FOCUS LOSS
+        ############################
+        dict_focus_loss = {}
+        for trial in filtered_trials:
+            if trial.participant.var.has("focus_loss"):
+                focus_loss = trial.participant.var.focus_loss
+            else:
+                focus_loss = 0
+            dict_focus_loss[trial.participant_id] = focus_loss
+
         ###################################
         # CREATE SUMMARY
         ###################################
@@ -124,6 +135,7 @@ class NestedGameNode(ChainNode):
             "accumulated_rewards": rewards,
             "round_failed": round_failed,
             "num_rounds_failed": num_rounds_failed,
+            "focus_loss": dict_focus_loss,
         }
 
         self.definition["summary"] = summary

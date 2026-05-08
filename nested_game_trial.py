@@ -671,5 +671,15 @@ class NestedGameTrial(ChainTrial):
             other_id = ids[0]
         return other_id
 
+    def increment_focus_loss(self, participant):
+        if not participant.var.has("focus_loss"):
+            participant.var.set("focus_loss", 0)
+        participant.var.focus_loss += 1
+        # logger.info(f"Focus loss incremented for participant {participant.id}. New value: {participant.var.focus_loss}")
+        # if participant.var.focus_loss >= 3:
+        #     logger.info(f"Focus loss exceeded for participant {participant.id}. Failing participant.")
+        #     participant.fail(reason="focus_loss_exceeded")
+    
+
 class NestedGameTrialMaker(ChainTrialMaker):
     pass

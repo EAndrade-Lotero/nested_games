@@ -165,7 +165,7 @@ class Exp(psynet.experiment.Experiment):
             ),
             logic_if_false=None,
         ),
-        # personality_trial_maker,
+        personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(
                 group_type="chain",
