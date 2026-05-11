@@ -3,7 +3,7 @@ from markupsafe import Markup
 from psynet.timeline import join
 from psynet.modular_page import ModularPage, SurveyJSControl
 
-from .game_paramters import (
+from .game_parameters import (
     STANDARD_TIMEOUT,
     TIME_ESTIMATE_FOR_COMPENSATION,
 )

@@ -10,7 +10,7 @@ from psynet.modular_page import Control, Prompt
 from psynet.timeline import FailedValidation
 from psynet.utils import get_logger, get_translator
 
-from .game_paramters import (
+from .game_parameters import (
     ENDOWMENT,
     NUMBER_OF_ROUNDS,
 )

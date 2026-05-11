@@ -18,7 +18,7 @@ from psynet.trial.chain import (
 from psynet.utils import get_logger
 
 from .variable_handler import VariableHandler
-from .game_paramters import (
+from .game_parameters import (
     TIME_ESTIMATE_FOR_COMPENSATION,
     REWARD_SCALING_FACTOR,
     MAX_BONUS_REWARD,

@@ -5,7 +5,7 @@ from psynet.sync import GroupBarrier
 from psynet.timeline import Page
 from psynet.participant import Participant
 
-from .game_paramters import (
+from .game_parameters import (
     WAIT_PAGE_TIME,
     TIMEOUT_WAITING_FOR_OTHER,
     TIMEOUT_BETWEEN_BARRIERS,

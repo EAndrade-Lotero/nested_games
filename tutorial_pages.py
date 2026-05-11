@@ -3,7 +3,7 @@ from markupsafe import Markup
 from psynet.modular_page import ModularPage, NullControl
 from .custom_front_end import TimeoutPrompt, TestSizeControl
 
-from .game_paramters import (
+from .game_parameters import (
     ENDOWMENT,
     STANDARD_TIMEOUT,
     TIME_ESTIMATE_FOR_COMPENSATION,

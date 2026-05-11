@@ -3,7 +3,7 @@ import numpy as np
 from psynet.utils import get_logger
 from psynet.trial.chain import ChainNode
 
-from .game_paramters import MAX_TIMEOUT_ROUNDS
+from .game_parameters import MAX_TIMEOUT_ROUNDS
 from .variable_handler import VariableHandler
 
 logger = get_logger()

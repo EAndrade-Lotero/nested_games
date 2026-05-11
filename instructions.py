@@ -7,7 +7,7 @@ from psynet.modular_page import (
     NullControl,
 )
 
-from .game_paramters import (
+from .game_parameters import (
     ENDOWMENT,
     STANDARD_TIMEOUT,
     TIME_ESTIMATE_FOR_COMPENSATION,

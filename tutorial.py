@@ -1,7 +1,7 @@
 from psynet.page import UnsuccessfulEndPage
 from psynet.timeline import conditional
 
-from .game_paramters import STANDARD_TIMEOUT
+from .game_parameters import STANDARD_TIMEOUT
 from .tutorial_pages import (
     OuterProposalTutorial, 
     InnerProposalTutorial, 

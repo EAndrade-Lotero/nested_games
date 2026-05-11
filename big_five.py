@@ -13,7 +13,7 @@ from psynet.timeline import conditional, PageMaker
 from psynet.modular_page import ModularPage
 from psynet.utils import get_logger
 
-from .game_paramters import (
+from .game_parameters import (
     RNG,
     NUM_BIG_FIVE_QUESTIONS,
     TIME_ESTIMATE_FOR_COMPENSATION,
@@ -138,17 +138,6 @@ class PersonalityTrial(StaticTrial):
                 time_estimate=self.time_estimate,
                 save_answer=page_label
             ),
-            PageMaker(
-                lambda experiment, participant:
-                InfoPage(
-                    Markup(
-                        f"{participant.answer}"
-                        f"{WaitingTrial.should_fail(participant)}"
-                    ),
-                    time_estimate=5
-                ),
-                time_estimate=5
-            ),
             conditional(
                 label="Checking if participant timeout",
                 condition=lambda participant: PersonalityTrial.should_fail(participant),
@@ -219,14 +208,14 @@ class WaitingTrial(StaticTrial):
                 item_idx=self.item["id"],
                 time_estimate=self.time_estimate,
             ),
-            # conditional(
-            #     label="Checking if participant timeout",
-            #     condition=lambda participant: WaitingTrial.should_fail(participant),
-            #     logic_if_true=UnsuccessfulEndPage(
-            #         failure_tags=["waiting_pages_failure"],
-            #     ),
-            #     logic_if_false=None,
-            # )
+            conditional(
+                label="Checking if participant timeout",
+                condition=lambda participant: WaitingTrial.should_fail(participant),
+                logic_if_true=UnsuccessfulEndPage(
+                    failure_tags=["waiting_pages_failure"],
+                ),
+                logic_if_false=None,
+            )
         ]
 
     @staticmethod

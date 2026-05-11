@@ -12,6 +12,7 @@ from psynet.modular_page import (
 from psynet.page import UnsuccessfulEndPage, InfoPage
 from psynet.timeline import conditional
 from psynet.db import with_transaction
+from psynet.experiment import is_experiment_launched
 from dallinger.experiment import scheduled_task
 
 from .nested_game_node import NestedGameNode
@@ -19,7 +20,7 @@ from .nested_game_trial import (
     NestedGameTrial,
     NestedGameTrialMaker,
 )
-from .game_paramters import (
+from .game_parameters import (
     NUM_BIG_FIVE_QUESTIONS,
     MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
     TIMEOUT_WATCH_TUTORIAL,
@@ -134,26 +135,26 @@ class Exp(psynet.experiment.Experiment):
     }
 
     timeline = CustomTimeline(
-        # consent_cococo_science_of_learning(
-        #     DURATION=ESTIMATED_DURATION,
-        #     PAYMENT=PAYMENT,
-        # ),
-        # InfoPage(
-        #     Markup(
-        #         f"<h3>Before we start the game...</h3>"
-        #         f"<p>You are about to play a multi-player game with other participants in real-time.</p>"
-        #         f"<p>Out of respect for them, we ask you to remain active until the end of the game.</p>"
-        #         f"<p>If you are away from your keyboard, you will be removed from the game and your submission may be not be approved.</p>"
-        #         f"<p>Please click 'Next' when you are ready to start.</p>"
-        #     ),
-        #     time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
-        #     events={
-        #         "submitEnable": Event(
-        #             is_triggered_by="trialStart",
-        #             delay=5.0
-        #         ),
-        #     },
-        # ),
+        consent_cococo_science_of_learning(
+            DURATION=ESTIMATED_DURATION,
+            PAYMENT=PAYMENT,
+        ),
+        InfoPage(
+            Markup(
+                f"<h3>Before we start the game...</h3>"
+                f"<p>You are about to play a multi-player game with other participants in real-time.</p>"
+                f"<p>Out of respect for them, we ask you to remain active until the end of the game.</p>"
+                f"<p>If you are away from your keyboard, you will be removed from the game and your submission may be not be approved.</p>"
+                f"<p>Please click 'Next' when you are ready to start.</p>"
+            ),
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
+            events={
+                "submitEnable": Event(
+                    is_triggered_by="trialStart",
+                    delay=5.0
+                ),
+            },
+        ),
         ModularPage(
             label="tutorial",
             prompt=VideoPrompt(

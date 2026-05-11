@@ -6,7 +6,7 @@ from psynet.modular_page import ModularPage
 from psynet.timeline import Page
 from psynet.utils import get_logger
 
-from .game_paramters import (
+from .game_parameters import (
     STANDARD_TIMEOUT,
     WAIT_PAGE_TIME,
     NUMBER_OF_ROUNDS,
