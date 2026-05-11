@@ -26,7 +26,7 @@ WAIT_PAGE_TIME = 3  # Refresh interval at barrier
 
 # Important for Prolific
 ESTIMATED_DURATION = 20
-HOURLY_PAYMENT = 25
+HOURLY_PAYMENT = 23
 TARGET_PARTICIPANTS = 12
 
 # Rewards

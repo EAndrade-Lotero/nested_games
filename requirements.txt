@@ -13,5 +13,8 @@ rq==2.8.0
 # psynet@git+https://gitlab.com/PsyNetDev/PsyNet.git@f1172454cb0656a135d3307585b29c7d8d76a386#egg=psynet
 # dallinger==12.2.0
 
+# dallinger==12.2.0
+# psynet@git+https://gitlab.com/PsyNetDev/PsyNet@ef1d87449a01910ae8f6d0d3c93ee8caf4555a98#egg=psynet
+
 dallinger==12.2.0
-psynet@git+https://gitlab.com/PsyNetDev/PsyNet@ef1d87449a01910ae8f6d0d3c93ee8caf4555a98#egg=psynet
+psynet@git+https://gitlab.com/PsyNetDev/PsyNet@9360573bbaa5e6a2aaf83fedba3216fdc65664f7#egg=psynet

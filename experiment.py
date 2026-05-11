@@ -11,9 +11,9 @@ from psynet.modular_page import (
 )
 from psynet.page import UnsuccessfulEndPage, InfoPage
 from psynet.timeline import conditional
-from psynet.db import with_transaction
-from psynet.experiment import is_experiment_launched
-from dallinger.experiment import scheduled_task
+# from psynet.db import with_transaction
+# from psynet.experiment import is_experiment_launched
+# from dallinger.experiment import scheduled_task
 
 from .nested_game_node import NestedGameNode
 from .nested_game_trial import (
@@ -121,11 +121,11 @@ class Exp(psynet.experiment.Experiment):
 
     config = {
         "server_pem": "~/cap.pem",
-        # "recruiter": "prolific",
-        "recruiter": "hotair",
+        "recruiter": "prolific",
+        # "recruiter": "hotair",
         "wage_per_hour": HOURLY_PAYMENT,
         "currency": CURRENCY,
-        # **get_prolific_settings(),
+        **get_prolific_settings(),
         f"title": f"Nested games experiment (Chrome browser, ~{ESTIMATED_DURATION} minutes, {CURRENCY}{PAYMENT})",
         "description": "This experiment is about collective behavior and group outcomes.",
         'initial_recruitment_size': 2,
@@ -223,35 +223,35 @@ class Exp(psynet.experiment.Experiment):
         get_final_survey(),
     )
 
-    @scheduled_task("interval", seconds=2, max_instances=1)
-    @staticmethod
-    @with_transaction
-    def _check_ready_to_spawn():
-        """Re-evaluate ready_to_spawn for GridTrialMaker head nodes.
-
-        Fixes a race condition where all participants finalize their trials
-        concurrently: each on_finalized call sees an incomplete DB snapshot
-        (uncommitted peers) and leaves ready_to_spawn=False even after all
-        trials are complete.  This task re-checks every 2 seconds so the
-        clock can catch the correct state within 2 seconds of all commits.
-        """
-        if not is_experiment_launched():
-            return
-
-        from psynet.trial.chain import ChainNetwork, ChainNode
-
-        candidate_heads = (
-            ChainNode.query.filter_by(ready_to_spawn=False)
-            .join(ChainNetwork, ChainNode.network_id == ChainNetwork.id)
-            .filter(
-                ChainNetwork.trial_maker_id == "nested_games_trial_maker",
-                ~ChainNetwork.failed,
-                ~ChainNetwork.full,
-            )
-            .with_for_update(skip_locked=True)
-            .populate_existing()
-            .all()
-        )
-        for node in candidate_heads:
-            if node.network.head == node:
-                node.check_ready_to_spawn()
+    # @scheduled_task("interval", seconds=2, max_instances=1)
+    # @staticmethod
+    # @with_transaction
+    # def _check_ready_to_spawn():
+    #     """Re-evaluate ready_to_spawn for GridTrialMaker head nodes.
+    #
+    #     Fixes a race condition where all participants finalize their trials
+    #     concurrently: each on_finalized call sees an incomplete DB snapshot
+    #     (uncommitted peers) and leaves ready_to_spawn=False even after all
+    #     trials are complete.  This task re-checks every 2 seconds so the
+    #     clock can catch the correct state within 2 seconds of all commits.
+    #     """
+    #     if not is_experiment_launched():
+    #         return
+    #
+    #     from psynet.trial.chain import ChainNetwork, ChainNode
+    #
+    #     candidate_heads = (
+    #         ChainNode.query.filter_by(ready_to_spawn=False)
+    #         .join(ChainNetwork, ChainNode.network_id == ChainNetwork.id)
+    #         .filter(
+    #             ChainNetwork.trial_maker_id == "nested_games_trial_maker",
+    #             ~ChainNetwork.failed,
+    #             ~ChainNetwork.full,
+    #         )
+    #         .with_for_update(skip_locked=True)
+    #         .populate_existing()
+    #         .all()
+    #     )
+    #     for node in candidate_heads:
+    #         if node.network.head == node:
+    #             node.check_ready_to_spawn()
