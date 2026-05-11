@@ -3,7 +3,7 @@ import numpy as np
 from psynet.utils import get_logger
 from psynet.trial.chain import ChainNode
 
-from .game_paramters import MAX_TIMEOUT_ROUNDS
+from .game_parameters import MAX_TIMEOUT_ROUNDS
 from .variable_handler import VariableHandler
 
 logger = get_logger()
@@ -34,24 +34,6 @@ class NestedGameNode(ChainNode):
             )
             for answer in filtered_answers
         ]), f"{[answer for answer in filtered_answers]}"
-
-        ###################################
-        # ACCUMULATE REWARDS
-        ###################################
-        rewards = {}
-        for trial in filtered_trials:
-            accumulated_reward = variable_handler.get_value(
-                participant=trial.participant,
-                variable="accumulated_reward"
-            )
-            round_reward = trial.answer["reward"]
-            accumulated_reward += float(round_reward)
-            variable_handler.set_value(
-                participant=trial.participant,
-                variable="accumulated_reward",
-                value=accumulated_reward,
-            )
-            rewards[trial.participant_id] = accumulated_reward
 
         ###################################
         # SANITY CHECKS
@@ -91,6 +73,31 @@ class NestedGameNode(ChainNode):
             if inner_game == "ultimatum":
                 assert inner_acceptance is not None
 
+        ###################################
+        # ACCUMULATE REWARDS
+        ###################################
+
+        if "summary" in self.definition.keys():
+            rewards = self.definition["summary"]["accumulated_rewards"]
+        else:
+            rewards = {
+                str(trial.participant_id): 0 for trial in filtered_trials
+            }
+
+        if not round_failed:
+            if outer_game != "ultimatum" or outer_acceptance == "Accept":
+                if inner_game != "ultimatum" or inner_acceptance == "Accept":
+                    for trial in filtered_trials:
+                        accumulated_reward = rewards[str(trial.participant_id)]
+                        round_reward = trial.answer["reward"]
+                        accumulated_reward += float(round_reward)
+                        variable_handler.set_value(
+                            participant=trial.participant,
+                            variable="accumulated_reward",
+                            value=accumulated_reward,
+                        )
+                        rewards[str(trial.participant_id)] = accumulated_reward
+
         ############################
         # ACCUMULATE ROUNDS FAILED
         ############################
@@ -101,6 +108,17 @@ class NestedGameNode(ChainNode):
 
         if round_failed:
             num_rounds_failed += 1
+
+        ############################
+        # RECORD FOCUS LOSS
+        ############################
+        dict_focus_loss = {}
+        for trial in filtered_trials:
+            if trial.participant.var.has("focus_loss"):
+                focus_loss = trial.participant.var.focus_loss
+            else:
+                focus_loss = 0
+            dict_focus_loss[trial.participant_id] = focus_loss
 
         ###################################
         # CREATE SUMMARY
@@ -117,6 +135,7 @@ class NestedGameNode(ChainNode):
             "accumulated_rewards": rewards,
             "round_failed": round_failed,
             "num_rounds_failed": num_rounds_failed,
+            "focus_loss": dict_focus_loss,
         }
 
         self.definition["summary"] = summary

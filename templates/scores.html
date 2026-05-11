@@ -1,116 +1,308 @@
+{# 0 → bowl; 1–9 → few_coins; 10–30 → more_coins; 31+ → overflow_coins #}
+{% macro bowl_image_src(score) -%}
+  {%- set n = score|default(0)|int -%}
+  {%- if n <= 0 -%}
+../static/bowl.png
+  {%- elif n < 10 -%}
+../static/few_coins.png
+  {%- elif n <= 30 -%}
+../static/more_coins.png
+  {%- else -%}
+../static/overflow_coins.png
+  {%- endif -%}
+{%- endmacro %}
+
 {% macro scores(config) %}
 
 <style>
+  body {
+    font-family: sans-serif;
+    background: #e5e5e5;
+    display: flex;
+    justify-content: center;
+    {#align-items: center;#}
+    height: 100vh;
+  }
 
-    .rectangle {
-        width: 600px;          /* match tabletop width from earlier pages */
-        min-height: 350px;     /* ensures outer frame larger than content */
-        background: #ffffff;
-        padding: 60px 40px;
-        position: relative;
+  .container {
+    position: relative;
+    width: 700px;
+    height: 0;
+  }
+  
+  .player {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .partner {
+    top: -5px;
+    /* left: 50%; */
+    transform: translateX(30%);
+  }
+
+  .me {
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-20%);
+  }
+
+  .avatar {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+    background-image: url("../static/generic.png");
+    background-size: cover;
+    background-position: center;
+    border-radius: 50%;
+    position: relative;
+    cursor: grab;
+    user-select: none;
+    color: white;
+    font-weight: bold;
+  }
+  
+  .avatar.partner {
+    width: 65px;
+    height: 65px;
+  }
+
+  .bowl {
+    height: 80px;
+    width: auto;
+    object-fit: contain;
+    flex-shrink: 0;
+    display: block;
+  }
+
+  .bowl.partner {
+    height: 65px;
+  }
+
+  .bowl-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .bowl-label {
+    font-size: 0.85rem;
+    text-align: left;
+    line-height: 1.2;
+  }
+
+  /* Adjust horizontal nudge for each bowl caption independently */
+  .bowl-label-partner {
+    transform: translateX(60%);
+  }
+
+  .bowl-label-me {
+    transform: translateX(5%);
+  }
+
+  .player-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .player-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 12px;
+  }
+
+  .player-row.me-row {
+    gap: 20px;
+  }
+
+  .player-label {
+    text-align: center;
+    transform: translateX(80%);
+  }
+
+  .table {
+    position: relative;
+    top: 10px;
+    left: 150px;
+    width: 400px;
+    height: 200px;
+    background: #8d8570;
+    clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+  }
+
+    .inner-proposal-root {
+      font-family: Arial, sans-serif;
+      box-sizing: border-box;
+      max-width: 100%;
+      padding: 0.25rem 0 1rem;
     }
 
-    .timer-container {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: white;
-        padding: 12px 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        font-size: 18px;
-        font-weight: bold;
+    .inner-proposal-root *,
+    .inner-proposal-root *::before,
+    .inner-proposal-root *::after {
+      box-sizing: inherit;
     }
 
-    .statement {
-        margin-bottom: 10px;
+      .inner-proposal-root .inner-proposal-basket {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      min-height: 60px;
     }
 
-    .mid_title {
-        font-weight: bold;
-        margin: 30px 0 15px 0;
+    .inner-proposal-root .inner-proposal-basket .inner-proposal-coin {
+      width: calc(25px * 0.8);
     }
 
-    .score-row {
-        display: flex;
-        justify-content: space-around;
-        margin-top: 10px;
+    .inner-proposal-root .inner-proposal-coin-pile {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      min-height: 60px;
     }
 
-    .label {
-
+    .inner-proposal-root .inner-proposal-coin {
+      width: 25px;
+      aspect-ratio: 1 / 1;
+      background-image: url("../static/coin.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      cursor: default;
     }
 
-    .score {
-        margin-top: 10px;
-    }
+  .scores-popup[hidden] {
+    display: none !important;
+  }
+
+  .scores-popup {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    box-sizing: border-box;
+  }
+
+  .scores-popup__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.48);
+  }
+
+  .scores-popup__panel {
+    position: relative;
+    max-width: 28rem;
+    width: 100%;
+    max-height: min(80vh, 100%);
+    overflow: auto;
+    /* Semitransparent “glass” so the table behind is faintly visible */
+    background: rgba(255, 255, 255, 0.88);
+    border-radius: 10px;
+    padding: 1.25rem 1.4rem 1.1rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.22);
+    color: #222;
+    line-height: 1.5;
+  }
+
+  .scores-popup__panel p:last-child {
+    margin-bottom: 0;
+  }
+
+  .scores-popup__content {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+  }
+
+  .scores-popup__dismiss {
+    display: block;
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+    background: #0d6efd;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .scores-popup__dismiss:hover {
+    background: #0b5ed7;
+  }
 
 </style>
 
-<div class="rectangle">
+<div class="inner-proposal-root">
+    <div class="container">
 
-    <!-- CLOCK -->
-    <div class="timer-container" id="timer">00:00</div>
-
-    <!-- TEXT -->
-
-    <div class="statement">
-        {{ config.text }}
-    </div>
-
-    <div class="mid_title">
-        Accumulated scores
-    </div>
-
-    <!-- SCORES -->
-
-    <div class="score-row">
-
-        <div>
-            <div class="label">Me</div>
-            <div class="score">{{ config.my_score }}</div>
+      <div class="player partner">
+        <div class="player-stack">
+          <div class="player-row">
+            <div class="bowl-stack">
+              <img class="bowl partner" src="{{ bowl_image_src(config.accumulated_score_partner) }}" alt="" />
+              <div class="bowl-label bowl-label-partner">{{ config.accumulated_score_partner }} coins</div>
+            </div>
+            <div class="avatar partner"></div>
+          </div>
+          <div class="player-label">Partner</div>
         </div>
+      </div>
 
-        <div>
-            <div class="label">Partner</div>
-            <div class="score">{{ config.partner_score }}</div>
+      <div class="table"></div>
+
+    <div class="player me">
+        <div class="player-stack">
+        <div class="player-row me-row">
+        <div class="bowl-stack">
+          <img class="bowl" src="{{ bowl_image_src(config.accumulated_score_me) }}" alt="" />
+          <div class="bowl-label bowl-label-me">{{ config.accumulated_score_me }} coins</div>
         </div>
-
+        <div class="avatar"></div>
+      </div>
+      <div class="player-label">Me</div>
+    </div>
     </div>
 
-</div>
+  </div>
 
+  <div class="scores-popup" id="scoresPopup" role="dialog" aria-modal="true" aria-label="Round result">
+    <div class="scores-popup__backdrop" data-scores-popup-dismiss="1" aria-hidden="true"></div>
+    <div class="scores-popup__panel">
+      <div class="scores-popup__content">
+        {{ config.content | safe }}
+      </div>
+      <button type="button" class="scores-popup__dismiss" data-scores-popup-dismiss="1">Continue</button>
+    </div>
+  </div>
 
 <script>
-    let timeRemaining = {{ config.timeoutSeconds }};
-
-    psynet.trial.onEvent("trialFinished", function() {
-        if (loop) {
-            psynet.trial.restart();
-        }
-    });
-
-    function updateTimer() {
-        let minutes = Math.floor(timeRemaining / 60);
-        let seconds = timeRemaining % 60;
-
-        seconds = seconds < 10 ? "0" + seconds : seconds;
-
-        document.getElementById("timer").textContent =
-            "Time left: " + minutes + ":" + seconds;
-
-        if (timeRemaining > 0) {
-            timeRemaining--;
-        } else {
-            clearInterval(timerInterval);
-            document.getElementById("timer").textContent = "Time's up!";
-            const timeoutAnswer = "{{ config.timeoutAnswer }}";
-            psynet.nextPage(timeoutAnswer);
-        }
+  (function () {
+    const popup = document.getElementById("scoresPopup");
+    if (!popup) return;
+    function closePopup() {
+      popup.setAttribute("hidden", "");
     }
-
-    updateTimer();
-    let timerInterval = setInterval(updateTimer, 1000);
-
+    popup.addEventListener("click", function (e) {
+      if (e.target.getAttribute("data-scores-popup-dismiss") === "1") {
+        closePopup();
+        psynet.nextPage(1000);
+      }
+    });
+  })();
 </script>
 {% endmacro %}

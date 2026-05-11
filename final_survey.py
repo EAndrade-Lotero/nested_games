@@ -3,8 +3,9 @@ from markupsafe import Markup
 from psynet.timeline import join
 from psynet.modular_page import ModularPage, SurveyJSControl
 
-from .game_paramters import (
-    TIMEOUT_PROPOSALS,
+from .game_parameters import (
+    STANDARD_TIMEOUT,
+    TIME_ESTIMATE_FOR_COMPENSATION,
 )
 from .custom_front_end import TimeoutPrompt
 
@@ -17,7 +18,8 @@ def get_final_survey():
                 text=Markup("""
                     <p></p>
                 """),
-                timeout=TIMEOUT_PROPOSALS * 5,
+                timeout=STANDARD_TIMEOUT * 3,
+                show_rounds=False,
             ),
             control=SurveyJSControl(
                 {
@@ -34,7 +36,7 @@ def get_final_survey():
                                 {
                                     "type": "rating",
                                     "name": "own_benefit",
-                                    "title": "When making a decisions, how much did you take into consideration your OWN benefit?",
+                                    "title": "When making a decisions, how much did you take into consideration your OWN outcome?",
                                     "rateValues": [
                                         {"value": "1", "text": "1"},
                                         {"value": "2", "text": "2"},
@@ -48,7 +50,7 @@ def get_final_survey():
                                 {
                                     "type": "rating",
                                     "name": "other_benefit",
-                                    "title": "When making a decisions, how much did you take into consideration the benefit of your PARTNER?",
+                                    "title": "When making a decisions, how much did you take into consideration the outcome of your PARTNER?",
                                     "rateValues": [
                                         {"value": "1", "text": "1"},
                                         {"value": "2", "text": "2"},
@@ -81,7 +83,7 @@ def get_final_survey():
                                 {
                                     "type": "rating",
                                     "name": "assessment_of_fairness",
-                                    "title": "How fair was the final result of the game?",
+                                    "title": "How fair was the total distribution of coins at the end of the game?",
                                     "rateValues": [
                                         {"value": "1", "text": "1"},
                                         {"value": "2", "text": "2"},
@@ -97,7 +99,7 @@ def get_final_survey():
                     ],
                 },
             ),
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
         ),
     )
 

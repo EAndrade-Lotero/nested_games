@@ -1,0 +1,244 @@
+{% macro size_test(config) %}
+
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f5f5f5;
+    font-family: Arial, sans-serif;
+  }
+
+  #outer {
+    width: 700px;
+    height: 750px;
+    position: relative;
+    background: white;
+    border: 2px solid #333;
+  }
+
+  /* Center drop area */
+  #center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: 300px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 5px;
+  }
+
+  .dropzone {
+    width: 100%;
+    height: 100%;
+  }
+
+  .red { background: red; }
+  .blue { background: blue; }
+  .yellow { background: yellow; }
+  .gray { background: gray; }
+
+  /* Draggable shapes */
+  .shape {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    cursor: grab;
+  }
+
+  /* Positions (corners) */
+  #shape-red { top: 10px; left: 10px; }
+  #shape-blue { top: 10px; right: 10px; }
+  #shape-yellow { bottom: 10px; left: 10px; }
+  #shape-gray { bottom: 10px; right: 10px; }
+
+  /* Specific shapes */
+  .circle {
+    border-radius: 50%;
+    background: blue;
+  }
+
+  .square {
+    background: red;
+  }
+
+  .triangle {
+    width: 0;
+    height: 0;
+    border-left: 40px solid transparent;
+    border-right: 40px solid transparent;
+    border-bottom: 80px solid gray;
+    background: none;
+  }
+
+  .star {
+    background: yellow;
+    clip-path: polygon(
+      50% 0%, 61% 35%, 98% 35%, 
+      68% 57%, 79% 91%, 
+      50% 70%, 21% 91%, 
+      32% 57%, 2% 35%, 
+      39% 35%
+    );
+  }
+  
+  .window-popup[hidden] {
+    display: none !important;
+  }
+
+  .window-popup {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    box-sizing: border-box;
+  }
+
+  .window-popup__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.48);
+  }
+
+  .window-popup__panel {
+    position: relative;
+    max-width: 28rem;
+    width: 100%;
+    max-height: min(80vh, 100%);
+    overflow: auto;
+    /* Semitransparent “glass” so the table behind is faintly visible */
+    background: rgba(255, 255, 255, 0.88);
+    border-radius: 10px;
+    padding: 1.25rem 1.4rem 1.1rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.22);
+    color: #222;
+    line-height: 1.5;
+  }
+
+  .window-popup__panel p:last-child {
+    margin-bottom: 0;
+  }
+
+  .window-popup__content {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+  }
+
+  .window-popup__dismiss {
+    display: block;
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+    background: #0d6efd;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .window-popup__dismiss:hover {
+    background: #0b5ed7;
+  }
+</style>
+
+<div id="outer">
+
+  <!-- Drop zones -->
+  <div id="center">
+    <div class="dropzone red" data-color="red"></div>
+    <div class="dropzone blue" data-color="blue"></div>
+    <div class="dropzone yellow" data-color="yellow"></div>
+    <div class="dropzone gray" data-color="gray"></div>
+  </div>
+
+  <!-- Shapes -->
+  <div id="shape-red" class="shape square" draggable="true" data-color="red"></div>
+  <div id="shape-blue" class="shape circle" draggable="true" data-color="blue"></div>
+  <div id="shape-yellow" class="shape star" draggable="true" data-color="yellow"></div>
+  <div id="shape-gray" class="shape triangle" draggable="true" data-color="gray"></div>
+
+</div>
+
+  <div class="window-popup" id="windowPopup" role="dialog" aria-modal="true" hidden>
+    <div class="window-popup__backdrop" data-window-popup-dismiss="1" aria-hidden="true"></div>
+    <div class="window-popup__panel">
+      <div class="window-popup__content">
+        "Excellent. Press 'Continue' to continue with the experiment."
+      </div>
+      <button type="button" class="window-popup__dismiss" data-window-popup-dismiss="1">Continue</button>
+    </div>
+  </div>
+
+<script>
+  const shapes = document.querySelectorAll('.shape');
+  const zones = document.querySelectorAll('.dropzone');
+
+  let placements = {};
+
+  shapes.forEach(shape => {
+    shape.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('color', shape.dataset.color);
+      e.dataTransfer.setData('id', shape.id);
+    });
+  });
+
+  zones.forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+    });
+
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+
+      const color = e.dataTransfer.getData('color');
+      const id = e.dataTransfer.getData('id');
+      const shape = document.getElementById(id);
+
+      // Append shape to zone
+      zone.appendChild(shape);
+      shape.style.position = "relative";
+      shape.style.top = "0";
+      shape.style.left = "0";
+
+      placements[id] = zone.dataset.color;
+
+      checkSuccess();
+    });
+  });
+
+    const popup = document.getElementById("windowPopup");
+
+    function closePopup() {
+        popup.setAttribute("hidden", "");
+    }
+
+    popup.addEventListener("click", function (e) {
+        if (e.target.getAttribute("data-window-popup-dismiss") === "1") {
+            closePopup();
+            psynet.nextPage("Tutorial_Ok");
+        }
+    });
+
+  function checkSuccess() {
+    const correct = Array.from(shapes).every(shape => {
+      return placements[shape.id] === shape.dataset.color;
+    });
+
+    if (correct) {
+        popup.removeAttribute('hidden');
+        popup.dispatchEvent(new CustomEvent('outer-proposal-tutorial-popup-show', { bubbles: true }));
+    }
+  }
+</script>
+
+{% endmacro %}

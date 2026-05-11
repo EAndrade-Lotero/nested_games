@@ -1,140 +1,119 @@
-import json
 from pathlib import Path
 from markupsafe import Markup
 from typing import Optional, Dict, Union
 
-from psynet.graphics import Prompt
-from psynet.modular_page import (
-    ModularPage,
-    PushButtonControl,
-    NullControl,
-)
-from psynet.timeline import (
-    Page,
-    Event,
-)
+from psynet.modular_page import ModularPage
+from psynet.timeline import Page
 from psynet.utils import get_logger
 
-from .game_paramters import (
-    ENDOWMENT,
-    TIMEOUT_PROPOSALS,
+from .game_parameters import (
+    STANDARD_TIMEOUT,
     WAIT_PAGE_TIME,
-    TIMEOUT_WAITING_FOR_OTHER,
+    NUMBER_OF_ROUNDS,
+    MAX_TIMEOUT_ROUNDS,
+    ENDOWMENT,
+    TIME_ESTIMATE_FOR_COMPENSATION,
 )
 from .custom_front_end import (
-    CustomControl,
-    OuterPrompt,
+    OuterProposalControl,
     InnerProposalControl,
-    InnerPrompt,
-    ScorePrompt,
+    InnerAcceptanceControl,
+    ScoreControl,
+    TimeoutPrompt,
 )
 from .custom_timeline import EndRoundPage
 
 
 logger = get_logger()
 
-_CUSTOM_INFO_TEMPLATE = Path(__file__).resolve().parent / "templates" / "custom_info_page.html"
-
-
-class CustomInfoPage(Page):
-    """
-    Like ``InfoPage``: shows HTML/text and PsyNet's normal Next control, but also
-    shows a countdown and calls ``psynet.nextPage()`` when it reaches zero.
-    """
-
-    def __init__(
-        self,
-        text: Union[str, Markup],
-        *,
-        time_estimate: int = 30,
-        label: str = "custom_info",
-        **kwargs,
-    ) -> None:
-        body = text if isinstance(text, Markup) else Markup(str(text))
-        self._countdown_seconds = int(time_estimate)
-        with open(_CUSTOM_INFO_TEMPLATE, "r", encoding="utf-8") as f:
-            template_str = f.read()
-        super().__init__(
-            label=label,
-            time_estimate=time_estimate,
-            template_str=template_str,
-            template_arg={
-                "body": body,
-                "timeout": self._countdown_seconds,
-            },
-            **kwargs,
-        )
-
-    def get_bot_response(self, experiment, bot):
-        return None
-
 
 class OuterProposalPage(ModularPage):
 
-    def __init__(self, context: Dict[str, str], round_: int) -> None:
-        prompt = Prompt(Markup(
-            f"<h2>Preparation phase</h2>"
+    def __init__(
+            self,
+            time_estimate: int=TIME_ESTIMATE_FOR_COMPENSATION,
+            accumulated_score_me: int = 0,
+            accumulated_score_partner: int = 0,
+            round_: int = 1,
+        ) -> None:
+        round_ = int(round_)
+        prompt = TimeoutPrompt(
+            timeout=STANDARD_TIMEOUT,
+            round_=round_,
+            num_rounds=NUMBER_OF_ROUNDS,
+            text=Markup(
+            f"<h3>Who gets the bag of coins?</h3>"
             f"<br>"
-            f"<p>Choose who will take on the role of PROPOSER: </p>"
+            f"<p>Drag and drop the bag of coins onto one of the players: </p>"
         ))
-        control = CustomControl(
-            context=context,
-            time_estimate=TIMEOUT_PROPOSALS,
+        control = OuterProposalControl(
+            accumulated_score_me=accumulated_score_me,
+            accumulated_score_partner=accumulated_score_partner,
             external_template="outer_proposal.html",
-            round_=round_
+            round_=round_,
+            show_next=False,
         )
         super().__init__(
             label="outer_proposal",
             prompt=prompt,
             control=control,
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=time_estimate,
             save_answer="outer_proposal",
-            events={
-                "done": Event(
-                    is_triggered_by="done",
-                ),
-            },
+            show_next_button=False,
         )
 
     def format_answer(self, raw_answer, **kwargs):
         metadata = kwargs.get("metadata") or {}
         participant = kwargs.get("participant")
+
         if participant is not None:
             event_log = metadata.get("event_log") or []
             if any(entry.get("eventType") == "done" for entry in event_log):
                 participant.var.fail_me = True
-                participant.var.num_rounds_failed += 1
+
+        increment_focus_loss = getattr(participant.current_trial, "increment_focus_loss", None)
+        if participant is not None and callable(increment_focus_loss):
+            for entry in metadata.get("event_log") or []:
+                if entry.get("eventType") == "Focus_lost":
+                    increment_focus_loss(participant)
+
         return super().format_answer(raw_answer, **kwargs)
 
 
-class CustomWaitingPage(Page):
+class OuterWaitingPage(Page):
 
     def __init__(
-        self,
-        template_path:str,
-        content:Optional[str|None] = None,
-        proposer:Optional[bool|None] = None,
-        n_coins:Optional[int] = 0,
-        **kwargs
-    ) -> None:
+            self,
+            template_path:str,
+            accumulated_score_me:int,
+            accumulated_score_partner:int,
+            round_:Optional[int]=1,
+            content:Optional[str|None] = None,
+            proposer:Optional[bool|None] = None,
+            **kwargs
+        ) -> None:
         if content is None:
             content = "Waiting for the other player..."
         self.content = content
         self.proposer = proposer
-        self.n_coins = n_coins
-        self.endowment = ENDOWMENT
+        self.accumulated_score_me = accumulated_score_me
+        self.accumulated_score_partner = accumulated_score_partner
+        self.round = round_
+        self.num_rounds = NUMBER_OF_ROUNDS
         self.wait_time = WAIT_PAGE_TIME
         with open(template_path, "r") as file:
             template = file.read()
         super().__init__(
             label="wait",
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
             template_str=template,
             template_arg={
+                "accumulated_score_me": int(self.accumulated_score_me),
+                "accumulated_score_partner": int(self.accumulated_score_partner),
+                "round": self.round,
+                "num_rounds": self.num_rounds,
                 "content": self.content,
                 "proposer": self.proposer,
-                "n_coins": self.n_coins,
-                "endowment": self.endowment,
                 "wait_time": self.wait_time,
             },
             **kwargs,
@@ -154,146 +133,263 @@ class CustomWaitingPage(Page):
 class OuterAcceptancePage(ModularPage):
 
     def __init__(
-        self,
-        context: Dict[str, str],
-        proposal: str,
-        round_: int,
-    ) -> None:
+            self,
+            proposal: str,
+            round_: int,
+            time_estimate: int=TIME_ESTIMATE_FOR_COMPENSATION,
+            accumulated_score_me: int = 0,
+            accumulated_score_partner: int = 0,
+        ) -> None:
         assert proposal in [None, "PROPOSER", "RESPONDER"]
+        if proposal == "PROPOSER":
+            recipient = "You have been given"
+        elif proposal == "RESPONDER":
+            recipient = "Your partner kept"
+        else:
+            recipient = None
 
-        prompt = OuterPrompt(
-            text=(
-                f"<p>Do you accept your partner's proposal of you to be the {proposal}? </p>"
-            ),
+        prompt = TimeoutPrompt(
+            timeout=STANDARD_TIMEOUT,
+            round_=round_,
+            num_rounds=NUMBER_OF_ROUNDS,
+            text=Markup(
+            f"<h3>{recipient} the bag of coins</h3>"
+            f"<br>"
+            f"<p>Do you accept this allocation?</p>"
+        ))
+        control = OuterProposalControl(
             proposal=proposal,
-            context=context,
-            time_estimate=TIMEOUT_PROPOSALS,
+            accumulated_score_me=accumulated_score_me,
+            accumulated_score_partner=accumulated_score_partner,
             external_template="outer_acceptance.html",
             round_=round_,
-        )
-        control = PushButtonControl(
-            choices=["Accept", "Reject"],
-            labels=["Accept", "Reject"],
-            arrange_vertically=False,
+            show_next=False,
         )
 
         super().__init__(
             label="outer_accept_answer",
             prompt=prompt,
             control=control,
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=time_estimate,
             save_answer="outer_accept_answer",
+            show_next_button=control.show_next,
         )
 
     def format_answer(self, raw_answer, **kwargs):
         metadata = kwargs.get("metadata") or {}
         participant = kwargs.get("participant")
+
         if participant is not None:
             event_log = metadata.get("event_log") or []
             if any(entry.get("eventType") == "done" for entry in event_log):
                 participant.var.fail_me = True
                 participant.var.num_rounds_failed += 1
+
+        increment_focus_loss = getattr(participant.current_trial, "increment_focus_loss", None)
+        if participant is not None and callable(increment_focus_loss):
+            for entry in metadata.get("event_log") or []:
+                if entry.get("eventType") == "Focus_lost":
+                    increment_focus_loss(participant)
+
         return super().format_answer(raw_answer, **kwargs)
 
 
 class InnerProposalPage(ModularPage):
 
     def __init__(
-        self,
-        outer_game:str,
-        context: Dict[str, str],
-        round_: int,
-    ) -> None:
+            self,
+            outer_game:str,
+            round_: int,
+            time_estimate: int=TIME_ESTIMATE_FOR_COMPENSATION,
+            accumulated_score_me: int = 0,
+            accumulated_score_partner: int = 0,
+        ) -> None:
         assert outer_game in ["ultimatum", "dictator"], f"Error: {outer_game} is not a valid game type"
 
-        text = f"<h2>Proposal phase</h2>"
-        text += f"<br>"
+        text = f"<h3>Giving coins</h3>"
+        text += f"<p>"
 
         if outer_game == "ultimatum":
-            text += f"<p>Proposal accepted. You are the PROPOSER. </p>"
+            text += f"Proposal accepted. "
 
-        text += f"<p>Use the slider below to decide how many of the {ENDOWMENT} coins you will give to your partner: <p/>"
-        text += f"<p>Press the 'Next' button when you are ready.</p>"
-        text += f"<p>(Scroll down the page if necessary.)</p>"
-        text += f"<br>"
+        text += f"Use the slider below to decide how many coins you will give "
+        text += f"to your partner, then press <strong>Make the offer</strong> when you are ready. <p/>"
 
-        prompt = Markup(text)
-        control = InnerProposalControl(
-            endowment=ENDOWMENT,
-            context=context,
-            time_estimate=TIMEOUT_PROPOSALS,
+        round_ = int(round_)
+        prompt = TimeoutPrompt(
+            timeout=STANDARD_TIMEOUT,
             round_=round_,
+            num_rounds=NUMBER_OF_ROUNDS,
+            text=Markup(text)
+        )
+        control = InnerProposalControl(
+            accumulated_score_me=accumulated_score_me,
+            accumulated_score_partner=accumulated_score_partner,
         )
         super().__init__(
             label="inner_proposal",
             prompt=prompt,
             control=control,
-            time_estimate=5,
+            time_estimate=time_estimate,
             save_answer="inner_proposal",
+            show_next_button=False,
         )
 
     def format_answer(self, raw_answer, **kwargs):
         metadata = kwargs.get("metadata") or {}
         participant = kwargs.get("participant")
+
         if participant is not None:
             event_log = metadata.get("event_log") or []
             if any(entry.get("eventType") == "done" for entry in event_log):
                 participant.var.fail_me = True
                 participant.var.num_rounds_failed += 1
+
+        increment_focus_loss = getattr(participant.current_trial, "increment_focus_loss", None)
+        if participant is not None and callable(increment_focus_loss):
+            for entry in metadata.get("event_log") or []:
+                if entry.get("eventType") == "Focus_lost":
+                    increment_focus_loss(participant)
+
         return super().format_answer(raw_answer, **kwargs)
+
+
+class InnerWaitingPage(Page):
+
+    def __init__(
+            self,
+            template_path:str,
+            accumulated_score_me:int,
+            accumulated_score_partner:int,
+            proposal:int,
+            round_:Optional[int]=1,
+            content:Optional[str|None] = None,
+            proposer:Optional[bool|None] = None,
+            **kwargs
+        ) -> None:
+        if content is None:
+            content = "Waiting for the other player..."
+        self.content = content
+        self.proposer = proposer
+        self.proposal = proposal
+        self.accumulated_score_me = accumulated_score_me
+        self.accumulated_score_partner = accumulated_score_partner
+        self.round = round_
+        self.num_rounds = NUMBER_OF_ROUNDS
+        self.wait_time = WAIT_PAGE_TIME
+        with open(template_path, "r") as file:
+            template = file.read()
+        super().__init__(
+            label="wait",
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
+            template_str=template,
+            template_arg={
+                "accumulated_score_me": int(self.accumulated_score_me),
+                "accumulated_score_partner": int(self.accumulated_score_partner),
+                "round": self.round,
+                "num_rounds": self.num_rounds,
+                "content": self.content,
+                "proposer": self.proposer,
+                "proposal": self.proposal,
+                "wait_time": self.wait_time,
+                "endowment": ENDOWMENT,
+            },
+            **kwargs,
+        )
+
+    def metadata(self, **kwargs):
+        return {"wait_time": self.wait_time}
+
+    def get_bot_response(self, experiment, bot):
+        return None
+
+    def on_complete(self, experiment, participant):
+        participant.total_wait_page_time += self.wait_time
+        super().on_complete(experiment, participant)
 
 
 class InnerAcceptancePage(ModularPage):
 
     def __init__(
-        self,
-        context: Dict[str, str],
-        proposal: int,
-        round_: int,
-    ) -> None:
+            self,
+            proposal: int,
+            round_: int,
+            time_estimate: int=TIME_ESTIMATE_FOR_COMPENSATION,
+            accumulated_score_me: int = 0,
+            accumulated_score_partner: int = 0,
+        ) -> None:
+        text = Markup("")
+        if proposal is not None:
+            if proposal == "No answer":
+                return
+            if proposal == 0:
+                text=Markup(
+                    f"<h3>No coins have been offered to you.</h3>"
+                    f"<p>Do you accept this offer?</p>"
+                )
+            elif proposal > 0:
+                text=Markup(
+                    f"<h3>You have been offered {proposal} coins.</h3>"
+                    f"<p>Do you accept this offer?</p>"
+                )
+            else:
+                text=Markup("")
 
-        prompt = InnerPrompt(
-            text=(
-                f"<p>Do you accept your partner's proposal of {proposal} coins? </p>"
-            ),
-            proposal=proposal,
-            endowment=ENDOWMENT,
-            context=context,
-            time_estimate=TIMEOUT_PROPOSALS,
-            external_template="inner_acceptance.html",
+        prompt = TimeoutPrompt(
+            timeout=STANDARD_TIMEOUT,
             round_=round_,
+            num_rounds=NUMBER_OF_ROUNDS,
+            text=Markup(text)
         )
-        control = PushButtonControl(
-            choices=["Accept", "Reject"],
-            labels=["Accept", "Reject"],
-            arrange_vertically=False,
+        control = InnerAcceptanceControl(
+            proposal=proposal,
+            accumulated_score_me=accumulated_score_me,
+            accumulated_score_partner=accumulated_score_partner,
         )
-
         super().__init__(
             label="inner_accept_answer",
             prompt=prompt,
             control=control,
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=time_estimate,
             save_answer="inner_accept_answer",
+            show_next_button=control.show_next,
         )
 
+    def format_answer(self, raw_answer, **kwargs):
+        metadata = kwargs.get("metadata") or {}
+        participant = kwargs.get("participant")
+
+        if participant is not None:
+            event_log = metadata.get("event_log") or []
+            if any(entry.get("eventType") == "done" for entry in event_log):
+                participant.var.fail_me = True
+                participant.var.num_rounds_failed += 1
+
+        increment_focus_loss = getattr(participant.current_trial, "increment_focus_loss", None)
+        if participant is not None and callable(increment_focus_loss):
+            for entry in metadata.get("event_log") or []:
+                if entry.get("eventType") == "Focus_lost":
+                    increment_focus_loss(participant)
+
+        return super().format_answer(raw_answer, **kwargs)
 
 class ScorePage(EndRoundPage):
 
     def __init__(
-        self,
-        outer_game_type: str,
-        inner_game_type: str,
-        proposer: bool,
-        proposal: int,
-        remainder_: int,
-        accumulated_score: int,
-        partners_accumulated_score: int,
-        outer_accepted: Optional[bool] = True,
-        inner_accepted: Optional[bool] = True,
-        round_failed: Optional[bool] = False,
-        num_rounds_failed:Optional[int] = 0,
-    ) -> None:
+            self,
+            outer_game_type: str,
+            inner_game_type: str,
+            proposer: bool,
+            proposal: int,
+            remainder_: int,
+            round_: int,
+            accumulated_score_me: int = 0,
+            accumulated_score_partner: int = 0,
+            outer_accepted: Optional[bool] = True,
+            inner_accepted: Optional[bool] = True,
+            round_failed: Optional[bool] = False,
+            num_rounds_failed:Optional[int] = 0,
+        ) -> None:
 
         if proposer:
             score = remainder_
@@ -301,30 +397,68 @@ class ScorePage(EndRoundPage):
             score = proposal
         self.score = score
 
-        prompt = ScorePrompt(
-            outer_game_type=outer_game_type,
-            inner_game_type=inner_game_type,
-            proposer=proposer,
-            proposal=proposal,
-            remainder_=remainder_,
-            accumulated_score=accumulated_score,
-            partners_accumulated_score=partners_accumulated_score,
-            timeout=TIMEOUT_WAITING_FOR_OTHER,
-            outer_accepted=outer_accepted,
-            inner_accepted=inner_accepted,
-            round_failed=round_failed,
-            num_rounds_failed=num_rounds_failed,
+        if num_rounds_failed >= MAX_TIMEOUT_ROUNDS:
+            text = f"""
+                <p>Round finished with score 0 coins. </p>
+                <p>Number of timeouts exceeded! Experiment failed! </p>
+            """
+        else:
+            if round_failed:
+                text = f"""
+                    <p>Round failed! One of the participants timed out. Round finished with score 0 coins. </p>
+                    <p>Participants have timed out {num_rounds_failed} round{"s" if num_rounds_failed > 1 else ""}. </p>
+                    <p>If participants timeout more than {MAX_TIMEOUT_ROUNDS} round{"s" if MAX_TIMEOUT_ROUNDS > 1 else ""}, the experiment will fail.</p>
+                """
+            else:
+                if outer_game_type == "ultimatum" and not outer_accepted:
+                    text = f"""
+                        <p>Proposal was not accepted. Round finished with score 0 coins. </p>
+                    """
+                else:
+                    if inner_game_type == "dictator":
+                        text = f"""
+                            <p>You have given {proposal} coins to your partner. </p>
+                            <p>You keep the remaining {remainder_} coins. </p>
+                        """
+                    elif inner_game_type == "ultimatum":
+                        if inner_accepted:
+                            if proposer:
+                                text = f"""
+                                    <p>You have proposed {proposal} coins to your partner. </p>
+                                    <p>Your proposal was accepted. </p>
+                                    <p>You keep the remaining {remainder_} coins. </p>
+                                """
+                            else:
+                                text = f"""
+                                    <p>Your partner has proposed to give you {proposal} coins. </p>
+                                    <p>You accepted this proposal. You keep these {proposal} coins. </p>
+                                """
+                        else:
+                            text = f"""
+                                <p>Proposal was not accepted. Round finished with score 0 coins. </p>
+                            """
+                    else:
+                        raise ValueError(f"{inner_game_type} is not a valid inner game type.")
+
+        prompt = TimeoutPrompt(
+            timeout=STANDARD_TIMEOUT,
+            round_=round_,
+            num_rounds=NUMBER_OF_ROUNDS,
+            text="",
+        )
+        control = ScoreControl(
+            content=text,
+            accumulated_score_me=accumulated_score_me,
+            accumulated_score_partner=accumulated_score_partner,
         )
 
         super().__init__(
             label="reward",
             prompt=prompt,
-            control=PushButtonControl(
-                labels=["Next"],
-                choices=[score],
-            ),
-            time_estimate=5,
+            control=control,
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
             save_answer="reward",
+            show_next_button=False,
         )
 
     def format_answer(self, raw_answer, **kwargs):

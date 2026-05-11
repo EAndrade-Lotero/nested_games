@@ -1,6 +1,13 @@
-{% macro timeout(params) %}
+{% macro timeout(config) %}
 
 <style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #eceaea;
+    }
+
+    /* Timer container (top right) */
     .timer-container {
         position: fixed;
         top: 20px;
@@ -9,56 +16,180 @@
         padding: 12px 20px;
         border-radius: 12px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        font-size: 18px;
+        font-size: 22px;
         font-weight: bold;
+        z-index: 10;
     }
-    #prompt-text {
-        text-align: {{ params.text_align }}
+
+    /* Round / phase label (top left) */
+    .phase-label {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        font-size: 22px;
+        font-weight: bold;
+        white-space: nowrap;
+        z-index: 10;
+    }
+
+    /* Main prompt copy from TimeoutPrompt.text (Markup/HTML) */
+    .timeout-prompt-body {
+        position: relative;
+        z-index: 1;
+        max-width: 48rem;
+        margin: 0 auto 1rem;
+        padding: 5rem 1.25rem 0;
+        line-height: 1.5;
+        color: #222;
+    }
+
+    .timeout-prompt-body h2 {
+        margin-top: 0;
     }
 </style>
 
-<div>
+    <div class="timeout-prompt-body">
+      {{ config.text|safe }}
+    </div>
+
+    {% if config.show_rounds is sameas true or config.show_rounds == "True" %}
+    <div class="phase-label">
+      Round {{ config.round }} / {{ config.num_rounds }}
+    </div>
+    {% endif %}
+
     <div class="timer-container" id="timer">
-        Time left: 05:00
+      00:18
     </div>
-
-    <div id="prompt-text">
-        {{ params.text_html }}
-    </div>
-</div>
-
 <script>
-    let loop = {{ params.loop | tojson }};
-    let timeRemaining = {{ params.timeoutSeconds }};
+const useSounds = {% if config.use_sounds %}true{% else %}false{% endif %};
+let timeRemaining = {{ config.timeoutSeconds }};
+let countdown10Played = false;
 
-    psynet.trial.onEvent("trialFinished", function() {
-        if (loop) {
-            psynet.trial.restart();
-        }
-    });
+function playSound(src) {
+    const audio = new Audio(src);
+    audio.play().catch(function () {});
+}
 
-    function updateTimer() {
-        let minutes = Math.floor(timeRemaining / 60);
-        let seconds = timeRemaining % 60;
+if (useSounds) {
+    playSound("../static/starting-alarm.mp3");
+}
 
-        seconds = seconds < 10 ? "0" + seconds : seconds;
+function updateTimer() {
+    let minutes = Math.floor(timeRemaining / 60);
+    let seconds = timeRemaining % 60;
 
-        document.getElementById("timer").textContent =
-            "Time left: " + minutes + ":" + seconds;
+    seconds = seconds < 10 ? "0" + seconds : seconds;
 
-        if (timeRemaining > 0) {
-            timeRemaining--;
-        } else {
-            clearInterval(timerInterval);
-            document.getElementById("timer").textContent = "Time's up!";
-            const timeoutAnswer = "{{ params.timeoutAnswer }}";
-            psynet.nextPage(timeoutAnswer);
+    document.getElementById("timer").textContent =
+        "Time left: " + minutes + ":" + seconds;
+
+    if (useSounds && !countdown10Played && timeRemaining === 10) {
+        countdown10Played = true;
+        playSound("../static/countdown.mp3");
+    }
+
+    if (timeRemaining > 0) {
+        timeRemaining--;
+    } else {
+        clearInterval(timerInterval);
+        document.getElementById("timer").textContent = "Time's up!";
+        psynet.trial.registerEvent(
+            "done",
+            {info: "timeout"}
+          );
+        const timeoutAnswer = "{{ config.timeoutAnswer }}";
+        psynet.nextPage(timeoutAnswer);
+    }
+}
+
+updateTimer();
+
+let timerInterval = setInterval(updateTimer, 1000);
+</script>
+
+{% if config.ask_not_to_loose_focus %}
+<script>
+(function () {
+    let focusOverlay = null;
+    let focusAudio = null;
+
+    function stopFocusAudio() {
+        if (focusAudio) {
+            focusAudio.pause();
+            focusAudio.currentTime = 0;
+            focusAudio = null;
         }
     }
 
-    updateTimer();
-    let timerInterval = setInterval(updateTimer, 1000);
+    function dismissFocusWarning() {
+        stopFocusAudio();
+        if (focusOverlay && focusOverlay.parentNode) {
+            focusOverlay.parentNode.removeChild(focusOverlay);
+        }
+        focusOverlay = null;
+    }
 
+    function showFocusWarning() {
+        if (focusOverlay) {
+            return;
+        }
+
+        psynet.trial.registerEvent("Focus_lost", {});
+
+        const overlay = document.createElement("div");
+        overlay.style.cssText = [
+            "position: fixed",
+            "top: 0",
+            "left: 0",
+            "width: 100%",
+            "height: 100%",
+            "background-color: rgba(0, 0, 0, 0.6)",
+            "display: flex",
+            "justify-content: center",
+            "align-items: center",
+            "z-index: 10000",
+        ].join("; ");
+
+        const modal = document.createElement("div");
+        modal.style.cssText = [
+            "background-color: white",
+            "padding: 30px",
+            "border-radius: 10px",
+            "box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3)",
+            "max-width: 500px",
+            "text-align: center",
+            "z-index: 10001",
+        ].join("; ");
+
+        modal.innerHTML =
+            '<h2 style="color: #d32f2f; margin-bottom: 15px;">⚠️ Warning</h2>' +
+            '<p style="font-size: 16px; color: #333; line-height: 1.6;">' +
+            "Please do not leave the experiment. We count with your time to provide valid data. Navigating away may result in the session being ended early." +
+            "</p>" +
+            '<button type="button" class="timeout-focus-dismiss" style="' +
+            "margin-top: 20px; padding: 10px 30px; background-color: #d32f2f; color: white; border: none; " +
+            'border-radius: 5px; font-size: 16px; cursor: pointer;">I Understand</button>';
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        focusOverlay = overlay;
+
+        modal
+            .querySelector(".timeout-focus-dismiss")
+            .addEventListener("click", dismissFocusWarning);
+
+        focusAudio = new Audio("../static/nightmare-piano.mp3");
+        focusAudio.play().catch(function () {});
+    }
+
+    window.addEventListener("blur", showFocusWarning);
+})();
 </script>
+{% endif %}
 
 {% endmacro %}

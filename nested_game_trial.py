@@ -1,5 +1,7 @@
 from typing import Union
+from markupsafe import Markup
 
+from psynet.page import UnsuccessfulEndPage
 from psynet.modular_page import (
     ModularPage,
     PushButtonControl,
@@ -8,7 +10,6 @@ from psynet.modular_page import (
 from psynet.timeline import (
     join,
     conditional,
-    CodeBlock,
 )
 from psynet.trial.chain import (
     ChainTrial,
@@ -17,21 +18,22 @@ from psynet.trial.chain import (
 from psynet.utils import get_logger
 
 from .variable_handler import VariableHandler
-from .game_paramters import (
+from .game_parameters import (
+    TIME_ESTIMATE_FOR_COMPENSATION,
     REWARD_SCALING_FACTOR,
     MAX_BONUS_REWARD,
-    TIMEOUT_WAITING_FOR_OTHER,
+    STANDARD_TIMEOUT,
     MAX_TIMEOUT_ROUNDS,
     RNG,
 )
-from .instructions import get_instructions
 from .custom_barriers import CustomBarrier
 from .custom_timeline import EndRoundPage
 from .custom_pages import (
     OuterProposalPage,
-    CustomWaitingPage,
+    OuterWaitingPage,
     OuterAcceptancePage,
     InnerProposalPage,
+    InnerWaitingPage,
     InnerAcceptancePage,
     ScorePage,
 )
@@ -41,24 +43,12 @@ variable_handler = VariableHandler()
 
 
 class NestedGameTrial(ChainTrial):
-    time_estimate = 5
+    time_estimate = TIME_ESTIMATE_FOR_COMPENSATION
     accumulate_answers = True
 
     def show_trial(self, experiment, participant):
 
-        instructions_stage = self.instructions_stage()
-        timeout_at_barrier = TIMEOUT_WAITING_FOR_OTHER * len(instructions_stage)
-
         return join(
-            #########################################
-            # INSTRUCTIONS
-            #########################################
-            conditional(
-                label="only_first_round",
-                condition=lambda participant: self.position == 0,
-                logic_if_true=instructions_stage,
-                logic_if_false=None
-            ),
             #############################################
             # CHOOSE OUTER ROLES DEPENDING ON TREATMENT
             #############################################
@@ -66,7 +56,7 @@ class NestedGameTrial(ChainTrial):
                 id_="choose_outer_roles",
                 content="Please wait for your partner...",
                 on_release = self.choose_new_outer_role,
-                timeout_at_barrier=timeout_at_barrier,
+                timeout_at_barrier=STANDARD_TIMEOUT,
             ),
             #########################################
             # OUTER GAME
@@ -99,22 +89,11 @@ class NestedGameTrial(ChainTrial):
             conditional(
                 label="check_max_timeout",
                 condition=lambda participant: self.check_max_timeout(),
-                logic_if_true=CodeBlock(
-                    lambda experiment, participant: experiment.timeline.redirect_to_branch(experiment, participant, "unsuccessful_end")
+                logic_if_true=UnsuccessfulEndPage(
+                    failure_tags=["max_timeouts_reached"],
                 ),
             )
         )  # end main join
-
-    ######################################################
-    # METHODS FOR THE INSTRUCTIONS
-    ######################################################
-    def instructions_stage(self):
-        return get_instructions(
-            outer_game=self.participant.current_trial.definition["outer_game"],
-            inner_game=self.participant.current_trial.definition["inner_game"],
-            transition=self.participant.current_trial.definition["transition"],
-            outer_role=self.get_outer_role(self.participant),
-        )
 
     ######################################################
     # METHODS FOR THE OUTER GAME
@@ -125,8 +104,10 @@ class NestedGameTrial(ChainTrial):
                 label="outer_leader",
                 condition=lambda participant: self.is_the_outer_leader(participant),
                 logic_if_true=OuterProposalPage(
-                    context=self.context,
+                    accumulated_score_me=self.get_my_accumulated_score(),
+                    accumulated_score_partner=self.get_partner_accumulated_score(),
                     round_=self.position + 1,
+                    time_estimate=self.time_estimate,
                 ),
                 logic_if_false=None,
             ),
@@ -134,9 +115,18 @@ class NestedGameTrial(ChainTrial):
                 id_="outer_proposal_stage",
                 on_release=self.assign_inner_roles,
                 active_participant=self.am_i_the_outer_leader(),
-                wait_page=CustomWaitingPage(
-                    template_path=self.context["waiting_page_path"],
-                    content="Waiting for the leader...",
+                wait_page=OuterWaitingPage(
+                    accumulated_score_me=self.get_my_accumulated_score(),
+                    accumulated_score_partner=self.get_partner_accumulated_score(),
+                    template_path=self.context["outer_waiting_page_path"],
+                    content=Markup(
+                        "<h3>Please wait</h3>"
+                        "<br>"
+                        "<p>Waiting for a proposal...</p>"
+                        "<br>"
+                        "<p><span style='font-weight: bold;'>Please do not refresh this page!</span></p>"
+                    ),
+                    round_=self.position + 1,
                 )
             ),
         )
@@ -148,9 +138,11 @@ class NestedGameTrial(ChainTrial):
                 label="outer_responder",
                 condition=lambda participant: self.is_the_outer_leader(participant),
                 logic_if_false=OuterAcceptancePage(
-                    context=self.context,
                     proposal=self.get_outer_proposal(),
                     round_=self.position + 1,
+                    accumulated_score_me=self.get_my_accumulated_score(),
+                    accumulated_score_partner=self.get_partner_accumulated_score(),
+                    time_estimate=self.time_estimate,
                 ),
                 logic_if_true=None,
             ),
@@ -159,10 +151,19 @@ class NestedGameTrial(ChainTrial):
                 id_="outer_acceptance_stage",
                 on_release=self.assign_outer_acceptance,
                 active_participant=not self.am_i_the_outer_leader(),
-                wait_page=CustomWaitingPage(
-                    template_path=self.context["waiting_page_path"],
-                    content="Waiting for acceptance...",
+                wait_page=OuterWaitingPage(
+                    accumulated_score_me=self.get_my_accumulated_score(),
+                    accumulated_score_partner=self.get_partner_accumulated_score(),
+                    template_path=self.context["outer_waiting_page_path"],
+                    content=Markup(
+                        "<h3>Please wait</h3>"
+                        "<br>"
+                        "<p>Waiting for your partner's acceptance...</p>"
+                        "<br>"
+                        "<p><span style='font-weight: bold;'>Please do not refresh this page!</span></p>"
+                    ),
                     proposer=self.am_i_the_inner_leader(),
+                    round_=self.position + 1,
                 )
             ),
         )
@@ -273,8 +274,8 @@ class NestedGameTrial(ChainTrial):
         if self.participant.current_trial.definition["outer_game"] == "ultimatum":
             # Determine if proposal was accepted
             for participant in participants:
-                accept_answer = variable_handler.get_value(participant, "outer_accept_answer")
-                if accept_answer is not None:
+                if not self.is_the_outer_leader(participant):
+                    accept_answer = variable_handler.get_value(participant, "outer_accept_answer")
                     break
 
         return accept_answer
@@ -295,18 +296,29 @@ class NestedGameTrial(ChainTrial):
                 condition=lambda participant: self.is_the_inner_leader(participant),
                 logic_if_true=InnerProposalPage(
                     outer_game=self.participant.current_trial.definition['outer_game'],
-                    context=self.context,
                     round_=self.position + 1,
+                    accumulated_score_me=self.get_my_accumulated_score(),
+                    accumulated_score_partner=self.get_partner_accumulated_score(),
+                    time_estimate=self.time_estimate,
                 ),
             ),
             CustomBarrier(
                 id_="inner_proposal_stage",
                 on_release=self.assign_inner_proposal,
                 active_participant=self.am_i_the_inner_leader(),
-                wait_page=CustomWaitingPage(
-                    template_path=self.context["waiting_page_path"],
-                    content="Waiting for the leader...",
+                wait_page=OuterWaitingPage(
+                    accumulated_score_me=self.get_my_accumulated_score(),
+                    accumulated_score_partner=self.get_partner_accumulated_score(),
+                    template_path=self.context["outer_waiting_page_path"],
+                    content=Markup(
+                        "<h3>Please wait</h3>"
+                        "<br>"
+                        "<p>Waiting for a proposal...</p>"
+                        "<br>"
+                        "<p><span style='font-weight: bold;'>Please do not refresh this page!</span></p>"
+                    ),
                     proposer=self.am_i_the_inner_leader(),
+                    round_=self.position + 1,
                 )
             ),
         )
@@ -320,20 +332,31 @@ class NestedGameTrial(ChainTrial):
                 label="inner_responder",
                 condition=lambda participant: self.is_the_inner_leader(participant),
                 logic_if_false=InnerAcceptancePage(
-                    context=self.context,
                     proposal=self.get_inner_proposal(),
                     round_=self.position + 1,
+                    time_estimate=self.time_estimate,
+                    accumulated_score_me=self.get_my_accumulated_score(),
+                    accumulated_score_partner=self.get_partner_accumulated_score(),
                 ),
                 logic_if_true=None,
             ),
             CustomBarrier(
                 id_="inner_acceptance_stage",
                 active_participant=not self.am_i_the_inner_leader(),
-                wait_page=CustomWaitingPage(
-                    template_path=self.context["waiting_page_path"],
-                    content="Waiting for acceptance...",
+                wait_page=InnerWaitingPage(
+                    accumulated_score_me=self.get_my_accumulated_score(),
+                    accumulated_score_partner=self.get_partner_accumulated_score(),
+                    template_path=self.context["inner_waiting_page_path"],
+                    content=Markup(
+                        "<h3>Please wait</h3>"
+                        "<br>"
+                        "<p>Waiting for your partner's acceptance...</p>"
+                        "<br>"
+                        "<p><span style='font-weight: bold;'>Please do not refresh this page!</span></p>"
+                    ),
                     proposer=self.am_i_the_inner_leader(),
-                    n_coins=self.get_inner_proposal(),
+                    proposal=self.get_inner_proposal(),
+                    round_=self.position + 1,
                 )
             ),
         )
@@ -459,12 +482,13 @@ class NestedGameTrial(ChainTrial):
                 proposer=True,
                 proposal=0,
                 remainder_=0,
-                accumulated_score=my_accumulated_score,
-                partners_accumulated_score=partners_accumulated_score,
+                accumulated_score_me=my_accumulated_score,
+                accumulated_score_partner=partners_accumulated_score,
                 outer_accepted=False,
                 inner_accepted=False,
                 round_failed=self.did_round_fail(),
                 num_rounds_failed=num_rounds_failed,
+                round_=self.position + 1,
             )
 
         else:
@@ -501,11 +525,12 @@ class NestedGameTrial(ChainTrial):
                     proposer=self.am_i_the_inner_leader(),
                     proposal=proposal,
                     remainder_=remainder_,
-                    accumulated_score=my_accumulated_score,
-                    partners_accumulated_score=partners_accumulated_score,
+                    accumulated_score_me=my_accumulated_score,
+                    accumulated_score_partner=partners_accumulated_score,
                     inner_accepted=accept_answer == "Accept",
                     round_failed=self.did_round_fail(),
                     num_rounds_failed=num_rounds_failed,
+                    round_=self.position + 1,
                 )
             else:
                 page = EndRoundPage(
@@ -516,7 +541,8 @@ class NestedGameTrial(ChainTrial):
                         choices=[0],
                     ),
                     save_answer="reward",
-                    time_estimate=5,
+                    time_estimate=self.time_estimate,
+                    show_next_button=False,
                 )
 
         return page
@@ -579,6 +605,21 @@ class NestedGameTrial(ChainTrial):
             )
         return None
 
+    def get_my_accumulated_score(self):
+        my_accumulated_score = 0
+        if "summary" in self.participant.current_trial.definition.keys():
+            rewards = self.participant.current_trial.definition["summary"]["accumulated_rewards"]
+            my_accumulated_score = rewards[str(self.participant_id)]
+        return my_accumulated_score
+
+    def get_partner_accumulated_score(self):
+        other_id = self.get_other_ide()
+        partner_accumulated_score = 0
+        if "summary" in self.participant.current_trial.definition.keys():
+            rewards = self.participant.current_trial.definition["summary"]["accumulated_rewards"]
+            partner_accumulated_score = rewards[str(other_id)]
+        return partner_accumulated_score
+
     def score_answer(self, answer, definition) -> float:
         """
         Scores the participant's answer.
@@ -591,7 +632,7 @@ class NestedGameTrial(ChainTrial):
             try:
                 score = float(answer)
             except Exception as e:
-                text = f"Error with finding reward from answer: {answer}"
+                text = f"Error finding reward from answer: {answer}"
                 text += f"\nGot error: {e}"
                 score = 0.0
         else:
@@ -618,6 +659,27 @@ class NestedGameTrial(ChainTrial):
                 return True
 
         return False
+
+    def get_other_ide(self):
+        other_id = None
+        if self.participant.sync_group is not None:
+            participants = self.participant.sync_group.participants
+            assert len(participants) == 2
+            ids = [participant.id for participant in participants]
+            assert self.participant_id in ids
+            ids.remove(self.participant_id)
+            other_id = ids[0]
+        return other_id
+
+    def increment_focus_loss(self, participant):
+        if not participant.var.has("focus_loss"):
+            participant.var.set("focus_loss", 0)
+        participant.var.focus_loss += 1
+        # logger.info(f"Focus loss incremented for participant {participant.id}. New value: {participant.var.focus_loss}")
+        # if participant.var.focus_loss >= 3:
+        #     logger.info(f"Focus loss exceeded for participant {participant.id}. Failing participant.")
+        #     participant.fail(reason="focus_loss_exceeded")
+    
 
 class NestedGameTrialMaker(ChainTrialMaker):
     pass

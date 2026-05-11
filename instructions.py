@@ -4,32 +4,31 @@ from psynet.timeline import join
 from psynet.graphics import Prompt
 from psynet.modular_page import (
     ModularPage,
-    PushButtonControl,
     NullControl,
 )
 
-from .game_paramters import (
+from .game_parameters import (
     ENDOWMENT,
-    TIMEOUT_PROPOSALS,
+    STANDARD_TIMEOUT,
+    TIME_ESTIMATE_FOR_COMPENSATION,
     NUMBER_OF_ROUNDS,
 )
 from .custom_front_end import TimeoutPrompt
-from .custom_pages import CustomInfoPage
 
 OBJECTIVE = f"""
     <h2>Instructions</h2>
     <br>
-    <p>Welcome to the <strong>"Who is the proposer?"</strong> experiment!</p>
+    <p>Welcome to the <strong>"Who splits the bag of coins?"</strong> experiment!</p>
     <br>
     <p>You will be paired with another participant to play {NUMBER_OF_ROUNDS} rounds.</p>
     <br>
     <p>Each round consists of two phases:</p>
     <ul>
         <li>
-            <strong>Preparation phase:</strong> Both participants decide which one of them will receive an endowment of {ENDOWMENT} coins.
+            <strong>Preparation phase:</strong> One of the participants decides which one gets a bag of coins with {ENDOWMENT} coins.
         </li>
         <li>
-            <strong>Proposal phase:</strong> The selected proposer decides how to split the endowment between the two players.
+            <strong>Proposal phase:</strong> The participant with the bag decides how to split the coins between the two players.
         </li>
     </ul>
     <br>
@@ -160,10 +159,11 @@ def get_instructions(
             label="Instructions",
             prompt=TimeoutPrompt(
                 text=Markup(OBJECTIVE),
-                timeout=TIMEOUT_PROPOSALS,
+                timeout=STANDARD_TIMEOUT,
+                show_rounds=False,
             ),
             control=NullControl(),
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
         ),
         ModularPage(
             label="Instructions",
@@ -172,7 +172,7 @@ def get_instructions(
                 timeout=TIMEOUT_PROPOSALS,
             ),
             control=NullControl(),
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
         ),
         ModularPage(
             label="Instructions",
@@ -181,7 +181,7 @@ def get_instructions(
                 timeout=TIMEOUT_PROPOSALS,
             ),
             control=NullControl(),
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
         ),
         ModularPage(
             label="Instructions",
@@ -190,7 +190,7 @@ def get_instructions(
                 timeout=TIMEOUT_PROPOSALS,
             ),
             control=NullControl(),
-            time_estimate=TIMEOUT_PROPOSALS,
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
         ),
     )
 

@@ -5,7 +5,7 @@ from psynet.sync import GroupBarrier
 from psynet.timeline import Page
 from psynet.participant import Participant
 
-from .game_paramters import (
+from .game_parameters import (
     WAIT_PAGE_TIME,
     TIMEOUT_WAITING_FOR_OTHER,
     TIMEOUT_BETWEEN_BARRIERS,
@@ -44,7 +44,9 @@ class CustomBarrier(GroupBarrier):
                 content=content,
             ),
 
-        expected_repetitions = timeout_at_barrier // WAIT_PAGE_TIME
+        # expected_repetitions = timeout_at_barrier // WAIT_PAGE_TIME
+        # If expected repetitions only bears on time estimate, keep at 1
+        expected_repetitions = 1
         timeout_between_barriers += timeout_at_barrier
 
         super().__init__(
@@ -57,6 +59,10 @@ class CustomBarrier(GroupBarrier):
             participant_timeout=timeout_between_barriers,
             participant_timeout_action=participant_timeout_action,
         )
+
+        # Set fixed time credit so that time 'credit' that the participant receives will be capped
+        # according to the estimate derived from ``waiting_logic`` and ``waiting_logic_expected_repetitions``
+        self.fix_time_credit = True
 
     def can_participant_exit(self, participant: Participant) -> bool:
         super_condition = super().can_participant_exit(participant)
