@@ -11,8 +11,8 @@ from psynet.modular_page import (
 )
 from psynet.page import UnsuccessfulEndPage, InfoPage
 from psynet.timeline import conditional
-# from psynet.db import with_transaction
-# from dallinger.experiment import scheduled_task
+from psynet.db import with_transaction
+from dallinger.experiment import scheduled_task
 
 from .nested_game_node import NestedGameNode
 from .nested_game_trial import (
@@ -134,26 +134,26 @@ class Exp(psynet.experiment.Experiment):
     }
 
     timeline = CustomTimeline(
-        consent_cococo_science_of_learning(
-            DURATION=ESTIMATED_DURATION,
-            PAYMENT=PAYMENT,
-        ),
-        InfoPage(
-            Markup(
-                f"<h3>Before we start the game...</h3>"
-                f"<p>You are about to play a multi-player game with other participants in real-time.</p>"
-                f"<p>Out of respect for them, we ask you to remain active until the end of the game.</p>"
-                f"<p>If you are away from your keyboard, you will be removed from the game and your submission may be not be approved.</p>"
-                f"<p>Please click 'Next' when you are ready to start.</p>"
-            ),
-            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
-            events={
-                "submitEnable": Event(
-                    is_triggered_by="trialStart",
-                    delay=5.0
-                ),
-            },
-        ),
+        # consent_cococo_science_of_learning(
+        #     DURATION=ESTIMATED_DURATION,
+        #     PAYMENT=PAYMENT,
+        # ),
+        # InfoPage(
+        #     Markup(
+        #         f"<h3>Before we start the game...</h3>"
+        #         f"<p>You are about to play a multi-player game with other participants in real-time.</p>"
+        #         f"<p>Out of respect for them, we ask you to remain active until the end of the game.</p>"
+        #         f"<p>If you are away from your keyboard, you will be removed from the game and your submission may be not be approved.</p>"
+        #         f"<p>Please click 'Next' when you are ready to start.</p>"
+        #     ),
+        #     time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
+        #     events={
+        #         "submitEnable": Event(
+        #             is_triggered_by="trialStart",
+        #             delay=5.0
+        #         ),
+        #     },
+        # ),
         ModularPage(
             label="tutorial",
             prompt=VideoPrompt(
@@ -178,9 +178,8 @@ class Exp(psynet.experiment.Experiment):
         conditional(
             label="Checking if participant timeout",
             condition=lambda participant: participant.answer == "No answer",
-            # logic_if_true=lambda participant: participant.var.set("experiment_failed", True),
             logic_if_true=UnsuccessfulEndPage(
-                failure_tags=["waiting_pages_timeout"],
+                failure_tags=["tutorial_timeout"],
             ),
             logic_if_false=None,
         ),
@@ -223,35 +222,35 @@ class Exp(psynet.experiment.Experiment):
         get_final_survey(),
     )
 
-    # @scheduled_task("interval", seconds=2, max_instances=1)
-    # @staticmethod
-    # @with_transaction
-    # def _check_ready_to_spawn():
-    #     """Re-evaluate ready_to_spawn for GridTrialMaker head nodes.
-    #
-    #     Fixes a race condition where all participants finalize their trials
-    #     concurrently: each on_finalized call sees an incomplete DB snapshot
-    #     (uncommitted peers) and leaves ready_to_spawn=False even after all
-    #     trials are complete.  This task re-checks every 2 seconds so the
-    #     clock can catch the correct state within 2 seconds of all commits.
-    #     """
-    #     if not is_experiment_launched():
-    #         return
-    #
-    #     from psynet.trial.chain import ChainNetwork
-    #
-    #     candidate_heads = (
-    #         ChainNode.query.filter_by(ready_to_spawn=False)
-    #         .join(ChainNetwork, ChainNode.network_id == ChainNetwork.id)
-    #         .filter(
-    #             ChainNetwork.trial_maker_id == YOUR_TRIAL_MAKER_ID,
-    #             ~ChainNetwork.failed,
-    #             ~ChainNetwork.full,
-    #         )
-    #         .with_for_update(skip_locked=True)
-    #         .populate_existing()
-    #         .all()
-    #     )
-    #     for node in candidate_heads:
-    #         if node.network.head == node:
-    #             node.check_ready_to_spawn()
+    @scheduled_task("interval", seconds=2, max_instances=1)
+    @staticmethod
+    @with_transaction
+    def _check_ready_to_spawn():
+        """Re-evaluate ready_to_spawn for GridTrialMaker head nodes.
+
+        Fixes a race condition where all participants finalize their trials
+        concurrently: each on_finalized call sees an incomplete DB snapshot
+        (uncommitted peers) and leaves ready_to_spawn=False even after all
+        trials are complete.  This task re-checks every 2 seconds so the
+        clock can catch the correct state within 2 seconds of all commits.
+        """
+        if not is_experiment_launched():
+            return
+
+        from psynet.trial.chain import ChainNetwork, ChainNode
+
+        candidate_heads = (
+            ChainNode.query.filter_by(ready_to_spawn=False)
+            .join(ChainNetwork, ChainNode.network_id == ChainNetwork.id)
+            .filter(
+                ChainNetwork.trial_maker_id == "nested_games_trial_maker",
+                ~ChainNetwork.failed,
+                ~ChainNetwork.full,
+            )
+            .with_for_update(skip_locked=True)
+            .populate_existing()
+            .all()
+        )
+        for node in candidate_heads:
+            if node.network.head == node:
+                node.check_ready_to_spawn()

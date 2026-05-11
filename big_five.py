@@ -8,8 +8,8 @@ from psynet.trial.static import (
     StaticTrial,
     StaticNode,
 )
-from psynet.page import UnsuccessfulEndPage
-from psynet.timeline import conditional
+from psynet.page import UnsuccessfulEndPage, InfoPage
+from psynet.timeline import conditional, PageMaker
 from psynet.modular_page import ModularPage
 from psynet.utils import get_logger
 
@@ -81,8 +81,9 @@ class WaitingTrialLikertPage(ModularPage):
         metadata = kwargs.get("metadata") or {}
         participant = kwargs.get("participant")
         trial = kwargs.get("trial")
-
         increment_focus_loss = getattr(trial, "increment_focus_loss", None)
+        # logger.info(f"Trial increment_focus_loss type {type(increment_focus_loss)}")
+
         if participant is not None and callable(increment_focus_loss):
             # logger.info(f"Entering increment focus loss for participant {participant}")
             for entry in metadata.get("event_log") or []:
@@ -120,32 +121,49 @@ class PersonalityTrial(StaticTrial):
         text += "<br>"
 
         return [
-                WaitingTrialLikertPage(
-                    label=page_label,
-                    prompt=TimeoutPrompt(
-                        text=Markup(text),
-                        timeout=STANDARD_TIMEOUT,
-                        show_rounds=False,
-                        ask_not_to_loose_focus=True,
-                    ),
-                    control=CustomLikertControl(
-                        lowest_value="Very inaccurate",
-                        highest_value="Very accurate",
-                        n_steps=5,
-                    ),
-                    item_idx=idx,
-                    time_estimate=self.time_estimate,
-                    save_answer=page_label
+            WaitingTrialLikertPage(
+                label=page_label,
+                prompt=TimeoutPrompt(
+                    text=Markup(text),
+                    timeout=STANDARD_TIMEOUT,
+                    show_rounds=False,
+                    ask_not_to_loose_focus=True,
                 ),
-                # conditional(
-                #     label="Checking if participant timeout",
-                #     condition=lambda participant: PersonalityTrial.should_fail(participant),
-                #     logic_if_true=UnsuccessfulEndPage(
-                #         failure_tags=["personality_pages_failure"],
-                #     ),
-                #     logic_if_false=None,
-                # ),
-            ]
+                control=CustomLikertControl(
+                    lowest_value="Very inaccurate",
+                    highest_value="Very accurate",
+                    n_steps=5,
+                ),
+                item_idx=idx,
+                time_estimate=self.time_estimate,
+                save_answer=page_label
+            ),
+            PageMaker(
+                lambda experiment, participant:
+                InfoPage(
+                    Markup(
+                        f"{participant.answer}"
+                        f"{WaitingTrial.should_fail(participant)}"
+                    ),
+                    time_estimate=5
+                ),
+                time_estimate=5
+            ),
+            conditional(
+                label="Checking if participant timeout",
+                condition=lambda participant: PersonalityTrial.should_fail(participant),
+                logic_if_true=UnsuccessfulEndPage(
+                    failure_tags=["personality_pages_failure"],
+                ),
+                logic_if_false=None,
+            ),
+        ]
+
+    @staticmethod
+    def increment_focus_loss(participant):
+        if not participant.var.has("focus_loss"):
+            participant.var.set("focus_loss", 0)
+        participant.var.focus_loss += 1
 
     @staticmethod
     def max_num_unfocus_reached(participant):
@@ -158,7 +176,7 @@ class PersonalityTrial(StaticTrial):
 
     @staticmethod
     def should_fail(participant):
-        check1 = participant.answer == "No answer"
+        check1 = participant.answer["choice"] == "No answer"
         check2 = PersonalityTrial.max_num_unfocus_reached(participant)
         return check1 or check2
 
@@ -215,7 +233,6 @@ class WaitingTrial(StaticTrial):
     def increment_focus_loss(participant):
         if not participant.var.has("focus_loss"):
             participant.var.set("focus_loss", 0)
-
         participant.var.focus_loss += 1
 
     @staticmethod
@@ -229,9 +246,10 @@ class WaitingTrial(StaticTrial):
 
     @staticmethod
     def should_fail(participant):
-        check1 = participant.answer == "No answer"
+        check1 = participant.answer["choice"] == "No answer"
         check2 = PersonalityTrial.max_num_unfocus_reached(participant)
         failure = check1 or check2
+        reason = ""
         if failure:
             reason = "Reason:"
             if check1:
@@ -240,6 +258,8 @@ class WaitingTrial(StaticTrial):
             if check2:
                 reason += " max_loss_focus;"
                 participant.vars.focus_loss = participant.var.focus_loss
+
+        logger.info(f"Failure? {failure}; Reason: {reason}")
         return failure
 
 
