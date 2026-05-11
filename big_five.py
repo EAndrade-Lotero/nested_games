@@ -18,6 +18,7 @@ from .game_paramters import (
     NUM_BIG_FIVE_QUESTIONS,
     TIME_ESTIMATE_FOR_COMPENSATION,
     STANDARD_TIMEOUT,
+    MAX_FOCUS_LOSS,
 )
 from .custom_front_end import (
     CustomLikertControl,
@@ -62,43 +63,51 @@ short_items = pd.read_csv("static/big_five_short.csv").to_dict(orient="records")
 personality_nodes = [
     StaticNode(
         definition={
-            "dummy": "ok"
+            "item_id": idx,
+            "question": item["item"],
         },
-    )
+    ) for idx, item in enumerate(short_items[:NUM_BIG_FIVE_QUESTIONS])
 ]
+
 
 class WaitingTrialLikertPage(ModularPage):
     """Calls ``WaitingTrial.increment_focus_loss`` once per ``Focus_lost`` entry in the trial event log."""
+
+    def __init__(self, label, prompt, control, item_idx, **kwargs):
+        super().__init__(label, prompt, control, **kwargs)
+        self.item_idx = item_idx
 
     def format_answer(self, raw_answer, **kwargs):
         metadata = kwargs.get("metadata") or {}
         participant = kwargs.get("participant")
         trial = kwargs.get("trial")
+
         increment_focus_loss = getattr(trial, "increment_focus_loss", None)
         if participant is not None and callable(increment_focus_loss):
+            # logger.info(f"Entering increment focus loss for participant {participant}")
             for entry in metadata.get("event_log") or []:
                 if entry.get("eventType") == "Focus_lost":
+                    # logger.info(f"Leaving event log for participant {participant}")
                     increment_focus_loss(participant)
-        return super().format_answer(raw_answer, **kwargs)
+
+        num_focus_loss = 0
+        if participant.var.has("focus_loss"):
+            num_focus_loss = participant.var.focus_loss
+
+        return {
+            "item_id": self.item_idx,
+            "choice": raw_answer,
+            "num_focus_loss": num_focus_loss,
+        }
 
 
 class PersonalityTrial(StaticTrial):
     time_estimate = TIME_ESTIMATE_FOR_COMPENSATION
 
     def show_trial(self, experiment, participant):
-        return join([
-            PersonalityTrial.question_page(
-                question=item["item"],
-                idx=idx,
-                time_estimate=self.time_estimate,
-            )
-            for idx, item in enumerate(short_items[:NUM_BIG_FIVE_QUESTIONS])
-        ])
-
-    @staticmethod
-    def question_page(question: str, idx: int, time_estimate: int):
+        idx = self.definition["item_id"]
+        question = self.definition["question"]
         page_label = f"big_five_question_{idx}"
-
         text = "<h2>Before we start</h2>"
         text += "<p>We want to ask you some questions about your personality traits. </p>"
         text += "<p><span style='font-weight:700'>Please report how accurate is the following statement:</span> </p>"
@@ -110,25 +119,54 @@ class PersonalityTrial(StaticTrial):
         text += "<p>We cannot compensate you monetarily if you allow this page to timeout.</p>"
         text += "<br>"
 
-        return WaitingTrialLikertPage(
-            label=page_label,
-            prompt=TimeoutPrompt(
-                text=Markup(text),
-                timeout=STANDARD_TIMEOUT,
-                show_rounds=False,
-            ),
-            control=CustomLikertControl(
-                lowest_value="Very inaccurate",
-                highest_value="Very accurate",
-                n_steps=5,
-            ),
-            time_estimate=time_estimate,
-            save_answer=page_label
-        )
+        return [
+                WaitingTrialLikertPage(
+                    label=page_label,
+                    prompt=TimeoutPrompt(
+                        text=Markup(text),
+                        timeout=STANDARD_TIMEOUT,
+                        show_rounds=False,
+                        ask_not_to_loose_focus=True,
+                    ),
+                    control=CustomLikertControl(
+                        lowest_value="Very inaccurate",
+                        highest_value="Very accurate",
+                        n_steps=5,
+                    ),
+                    item_idx=idx,
+                    time_estimate=self.time_estimate,
+                    save_answer=page_label
+                ),
+                # conditional(
+                #     label="Checking if participant timeout",
+                #     condition=lambda participant: PersonalityTrial.should_fail(participant),
+                #     logic_if_true=UnsuccessfulEndPage(
+                #         failure_tags=["personality_pages_failure"],
+                #     ),
+                #     logic_if_false=None,
+                # ),
+            ]
+
+    @staticmethod
+    def max_num_unfocus_reached(participant):
+        num_focus_loss = 0
+        if participant.var.has("focus_loss"):
+            num_focus_loss = participant.var.focus_loss
+        if num_focus_loss > MAX_FOCUS_LOSS:
+            return True
+        return False
+
+    @staticmethod
+    def should_fail(participant):
+        check1 = participant.answer == "No answer"
+        check2 = PersonalityTrial.max_num_unfocus_reached(participant)
+        return check1 or check2
 
 
 class WaitingTrial(StaticTrial):
     time_estimate = TIME_ESTIMATE_FOR_COMPENSATION
+    propagate_failure = False
+    item = 0
 
     def show_trial(self, experiment, participant):
 
@@ -160,29 +198,49 @@ class WaitingTrial(StaticTrial):
                     highest_value="Very accurate",
                     n_steps=5,
                 ),
+                item_idx=self.item["id"],
                 time_estimate=self.time_estimate,
             ),
-            conditional(
-                label="Checking if participant timeout",
-                condition=lambda participant: participant.answer == "No answer",
-                logic_if_true=UnsuccessfulEndPage(
-                    failure_tags=["waiting_pages_timeout"],
-                ),
-                logic_if_false=None,
-            )
+            # conditional(
+            #     label="Checking if participant timeout",
+            #     condition=lambda participant: WaitingTrial.should_fail(participant),
+            #     logic_if_true=UnsuccessfulEndPage(
+            #         failure_tags=["waiting_pages_failure"],
+            #     ),
+            #     logic_if_false=None,
+            # )
         ]
 
-    def format_answer(self, raw_answer, **kwargs):
-        return {
-            "item_id": self.item["id"],
-            "choice": raw_answer,
-        }
-
-    def increment_focus_loss(self, participant):
+    @staticmethod
+    def increment_focus_loss(participant):
         if not participant.var.has("focus_loss"):
             participant.var.set("focus_loss", 0)
 
         participant.var.focus_loss += 1
+
+    @staticmethod
+    def max_num_unfocus_reached(participant):
+        num_focus_loss = 0
+        if participant.var.has("focus_loss"):
+            num_focus_loss = participant.var.focus_loss
+        if num_focus_loss > MAX_FOCUS_LOSS:
+            return True
+        return False
+
+    @staticmethod
+    def should_fail(participant):
+        check1 = participant.answer == "No answer"
+        check2 = PersonalityTrial.max_num_unfocus_reached(participant)
+        failure = check1 or check2
+        if failure:
+            reason = "Reason:"
+            if check1:
+                reason += " inactive_timeout;"
+                participant.vars.no_answer = True
+            if check2:
+                reason += " max_loss_focus;"
+                participant.vars.focus_loss = participant.var.focus_loss
+        return failure
 
 
 class PersonalityTrialMaker(StaticTrialMaker):
