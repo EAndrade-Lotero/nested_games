@@ -1,5 +1,4 @@
 import json
-from markupsafe import Markup
 
 import psynet.experiment
 from psynet.sync import SimpleGrouper

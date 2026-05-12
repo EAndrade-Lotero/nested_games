@@ -95,10 +95,15 @@ class VariableHandler:
     def get_value_from_last_answer(participant, page_label: str):
         last_answer = participant.answer_accumulators[-1]
         assert isinstance(last_answer, dict)
-        value = VariableHandler.get_from_answer(
-            answer=last_answer,
-            variable=page_label,
-        )
+        try:
+            value = VariableHandler.get_from_answer(
+                answer=last_answer,
+                variable=page_label,
+            )
+        except ValueError:
+            error_msg = f"Error while getting value from last answer {page_label}\n"
+            error_msg += f"from participant {participant.id}\n"
+            raise ValueError(error_msg)
         return value
 
     @staticmethod

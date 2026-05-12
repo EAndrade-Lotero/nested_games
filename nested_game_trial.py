@@ -367,10 +367,17 @@ class NestedGameTrial(ChainTrial):
         if self.continue_to_inner_game():
             for participant in participants:
                 if self.is_the_inner_leader(participant):
-                    inner_proposal = VariableHandler.get_value_from_last_answer(
-                        participant, "inner_proposal"
-                    )
-                    break
+
+                    try:
+                        inner_proposal = VariableHandler.get_value_from_last_answer(
+                            participant, "inner_proposal"
+                        )
+                        break
+                    except Exception as e:
+                        inner_proposal = 5
+                        error_msg = f"Error while getting inner proposal: {e}"
+                        error_msg += f"Participant {participant.id}: is the leader? {self.is_the_inner_leader(participant)}"
+                        logger.info(error_msg)
 
             # Check round failure
             self.check_round_failed()
