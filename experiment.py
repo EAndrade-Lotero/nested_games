@@ -3,13 +3,9 @@ from markupsafe import Markup
 
 import psynet.experiment
 from psynet.sync import SimpleGrouper
-from psynet.timeline import PageMaker, Event
+from psynet.timeline import PageMaker
 from psynet.utils import get_logger
-from psynet.modular_page import (
-    ModularPage,
-    VideoPrompt,
-)
-from psynet.page import UnsuccessfulEndPage, InfoPage
+from psynet.page import UnsuccessfulEndPage
 from psynet.timeline import conditional
 # from psynet.db import with_transaction
 # from psynet.experiment import is_experiment_launched
@@ -23,7 +19,6 @@ from .nested_game_trial import (
 from .game_parameters import (
     NUM_BIG_FIVE_QUESTIONS,
     MAX_NUM_WAITING_BIG_FIVE_QUESTIONS,
-    TIMEOUT_WATCH_TUTORIAL,
     TIMEOUT_WAITING_BIG_FIVE_QUESTIONS,
     STANDARD_TIMEOUT,
     TIME_ESTIMATE_FOR_COMPENSATION,
@@ -36,6 +31,10 @@ from .game_parameters import (
     TARGET_PARTICIPANTS,
     RNG,
 )
+from .instruction_pages import (
+    InstructionPage,
+    TutorialVideoPage,
+)
 from .big_five import (
     PersonalityTrial,
     PersonalityTrialMaker,
@@ -44,10 +43,9 @@ from .big_five import (
     waiting_nodes,
 )
 from .custom_barriers import CustomBarrier
-from .custom_timeline import CustomTimeline, EndExperimentPage
+from .custom_timeline import CustomTimeline
 from .consent_science_of_learning import consent_cococo_science_of_learning
 from .final_survey import get_final_survey
-from .custom_front_end import NextWithTimerControl
 
 logger = get_logger()
 
@@ -139,48 +137,25 @@ class Exp(psynet.experiment.Experiment):
             DURATION=ESTIMATED_DURATION,
             PAYMENT=PAYMENT,
         ),
-        InfoPage(
-            Markup(
-                f"<h3>Before we start the game...</h3>"
-                f"<p>You are about to play a multi-player game with other participants in real-time.</p>"
-                f"<p>Out of respect for them, we ask you to remain active until the end of the game.</p>"
-                f"<p>If you are away from your keyboard, you will be removed from the game and your submission may be not be approved.</p>"
-                f"<p>Please click 'Next' when you are ready to start.</p>"
-            ),
+        InstructionPage(
             time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
-            events={
-                "submitEnable": Event(
-                    is_triggered_by="trialStart",
-                    delay=5.0
-                ),
-            },
-        ),
-        ModularPage(
-            label="tutorial",
-            prompt=VideoPrompt(
-                text=Markup(
-                    "<p><span style='font-weight: bold;'>Please watch the following tutorial video.</span></p>"
-                    "<br>"
-                    "<p><span style='font-weight: bold;'>Important:</span> Please do not allow the experiment to timeout.</p>"
-                    "<p>We cannot compensate you monetarily if you allow this page to timeout.</p>"
-                    "<br>"
-                ),
-                text_align="center",
-                video="../static/Instructions.mp4",
-                controls=True,
-            ),
-            control=NextWithTimerControl(
-                timeout=TIMEOUT_WATCH_TUTORIAL
-            ),
-            save_answer="tutorial",
-            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION_TUTORIAL_VIDEO,
-            show_next_button=False,
         ),
         conditional(
             label="Checking if participant timeout",
             condition=lambda participant: participant.answer == "No answer",
             logic_if_true=UnsuccessfulEndPage(
-                failure_tags=["tutorial_timeout"],
+                failure_tags=["initial_recommendation_timeout"],
+            ),
+            logic_if_false=None,
+        ),
+        TutorialVideoPage(
+            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION_TUTORIAL_VIDEO,
+        ),
+        conditional(
+            label="Checking if participant timeout",
+            condition=lambda participant: participant.answer == "No answer",
+            logic_if_true=UnsuccessfulEndPage(
+                failure_tags=["tutorial_video_timeout"],
             ),
             logic_if_false=None,
         ),
