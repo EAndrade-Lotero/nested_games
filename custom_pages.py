@@ -70,6 +70,7 @@ class OuterProposalPage(ModularPage):
             event_log = metadata.get("event_log") or []
             if any(entry.get("eventType") == "done" for entry in event_log):
                 participant.var.fail_me = True
+                participant.var.num_rounds_failed += 1
 
         increment_focus_loss = getattr(participant.current_trial, "increment_focus_loss", None)
         if participant is not None and callable(increment_focus_loss):
@@ -217,7 +218,7 @@ class InnerProposalPage(ModularPage):
 
         round_ = int(round_)
         prompt = TimeoutPrompt(
-            timeout=STANDARD_TIMEOUT,
+            timeout=5,
             round_=round_,
             num_rounds=NUMBER_OF_ROUNDS,
             text=Markup(text)
@@ -372,6 +373,7 @@ class InnerAcceptancePage(ModularPage):
                     increment_focus_loss(participant)
 
         return super().format_answer(raw_answer, **kwargs)
+
 
 class ScorePage(EndRoundPage):
 

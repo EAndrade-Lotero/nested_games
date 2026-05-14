@@ -1,7 +1,7 @@
 from typing import Union
 from markupsafe import Markup
 
-from psynet.page import UnsuccessfulEndPage
+from psynet.page import UnsuccessfulEndPage, InfoPage
 from psynet.modular_page import (
     ModularPage,
     PushButtonControl,
@@ -136,15 +136,15 @@ class NestedGameTrial(ChainTrial):
             self.outer_dictator_stage(),
             conditional(
                 label="outer_responder",
-                condition=lambda participant: self.is_the_outer_leader(participant),
-                logic_if_false=OuterAcceptancePage(
+                condition=lambda participant: not self.is_the_outer_leader(participant),
+                logic_if_true=OuterAcceptancePage(
                     proposal=self.get_outer_proposal(),
                     round_=self.position + 1,
                     accumulated_score_me=self.get_my_accumulated_score(),
                     accumulated_score_partner=self.get_partner_accumulated_score(),
                     time_estimate=self.time_estimate,
                 ),
-                logic_if_true=None,
+                logic_if_false=None,
             ),
             # Acceptance stage
             CustomBarrier(
@@ -301,6 +301,7 @@ class NestedGameTrial(ChainTrial):
                     accumulated_score_partner=self.get_partner_accumulated_score(),
                     time_estimate=self.time_estimate,
                 ),
+                logic_if_false=None,
             ),
             CustomBarrier(
                 id_="inner_proposal_stage",
@@ -321,6 +322,18 @@ class NestedGameTrial(ChainTrial):
                     round_=self.position + 1,
                 )
             ),
+            InfoPage(
+                content=f"""
+            My id: {self.participant_id} ---
+            My inner role: {self.get_inner_role(self.participant)} ---
+            Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
+            Proposal: {variable_handler.get_value(self.participant, "inner_proposal")} ---
+            Result: {self.get_inner_result()} ---
+            Answer: {self.participant.answer} ---
+            Answer accumulators: {self.participant.answer_accumulators} ---
+            """,
+                time_estimate=5,
+            ),
         )
 
     def inner_ultimatum_stage(self):
@@ -330,15 +343,15 @@ class NestedGameTrial(ChainTrial):
             # Acceptance stage
             conditional(
                 label="inner_responder",
-                condition=lambda participant: self.is_the_inner_leader(participant),
-                logic_if_false=InnerAcceptancePage(
+                condition=lambda participant: not self.is_the_inner_leader(participant),
+                logic_if_true=InnerAcceptancePage(
                     proposal=self.get_inner_proposal(),
                     round_=self.position + 1,
-                    time_estimate=self.time_estimate,
                     accumulated_score_me=self.get_my_accumulated_score(),
                     accumulated_score_partner=self.get_partner_accumulated_score(),
+                    time_estimate=self.time_estimate,
                 ),
-                logic_if_true=None,
+                logic_if_false=None,
             ),
             CustomBarrier(
                 id_="inner_acceptance_stage",
@@ -368,16 +381,21 @@ class NestedGameTrial(ChainTrial):
             for participant in participants:
                 if self.is_the_inner_leader(participant):
 
+                    logger.info("Trying to get value from last answer...")
+
                     try:
                         inner_proposal = VariableHandler.get_value_from_last_answer(
                             participant, "inner_proposal"
                         )
                         break
                     except Exception as e:
-                        inner_proposal = 5
+                        participant.var.fail_me = True
+                        inner_proposal = "No answer"
                         error_msg = f"Error while getting inner proposal: {e}"
                         error_msg += f"Participant {participant.id}: is the leader? {self.is_the_inner_leader(participant)}"
                         logger.info(error_msg)
+
+                    logger.info(f"Value from last answer: {inner_proposal}")
 
             # Check round failure
             self.check_round_failed()

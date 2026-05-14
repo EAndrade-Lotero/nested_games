@@ -132,33 +132,33 @@ class Exp(psynet.experiment.Experiment):
     }
 
     timeline = CustomTimeline(
-        consent_cococo_science_of_learning(
-            DURATION=ESTIMATED_DURATION,
-            PAYMENT=PAYMENT,
-        ),
-        InstructionPage(
-            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
-        ),
-        conditional(
-            label="Checking if participant timeout",
-            condition=lambda participant: participant.answer == "No answer",
-            logic_if_true=UnsuccessfulEndPage(
-                failure_tags=["initial_recommendation_timeout"],
-            ),
-            logic_if_false=None,
-        ),
-        TutorialVideoPage(
-            time_estimate=TIME_ESTIMATE_FOR_COMPENSATION_TUTORIAL_VIDEO,
-        ),
-        conditional(
-            label="Checking if participant timeout",
-            condition=lambda participant: participant.answer == "No answer",
-            logic_if_true=UnsuccessfulEndPage(
-                failure_tags=["tutorial_video_timeout"],
-            ),
-            logic_if_false=None,
-        ),
-        personality_trial_maker,
+        # consent_cococo_science_of_learning(
+        #     DURATION=ESTIMATED_DURATION,
+        #     PAYMENT=PAYMENT,
+        # ),
+        # InstructionPage(
+        #     time_estimate=TIME_ESTIMATE_FOR_COMPENSATION,
+        # ),
+        # conditional(
+        #     label="Checking if participant timeout",
+        #     condition=lambda participant: participant.answer == "No answer",
+        #     logic_if_true=UnsuccessfulEndPage(
+        #         failure_tags=["initial_recommendation_timeout"],
+        #     ),
+        #     logic_if_false=None,
+        # ),
+        # TutorialVideoPage(
+        #     time_estimate=TIME_ESTIMATE_FOR_COMPENSATION_TUTORIAL_VIDEO,
+        # ),
+        # conditional(
+        #     label="Checking if participant timeout",
+        #     condition=lambda participant: participant.answer == "No answer",
+        #     logic_if_true=UnsuccessfulEndPage(
+        #         failure_tags=["tutorial_video_timeout"],
+        #     ),
+        #     logic_if_false=None,
+        # ),
+        # personality_trial_maker,
         waiting_trial_maker.custom(
             SimpleGrouper(
                 group_type="chain",

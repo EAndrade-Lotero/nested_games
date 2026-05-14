@@ -146,11 +146,23 @@ class NestedGameNode(ChainNode):
     def get_round_failed(trials):
         answers = [trial.answer for trial in trials]
         values =[]
+
         for answer in answers:
             if len(answer) > 0:
                 values.extend(list(answer.values()))
 
-        return any([v == "No answer" for v in values])
+        check1 = any([v == "No answer" for v in values])
+
+        failures = []
+        for trial in trials:
+            if trial.participant.var.has("fail_me"):
+                failures.append(trial.participant.var.fail_me)
+            else:
+                failures.append(False)
+
+        check2 = any(failures)
+
+        return check1 or check2
 
     @staticmethod
     def get_outer_proposer(trials):

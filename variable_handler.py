@@ -155,7 +155,7 @@ class VariableHandler:
 # My id: {self.participant_id} ---
 # My inner role: {self.get_inner_role(self.participant)} ---
 # Am I the inner leader?: {self.is_the_inner_leader(self.participant)} ---
-# Proposal: {variable_handler.get_value(participant, "inner_proposal")} ---
+# Proposal: {variable_handler.get_value(self.participant, "inner_proposal")} ---
 # Result: {self.get_inner_result()} ---
 # Answer: {self.participant.answer} ---
 # Answer accumulators: {self.participant.answer_accumulators} ---

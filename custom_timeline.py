@@ -80,64 +80,84 @@ class CustomTimeline(Timeline):
     def __init__(self, *args):
         super().__init__(*args)
 
+    # @log_time_taken
+    # def advance_page(self, experiment, participant):
+    #     participant._in_advance_page = True
+    #     try:
+    #         if participant.pending_redirect:
+    #             branch = participant.pending_redirect
+    #             participant.pending_redirect = None
+    #             self.redirect_to_branch(experiment, participant, branch)
+    #
+    #         finished = False
+    #         while not finished:
+    #             participant.elt_id[-1] += 1
+    #
+    #             try:
+    #                 new_elt = self.get_current_elt(experiment, participant)
+    #             except PageMakerFinishedError:
+    #                 participant.elt_id = participant.elt_id[:-1]
+    #                 participant.elt_id_max = participant.elt_id_max[:-1]
+    #                 continue
+    #             if isinstance(new_elt, PageMaker):
+    #                 participant.elt_id.append(-1)
+    #                 continue
+    #
+    #             new_elt.consume(experiment, participant)
+    #
+    #             if isinstance(new_elt, Page):
+    #                 finished = True
+    #     finally:
+    #         participant._in_advance_page = False
+
     @log_time_taken
     def advance_page(self, experiment, participant):
+        participant._in_advance_page = True
+        try:
+            if participant.pending_redirect:
+                branch = participant.pending_redirect
+                participant.pending_redirect = None
+                self.redirect_to_branch(experiment, participant, branch)
 
-        round_failed = CustomTimeline.get_round_failed(participant)
-        # logger.info(f"Do I see round failed? {round_failed}")
-        # experiment_failed = CustomTimeline.get_experiment_failed(participant)
-        # logger.info(f"Do I see experiment failed? {experiment_failed}")
+            round_failed = CustomTimeline.get_round_failed(participant)
 
-        # if experiment_failed:
-        #
-        #     while True:
-        #         new_elt = self.increase_one_page(experiment, participant)
-        #
-        #         logger.info(f"Considering elt of type: {type(new_elt)}")
-        #         if isinstance(new_elt, EndExperimentPage):
-        #             finished = True
-        #             break
-        #
-        #         try:
-        #             elt_id_max = participant.elt_id_max[-1]
-        #         except IndexError:
-        #             raise Exception("End of timeline reached. No end experiment page found.")
-        #
-        #         if participant.elt_id[-1] == participant.elt_id_max[-1]:
-        #             raise Exception("End of timeline reached. No end round page found.")
+            if round_failed:
 
-        if round_failed:
+                finished = False
+                new_elt = None
 
-            finished = False
+                while not finished:
+                    new_elt = self.increase_one_page(experiment, participant)
+                    # if new_elt is not None:
+                    #     new_elt.consume(experiment, participant)
 
-            while not finished:
-                new_elt = self.increase_one_page(experiment, participant)
+                    if isinstance(new_elt, EndRoundPage):
+                        finished = True
+                        break
 
-                if isinstance(new_elt, EndRoundPage):
-                    finished = True
-                    break
+                    try:
+                        elt_id_max = participant.elt_id_max[-1]
+                    except IndexError:
+                        raise Exception("End of timeline reached. No end round page found.")
 
-                try:
-                    elt_id_max = participant.elt_id_max[-1]
-                except IndexError:
-                    raise Exception("End of timeline reached. No end round page found.")
+                    if participant.elt_id[-1] >= participant.elt_id_max[-1]:
+                        raise Exception("End of timeline reached. No end round page found.")
 
-                if participant.elt_id[-1] == participant.elt_id_max[-1]:
-                    raise Exception("End of timeline reached. No end round page found.")
+                participant.var.round_failed = False
 
-            participant.var.round_failed = False
+            else:
 
-        else:
+                finished = False
+                while not finished:
+                    new_elt = self.increase_one_page(experiment, participant)
+                    if new_elt is not None:
+                        new_elt.consume(experiment, participant)
 
-            finished = False
-            while not finished:
-                new_elt = self.increase_one_page(experiment, participant)
-                if new_elt is not None:
-                    new_elt.consume(experiment, participant)
+                    if isinstance(new_elt, Page):
+                        finished = True
 
-                if isinstance(new_elt, Page):
-                    finished = True
-
+        finally:
+            participant._in_advance_page = False
 
     def increase_one_page(self, experiment, participant):
         participant.elt_id[-1] += 1
